@@ -1,15 +1,26 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import type { Metadata } from "next"
+import { Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
+const fontSans = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+})
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
+
+export const metadata: Metadata = {
+  title: {
+    default: "Fantasy F1 Race-Weekend Advisor",
+    template: "%s · Fantasy F1 Advisor",
+  },
+  description:
+    "Optimal F1 Fantasy transfers and DRS Boost pick for the upcoming Grand Prix — free, no login, with the math shown.",
+}
 
 export default function RootLayout({
   children,
@@ -17,14 +28,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
+    // Dark-only telemetry design: the dark class is applied statically (no theme island).
     <html
       lang="en"
-      suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}
+      className={`dark ${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
     >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+      <body className="tabular-nums">{children}</body>
     </html>
   )
 }
