@@ -1,19 +1,21 @@
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
-export default function Page() {
+// Plain sync RSC for now — the feed-backed advisor arrives in M1.
+export default function AdvisorPage() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <main className="mx-auto flex min-h-svh max-w-5xl flex-col gap-4 p-6">
+      <header className="flex items-center gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Race-Weekend Advisor
+        </h1>
+        <Badge variant="secondary">M0 shell</Badge>
+      </header>
+      <p className="max-w-prose text-sm text-muted-foreground">
+        Enter your F1 Fantasy team and get the mathematically optimal transfers
+        and DRS Boost pick for the upcoming Grand Prix — with the reasoning
+        shown. Coming up: data layer (M1), projection engine and optimizer (M2),
+        the full advisor UI (M3).
+      </p>
+    </main>
   )
 }
