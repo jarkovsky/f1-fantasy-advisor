@@ -1,0 +1,9 @@
+name: Fantasy F1 Advisor
+processes:
+  Dev server:
+    command: pnpm dev
+    auto_start: true
+    auto_restart: false
+    restart_when_changed:
+      - next.config.ts
+      - package.json
