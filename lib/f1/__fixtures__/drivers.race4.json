@@ -1,0 +1,311 @@
+{
+ "Data": {
+  "Value": [
+   {
+    "PlayerId": "18",
+    "Skill": 1,
+    "PositionName": "DRIVER",
+    "Value": 13.0,
+    "TeamId": "23",
+    "FUllName": "Pierre Gasly",
+    "DisplayName": "P. Gasly",
+    "TeamName": "Alpine",
+    "Status": "0",
+    "IsActive": "1",
+    "DriverTLA": "GAS",
+    "DriverReference": "PIEGAS01",
+    "CountryName": "Rouen, France",
+    "OverallPpints": "53.00",
+    "GamedayPoints": "-8.00",
+    "SelectedPercentage": "19",
+    "CaptainSelectedPercentage": "1",
+    "OldPlayerValue": 12.8,
+    "BestRaceFinished": "6",
+    "HigestGridStart": "7",
+    "HigestChampFinish": "",
+    "FastestPitstopAward": "",
+    "BestRaceFinishCount": 1,
+    "HighestGridStartCount": 1,
+    "HighestChampFinishCount": 0,
+    "FastestPitstopAwardCount": 0,
+    "QualifyingPoints": "2",
+    "RacePoints": "-15",
+    "SprintPoints": "5",
+    "NoNegativePoints": "12.00",
+    "F1PlayerId": "8",
+    "FirstName": "Pierre",
+    "LastName": "Gasly",
+    "SessionWisePoints": [
+     {
+      "sessionnumber": 1,
+      "sessiontype": "Sprint Qualifying",
+      "points": 5,
+      "nonegative_points": 5
+     },
+     {
+      "sessionnumber": 2,
+      "sessiontype": "Qualifying",
+      "points": 2,
+      "nonegative_points": 2
+     },
+     {
+      "sessionnumber": 3,
+      "sessiontype": "Race",
+      "points": -15,
+      "nonegative_points": 5
+     }
+    ],
+    "AdditionalStats": {
+     "fastest_lap_pts": 0.0,
+     "dotd_pts": 0.0,
+     "overtaking_pts": 34.0,
+     "q3_finishes_pts": 10.0,
+     "top10_race_position_pts": 19.0,
+     "top8_sprint_position_pts": 1.0,
+     "total_position_pts": 30.0,
+     "total_position_gained_lost": 9.0,
+     "total_dnf_dq_pts": -20.0,
+     "value_for_money": 0.82
+    },
+    "old_Value": 0.0,
+    "new_value": 0.0,
+    "ProjectedGamedayPoints": "-8.00",
+    "ProjectedNoNegativePoints": "12.00",
+    "ProjectedOverallPpints": "53.00"
+   },
+   {
+    "PlayerId": "131",
+    "Skill": 1,
+    "PositionName": "DRIVER",
+    "Value": 28.2,
+    "TeamId": "29",
+    "FUllName": "Max Verstappen",
+    "DisplayName": "M. Verstappen",
+    "TeamName": "Red Bull Racing",
+    "Status": "0",
+    "IsActive": "1",
+    "DriverTLA": "VER",
+    "DriverReference": "MAXVER01",
+    "CountryName": "Hasselt, Belgium",
+    "OverallPpints": "155.00",
+    "GamedayPoints": "52.00",
+    "SelectedPercentage": "17",
+    "CaptainSelectedPercentage": "13",
+    "OldPlayerValue": 28.1,
+    "BestRaceFinished": "3",
+    "HigestGridStart": "5",
+    "HigestChampFinish": "",
+    "FastestPitstopAward": "",
+    "BestRaceFinishCount": 1,
+    "HighestGridStartCount": 1,
+    "HighestChampFinishCount": 0,
+    "FastestPitstopAwardCount": 0,
+    "QualifyingPoints": "9",
+    "RacePoints": "37",
+    "SprintPoints": "6",
+    "NoNegativePoints": "55.00",
+    "F1PlayerId": "31",
+    "FirstName": "Max",
+    "LastName": "Verstappen",
+    "SessionWisePoints": [
+     {
+      "sessionnumber": 1,
+      "sessiontype": "Sprint Qualifying",
+      "points": 6,
+      "nonegative_points": 6
+     },
+     {
+      "sessionnumber": 2,
+      "sessiontype": "Qualifying",
+      "points": 9,
+      "nonegative_points": 9
+     },
+     {
+      "sessionnumber": 3,
+      "sessiontype": "Race",
+      "points": 37,
+      "nonegative_points": 40
+     }
+    ],
+    "AdditionalStats": {
+     "fastest_lap_pts": 10.0,
+     "dotd_pts": 20.0,
+     "overtaking_pts": 74.0,
+     "q3_finishes_pts": 17.0,
+     "top10_race_position_pts": 37.0,
+     "top8_sprint_position_pts": 6.0,
+     "total_position_pts": 60.0,
+     "total_position_gained_lost": 16.0,
+     "total_dnf_dq_pts": -25.0,
+     "value_for_money": 1.1
+    },
+    "old_Value": 0.0,
+    "new_value": 0.0,
+    "ProjectedGamedayPoints": "52.00",
+    "ProjectedNoNegativePoints": "55.00",
+    "ProjectedOverallPpints": "155.00"
+   },
+   {
+    "PlayerId": "28",
+    "Skill": 2,
+    "PositionName": "CONSTRUCTOR",
+    "Value": 30.2,
+    "TeamId": "28",
+    "FUllName": "Mercedes",
+    "DisplayName": "Mercedes",
+    "TeamName": "",
+    "Status": "",
+    "IsActive": "1",
+    "DriverTLA": "MER",
+    "DriverReference": "",
+    "CountryName": "",
+    "OverallPpints": "483.00",
+    "GamedayPoints": "104.00",
+    "SelectedPercentage": "33",
+    "CaptainSelectedPercentage": "0",
+    "OldPlayerValue": 29.9,
+    "BestRaceFinished": "1",
+    "HigestGridStart": "1",
+    "HigestChampFinish": "",
+    "FastestPitstopAward": "",
+    "BestRaceFinishCount": 5,
+    "HighestGridStartCount": 4,
+    "HighestChampFinishCount": 0,
+    "FastestPitstopAwardCount": 0,
+    "QualifyingPoints": "26",
+    "RacePoints": "67",
+    "SprintPoints": "11",
+    "NoNegativePoints": "106.00",
+    "F1PlayerId": "8",
+    "FirstName": "Mercedes",
+    "LastName": "Mercedes",
+    "SessionWisePoints": [
+     {
+      "sessionnumber": 1,
+      "sessiontype": "Sprint Qualifying",
+      "points": 11,
+      "nonegative_points": 13
+     },
+     {
+      "sessionnumber": 2,
+      "sessiontype": "Qualifying",
+      "points": 26,
+      "nonegative_points": 26
+     },
+     {
+      "sessionnumber": 3,
+      "sessiontype": "Race",
+      "points": 67,
+      "nonegative_points": 67
+     }
+    ],
+    "AdditionalStats": {
+     "fastest_lap_pts": 35.0,
+     "dotd_pts": 0.0,
+     "overtaking_pts": 81.0,
+     "q3_finishes_pts": 92.0,
+     "top10_race_position_pts": 185.0,
+     "top8_sprint_position_pts": 34.0,
+     "total_position_pts": 311.0,
+     "total_position_gained_lost": -6.0,
+     "total_dnf_dq_pts": -20.0,
+     "value_for_money": 3.2
+    },
+    "old_Value": 0.0,
+    "new_value": 0.0,
+    "ProjectedGamedayPoints": "104.00",
+    "ProjectedNoNegativePoints": "106.00",
+    "ProjectedOverallPpints": "483.00"
+   },
+   {
+    "PlayerId": "29",
+    "Skill": 2,
+    "PositionName": "CONSTRUCTOR",
+    "Value": 29.1,
+    "TeamId": "29",
+    "FUllName": "Red Bull Racing",
+    "DisplayName": "Red Bull Racing",
+    "TeamName": "",
+    "Status": "",
+    "IsActive": "1",
+    "DriverTLA": "RBR",
+    "DriverReference": "",
+    "CountryName": "",
+    "OverallPpints": "187.00",
+    "GamedayPoints": "31.00",
+    "SelectedPercentage": "7",
+    "CaptainSelectedPercentage": "0",
+    "OldPlayerValue": 28.8,
+    "BestRaceFinished": "3",
+    "HigestGridStart": "3",
+    "HigestChampFinish": "",
+    "FastestPitstopAward": "",
+    "BestRaceFinishCount": 1,
+    "HighestGridStartCount": 1,
+    "HighestChampFinishCount": 0,
+    "FastestPitstopAwardCount": 0,
+    "QualifyingPoints": "4",
+    "RacePoints": "18",
+    "SprintPoints": "9",
+    "NoNegativePoints": "64.00",
+    "F1PlayerId": "9",
+    "FirstName": "Red Bull Racing",
+    "LastName": "Red Bull Racing",
+    "SessionWisePoints": [
+     {
+      "sessionnumber": 1,
+      "sessiontype": "Sprint Qualifying",
+      "points": 9,
+      "nonegative_points": 9
+     },
+     {
+      "sessionnumber": 2,
+      "sessiontype": "Qualifying",
+      "points": 4,
+      "nonegative_points": 14
+     },
+     {
+      "sessionnumber": 3,
+      "sessiontype": "Race",
+      "points": 18,
+      "nonegative_points": 41
+     }
+    ],
+    "AdditionalStats": {
+     "fastest_lap_pts": 10.0,
+     "dotd_pts": 0.0,
+     "overtaking_pts": 110.0,
+     "q3_finishes_pts": 34.0,
+     "top10_race_position_pts": 51.0,
+     "top8_sprint_position_pts": 6.0,
+     "total_position_pts": 91.0,
+     "total_position_gained_lost": 0.0,
+     "total_dnf_dq_pts": -75.0,
+     "value_for_money": 1.29
+    },
+    "old_Value": 0.0,
+    "new_value": 0.0,
+    "ProjectedGamedayPoints": "31.00",
+    "ProjectedNoNegativePoints": "64.00",
+    "ProjectedOverallPpints": "187.00"
+   }
+  ],
+  "FeedTime": {
+   "UTCTime": "6/1/2026 2:45:19 PM",
+   "ISTTime": "6/1/2026 8:15:19 PM",
+   "CESTTime": "6/1/2026 4:45:19 PM"
+  }
+ },
+ "Meta": {
+  "Message": "Success",
+  "RetVal": 1,
+  "Success": true,
+  "Timestamp": {
+   "UTCTime": "6/1/2026 2:45:19 PM",
+   "ISTTime": "6/1/2026 8:15:19 PM",
+   "CESTTime": "6/1/2026 4:45:19 PM"
+  },
+  "StatusCode": 200,
+  "Maintenance": ""
+ }
+}

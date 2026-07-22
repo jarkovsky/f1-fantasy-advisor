@@ -1,0 +1,42 @@
+{
+ "Data": {
+  "Value": {
+   "GamedayId": 6,
+   "MatchdayId": 14,
+   "PhaseId": 1,
+   "MaxTeamValue": 100.0,
+   "DeadlineDate": "06/05/2026 00:00:00",
+   "ActiveTour": 0,
+   "GMCSubScenario": "TR_PRE",
+   "FixtureUpdateFlag": 0,
+   "LPTourGamedayId": 5,
+   "ARRGamedayId": [
+    6
+   ],
+   "TREndGamedayId": 22,
+   "IsLateOnboard": 0,
+   "IsActiveForNewUser": 1,
+   "ShowRaceweekTab": 1,
+   "ShowAnnouncementCard": 0,
+   "NextSeasonDeadline": "",
+   "isSwapSuggestion": 0
+  },
+  "FeedTime": {
+   "UTCTime": "6/1/2026 7:13:31 PM",
+   "ISTTime": "6/2/2026 12:43:31 AM",
+   "CESTTime": "6/1/2026 9:13:31 PM"
+  }
+ },
+ "Meta": {
+  "Message": "Success",
+  "RetVal": 1,
+  "Success": true,
+  "Timestamp": {
+   "UTCTime": "6/1/2026 7:13:31 PM",
+   "ISTTime": "6/2/2026 12:43:31 AM",
+   "CESTTime": "6/1/2026 9:13:31 PM"
+  },
+  "StatusCode": 200,
+  "Maintenance": ""
+ }
+}
