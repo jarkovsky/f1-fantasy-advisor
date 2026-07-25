@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "snapshot": "tsx scripts/snapshot.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint",
@@ -42,6 +43,7 @@
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.8"
   },

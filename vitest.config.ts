@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url"
+
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config"
 
@@ -6,6 +8,12 @@ export default defineConfig({
   resolve: {
     // Vite 8 resolves tsconfig "paths" (@/*) natively.
     tsconfigPaths: true,
+    alias: {
+      // The real package throws outside an RSC graph; stub it for tests.
+      "server-only": fileURLToPath(
+        new URL("./test/stubs/server-only.ts", import.meta.url)
+      ),
+    },
   },
   test: {
     environment: "jsdom",

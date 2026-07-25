@@ -1,0 +1,39 @@
+{
+  "Value": {
+    "infoflag": 0,
+    "ov": "20260605102432",
+    "hv": "20260605102432",
+    "lv": "20260601191331",
+    "conf": {
+      "bv": "1.3",
+      "ipe": true,
+      "teamkillswitch": {
+        "web": 1,
+        "ios": 1,
+        "android": 1
+      },
+      "leaguekillswitch": {
+        "web": 1,
+        "ios": 1,
+        "android": 1
+      },
+      "eosoff": 0
+    },
+    "Maintenance": "0",
+    "isLive": 0,
+    "feedBuster": {
+      "config": "20260601191332",
+      "statistics": "20260605102422",
+      "translation": "20260520144223",
+      "staticPage": "20260520144223",
+      "fixtures": "20260601191333",
+      "announcement": "20260522100707",
+      "genericCard": "20260605102432"
+    }
+  },
+  "FeedTime": {
+    "UTCTime": "6/5/2026 10:24:32 AM",
+    "ISTTime": "6/5/2026 3:54:32 PM",
+    "CESTTime": "6/5/2026 12:24:32 PM"
+  }
+}
