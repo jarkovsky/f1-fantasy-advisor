@@ -24,5 +24,5 @@ export const EXTRA_TRANSFER_PENALTY = -10
 /** Initial cost cap, in tenths of a million ($100.0M). Affordability is bank-based after race 1 (spec §7). */
 export const INITIAL_BUDGET_TENTHS = 1000
 
-/** DRS Boost: doubles one driver's gameday score, free every week. */
+/** DRS Boost: doubles one driver's race-weekend score, free every week. */
 export const DRS_BOOST_MULTIPLIER = 2
