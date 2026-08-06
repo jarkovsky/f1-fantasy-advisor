@@ -1,18 +1,35 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
+
+import { AssetTable } from "./_components/asset-table"
 
 export const metadata: Metadata = {
   title: "Stats",
 }
 
-// Plain sync RSC for now — the sortable 33-asset explorer arrives in M3.
+function TableSkeleton() {
+  return (
+    <div className="flex flex-col gap-2" aria-hidden>
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="h-9 w-full animate-pulse rounded-md bg-muted" />
+      ))}
+    </div>
+  )
+}
+
+// Sync shell (prerendered) + one streamed data hole. The full sortable
+// explorer with per-session splits and sparklines lands in M3.
 export default function StatsPage() {
   return (
     <main className="mx-auto flex min-h-svh max-w-5xl flex-col gap-4 p-6">
       <h1 className="text-2xl font-semibold tracking-tight">Stats explorer</h1>
       <p className="max-w-prose text-sm text-muted-foreground">
-        Prices, points, PPM, form and per-session splits for all 22 drivers and
-        11 constructors. Coming in M3.
+        All 33 assets from the official F1 Fantasy feed, parsed through the
+        typed boundary — prices, price moves, race points, selection.
       </p>
+      <Suspense fallback={<TableSkeleton />}>
+        <AssetTable />
+      </Suspense>
     </main>
   )
 }
