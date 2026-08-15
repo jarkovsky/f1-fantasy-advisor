@@ -1,0 +1,409 @@
+/**
+ * Projection engine (spec §6): turns SeasonHistory into per-asset expected
+ * fantasy points for the upcoming race, under five transparent presets, with
+ * session-aware composition matched to the upcoming weekend's format.
+ *
+ * PURE: no I/O, no caching, no Date.now(). The caller injects the history and
+ * the upcoming weekend's shape, exactly as raceweek.ts injects `now`.
+ *
+ * Key invariant (tested): for a NORMAL upcoming weekend,
+ *   Σ perSession.expected === totalPoints === preset(elementwise quali+race)
+ * Quali and race exist in the same set of races, so their preset weight
+ * vectors are identical and the weighted mean is linear. (The naive variant —
+ * comparing against whole-race points — is WRONG: those include sprint
+ * sessions in sprint races.)
+ *
+ * Equal PPM is per-race calibrated: k_class divides season points by season
+ * price AND by completed races, so its outputs sit on the same single-race
+ * scale as the history presets. That matters because Equal PPM is also the
+ * fallback mixed into history-preset results for no-history assets.
+ */
+import {
+  EWMA_HALF_LIFE,
+  FORM_WINDOW,
+  HISTORY_PRESET_MIN_RACES,
+  SPRINT_PRIOR_SHRINKAGE_K,
+} from "@/lib/constants"
+import type { AssetHistory, SeasonHistory } from "@/lib/f1/history"
+import type { SessionLabelType } from "@/lib/f1/schemas"
+
+// ---------------------------------------------------------------------------
+// Preset registry (the M3 dropdown consumes this)
+// ---------------------------------------------------------------------------
+
+export const PRESET_IDS = [
+  "weighted-recent",
+  "form-5",
+  "season-average",
+  "equal-ppm",
+  "custom-blend",
+] as const
+
+export type PresetId = (typeof PRESET_IDS)[number]
+
+export type PresetDefinition = {
+  id: PresetId
+  label: string
+  /** History presets need ≥N completed races; equal-ppm works from race 1. */
+  minRaces: number
+  /** True for presets computed from per-race history (greyed at cold start). */
+  historyBased: boolean
+}
+
+export const PRESET_REGISTRY: readonly PresetDefinition[] = [
+  {
+    id: "weighted-recent",
+    label: "Weighted recent",
+    minRaces: HISTORY_PRESET_MIN_RACES,
+    historyBased: true,
+  },
+  {
+    id: "form-5",
+    label: `Form (last ${FORM_WINDOW})`,
+    minRaces: HISTORY_PRESET_MIN_RACES,
+    historyBased: true,
+  },
+  {
+    id: "season-average",
+    label: "Season average",
+    minRaces: HISTORY_PRESET_MIN_RACES,
+    historyBased: true,
+  },
+  { id: "equal-ppm", label: "Equal PPM", minRaces: 0, historyBased: false },
+  {
+    id: "custom-blend",
+    label: "Custom blend",
+    minRaces: HISTORY_PRESET_MIN_RACES,
+    historyBased: true,
+  },
+]
+
+// ---------------------------------------------------------------------------
+// Result types
+// ---------------------------------------------------------------------------
+
+export type ProjectionOptions = {
+  preset: PresetId
+  /** Custom blend only: 0 = pure Season average, 1 = pure Weighted recent. */
+  blendWeight?: number
+}
+
+export type UpcomingWeekend = { isSprint: boolean }
+
+export type SessionExpectation = {
+  session: SessionLabelType
+  expected: number
+  /** Races where this session existed and was scored ("based on N" copy). */
+  basisRaces: number
+  /** True when E[sprint] used the scaled-prior small-sample guard. */
+  priorBlended?: boolean
+}
+
+export type AssetProjection = {
+  playerId: string
+  kind: AssetHistory["kind"]
+  totalPoints: number
+  /** Empty for equal-ppm (direct total — no fake session split). */
+  perSession: SessionExpectation[]
+  /** The preset actually applied to this asset (fallbacks change it). */
+  source: PresetId
+  basis: { completedRaces: number; completedSprints: number }
+  fallback?: "equal-ppm-no-history" | "equal-ppm-cold-start"
+}
+
+export type ProjectionResult = {
+  byPlayerId: Record<string, AssetProjection>
+  requestedPreset: PresetId
+  /** Differs from requested only at cold start (equal-ppm forced). */
+  effectivePreset: PresetId
+  basis: { completedRaces: number; completedSprints: number }
+  /** True at race 1: history presets greyed, equal-ppm locked (spec §6.2). */
+  coldStart: boolean
+  notes: string[]
+}
+
+// ---------------------------------------------------------------------------
+// Numeric primitives
+// ---------------------------------------------------------------------------
+
+function mean(values: number[]): number {
+  if (values.length === 0) return 0
+  return values.reduce((a, b) => a + b, 0) / values.length
+}
+
+/**
+ * Exponentially weighted mean: the LAST element is the most recent (age 0),
+ * w = 0.5^(age / halfLife), normalized over the present values only.
+ * Exported for direct numeric testing.
+ */
+export function ewma(values: number[], halfLife: number): number {
+  if (values.length === 0) return 0
+  let num = 0
+  let den = 0
+  for (let i = 0; i < values.length; i++) {
+    const age = values.length - 1 - i
+    const w = 0.5 ** (age / halfLife)
+    num += w * (values[i] ?? 0)
+    den += w
+  }
+  return num / den
+}
+
+function formMean(values: number[], window: number): number {
+  return mean(values.slice(-window))
+}
+
+type HistoryPresetId = "weighted-recent" | "form-5" | "season-average"
+
+/** Apply a history preset's weighting to a chronological series. */
+function applyPreset(preset: HistoryPresetId, series: number[]): number {
+  switch (preset) {
+    case "weighted-recent":
+      return ewma(series, EWMA_HALF_LIFE)
+    case "form-5":
+      return formMean(series, FORM_WINDOW)
+    case "season-average":
+      return mean(series)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Series extraction (scored races only — pending excluded by construction)
+// ---------------------------------------------------------------------------
+
+/** Chronological per-race points for one session of one asset. */
+function sessionSeries(
+  history: AssetHistory,
+  session: SessionLabelType
+): number[] {
+  const series: number[] = []
+  for (const race of history.perRace) {
+    if (race.status !== "scored") continue
+    for (const s of race.sessionPoints) {
+      if (s.session === session && s.points !== null) {
+        series.push(s.points)
+        break
+      }
+    }
+  }
+  return series
+}
+
+// ---------------------------------------------------------------------------
+// Equal PPM (per-race calibrated)
+// ---------------------------------------------------------------------------
+
+type ClassK = { driver: number; constructor: number }
+
+/** Latest known price (the pending race row carries the current price). */
+function currentPriceTenths(history: AssetHistory): number {
+  return history.perRace[history.perRace.length - 1]?.priceTenths ?? 0
+}
+
+function computeClassK(
+  season: SeasonHistory,
+  completedRaces: number,
+  notes: string[]
+): ClassK {
+  // Cold start: no scored points anywhere — degenerate to a pure price
+  // ranking (k = 1 point per tenth), labeled via the cold-start fallback.
+  if (completedRaces === 0) return { driver: 1, constructor: 1 }
+
+  const sums = {
+    driver: { points: 0, priceTenths: 0 },
+    constructor: { points: 0, priceTenths: 0 },
+  }
+  for (const history of Object.values(season.byPlayerId)) {
+    sums[history.kind].points += history.cumulativePoints
+    sums[history.kind].priceTenths += currentPriceTenths(history)
+  }
+
+  const k = (kind: AssetHistory["kind"]): number => {
+    const { points, priceTenths } = sums[kind]
+    if (points <= 0 || priceTenths <= 0) {
+      notes.push(
+        `equal-ppm: ${kind} class has non-positive points or price — k forced to 0`
+      )
+      return 0
+    }
+    // Per-race calibration: season points / season price / races → the
+    // expected single-race scale (comparable with history presets).
+    return points / priceTenths / completedRaces
+  }
+
+  return { driver: k("driver"), constructor: k("constructor") }
+}
+
+// ---------------------------------------------------------------------------
+// Session composition
+// ---------------------------------------------------------------------------
+
+const NORMAL_SESSIONS: SessionLabelType[] = ["Qualifying", "Race"]
+const SPRINT_SESSIONS: SessionLabelType[] = [
+  "Sprint Qualifying",
+  "Qualifying",
+  "Race",
+]
+
+/**
+ * Grid-wide sprint/race points ratio over completed sprint races — the prior
+ * scale for the sprint small-sample guard.
+ */
+function gridSprintRaceRatio(season: SeasonHistory): number {
+  let sprint = 0
+  let race = 0
+  for (const history of Object.values(season.byPlayerId)) {
+    for (const r of history.perRace) {
+      if (r.status !== "scored") continue
+      const sprintSession = r.sessionPoints.find(
+        (s) => s.session === "Sprint Qualifying"
+      )
+      if (!sprintSession || sprintSession.points === null) continue
+      sprint += sprintSession.points
+      race += r.sessionPoints.find((s) => s.session === "Race")?.points ?? 0
+    }
+  }
+  return race > 0 ? sprint / race : 1
+}
+
+function composeSessions(
+  history: AssetHistory,
+  upcoming: UpcomingWeekend,
+  preset: HistoryPresetId | "custom-blend",
+  blendWeight: number,
+  gridRatio: number,
+  completedSprints: number
+): SessionExpectation[] {
+  const sessions = upcoming.isSprint ? SPRINT_SESSIONS : NORMAL_SESSIONS
+
+  const expectFor = (series: number[]): number =>
+    preset === "custom-blend"
+      ? blendWeight * applyPreset("weighted-recent", series) +
+        (1 - blendWeight) * applyPreset("season-average", series)
+      : applyPreset(preset, series)
+
+  return sessions.map((session) => {
+    const series = sessionSeries(history, session)
+    const raw = expectFor(series)
+
+    if (session !== "Sprint Qualifying") {
+      return { session, expected: raw, basisRaces: series.length }
+    }
+
+    // Sprint small-sample guard: shrink toward the asset's race expectation
+    // scaled by the grid-wide sprint/race ratio (spec §6.3).
+    const raceSeries = sessionSeries(history, "Race")
+    const raceExpectation = expectFor(raceSeries)
+    const alpha =
+      completedSprints / (completedSprints + SPRINT_PRIOR_SHRINKAGE_K)
+    const expected = alpha * raw + (1 - alpha) * raceExpectation * gridRatio
+    return { session, expected, basisRaces: series.length, priorBlended: true }
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Orchestrator
+// ---------------------------------------------------------------------------
+
+function clamp01(x: number): number {
+  return Math.min(1, Math.max(0, x))
+}
+
+export function projectAssets(
+  season: SeasonHistory,
+  upcoming: UpcomingWeekend,
+  options: ProjectionOptions
+): ProjectionResult {
+  const notes: string[] = []
+
+  // Basis: completed races/sprints over the whole assembly.
+  const completedRaces = season.raceNumbers.filter(
+    (n) => n !== season.pendingRace
+  ).length
+  let completedSprints = 0
+  for (const n of season.raceNumbers) {
+    if (n === season.pendingRace) continue
+    const hasSprint = Object.values(season.byPlayerId).some((h) =>
+      h.perRace.some(
+        (r) =>
+          r.raceNumber === n &&
+          r.sessionPoints.some((s) => s.session === "Sprint Qualifying")
+      )
+    )
+    if (hasSprint) completedSprints += 1
+  }
+  const basis = { completedRaces, completedSprints }
+
+  const coldStart = completedRaces === 0
+  const requestedPreset = options.preset
+  const effectivePreset: PresetId = coldStart ? "equal-ppm" : requestedPreset
+  if (coldStart && requestedPreset !== "equal-ppm") {
+    notes.push(
+      "no completed races yet — history presets unavailable, equal-ppm locked (price ranking)"
+    )
+  }
+
+  const blendWeight = clamp01(options.blendWeight ?? 0.5)
+  const classK = computeClassK(season, completedRaces, notes)
+  const gridRatio = upcoming.isSprint ? gridSprintRaceRatio(season) : 1
+
+  const byPlayerId: Record<string, AssetProjection> = {}
+
+  for (const history of Object.values(season.byPlayerId)) {
+    const scoredRaces = history.perRace.filter((r) => r.status === "scored")
+
+    const equalPpm = (
+      fallback?: AssetProjection["fallback"]
+    ): AssetProjection => ({
+      playerId: history.playerId,
+      kind: history.kind,
+      totalPoints: currentPriceTenths(history) * classK[history.kind],
+      perSession: [],
+      source: "equal-ppm",
+      basis,
+      ...(fallback ? { fallback } : {}),
+    })
+
+    if (coldStart) {
+      byPlayerId[history.playerId] = equalPpm("equal-ppm-cold-start")
+      continue
+    }
+
+    if (effectivePreset === "equal-ppm") {
+      byPlayerId[history.playerId] = equalPpm()
+      continue
+    }
+
+    // Per-asset no-history fallback (mid-season swap, spec §6.3).
+    if (scoredRaces.length === 0) {
+      byPlayerId[history.playerId] = equalPpm("equal-ppm-no-history")
+      continue
+    }
+
+    const perSession = composeSessions(
+      history,
+      upcoming,
+      effectivePreset,
+      blendWeight,
+      gridRatio,
+      completedSprints
+    )
+    byPlayerId[history.playerId] = {
+      playerId: history.playerId,
+      kind: history.kind,
+      totalPoints: perSession.reduce((sum, s) => sum + s.expected, 0),
+      perSession,
+      source: effectivePreset,
+      basis,
+    }
+  }
+
+  return {
+    byPlayerId,
+    requestedPreset,
+    effectivePreset,
+    basis,
+    coldStart,
+    notes,
+  }
+}

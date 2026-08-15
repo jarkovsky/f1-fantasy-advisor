@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest"
 
 import {
   DRS_BOOST_MULTIPLIER,
+  EWMA_HALF_LIFE,
   EXTRA_TRANSFER_PENALTY,
+  FORM_WINDOW,
   FREE_TRANSFERS,
   GRID,
+  HISTORY_PRESET_MIN_RACES,
   INITIAL_BUDGET_TENTHS,
+  SPRINT_PRIOR_SHRINKAGE_K,
   SQUAD_CONSTRUCTORS,
   SQUAD_DRIVERS,
 } from "@/lib/constants"
@@ -34,5 +38,12 @@ describe("2026 rule constants", () => {
 
   it("encodes the DRS Boost multiplier", () => {
     expect(DRS_BOOST_MULTIPLIER).toBe(2)
+  })
+
+  it("encodes the projection tuning (spec §6.2-§6.3)", () => {
+    expect(EWMA_HALF_LIFE).toBe(3)
+    expect(FORM_WINDOW).toBe(5)
+    expect(SPRINT_PRIOR_SHRINKAGE_K).toBe(2)
+    expect(HISTORY_PRESET_MIN_RACES).toBe(1)
   })
 })

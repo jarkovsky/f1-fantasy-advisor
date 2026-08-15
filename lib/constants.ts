@@ -26,3 +26,20 @@ export const INITIAL_BUDGET_TENTHS = 1000
 
 /** DRS Boost: doubles one driver's race-weekend score, free every week. */
 export const DRS_BOOST_MULTIPLIER = 2
+
+// ---------------------------------------------------------------------------
+// Projection model tuning (spec §6.2–§6.3). These live here (model axis), not
+// in lib/f1/config.ts (vendor-feed axis).
+// ---------------------------------------------------------------------------
+
+/** "Weighted recent": weight halves every N races (effective window ≈ 5). */
+export const EWMA_HALF_LIFE = 3
+
+/** "Form (last 5)": plain mean over the last N completed races. */
+export const FORM_WINDOW = 5
+
+/** Sprint small-sample guard: α = n_sprints / (n_sprints + K). */
+export const SPRINT_PRIOR_SHRINKAGE_K = 2
+
+/** History presets are greyed below this many completed races (cold start). */
+export const HISTORY_PRESET_MIN_RACES = 1
