@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "snapshot": "tsx scripts/snapshot.ts",
+    "bench": "tsx scripts/bench-optimizer.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint",
