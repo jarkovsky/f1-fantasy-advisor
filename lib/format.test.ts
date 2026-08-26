@@ -1,0 +1,80 @@
+import { describe, expect, it } from "vitest"
+
+import {
+  formatDateISO,
+  formatDeltaTenths,
+  formatPoints,
+  formatPriceTenths,
+  formatSignedPoints,
+} from "@/lib/format"
+
+describe("formatPriceTenths", () => {
+  it("prints one decimal with a $…M wrapper", () => {
+    expect(formatPriceTenths(265)).toBe("$26.5M")
+  })
+
+  it("keeps the trailing .0 for integer prices", () => {
+    expect(formatPriceTenths(300)).toBe("$30.0M")
+  })
+
+  it("handles small values", () => {
+    expect(formatPriceTenths(45)).toBe("$4.5M")
+  })
+})
+
+describe("formatDeltaTenths", () => {
+  it("renders a middle dot for zero", () => {
+    expect(formatDeltaTenths(0)).toBe("·")
+  })
+
+  it("prefixes a plain plus for a rise", () => {
+    expect(formatDeltaTenths(3)).toBe("+0.3")
+  })
+
+  it("prefixes U+2212 (not hyphen) for a drop", () => {
+    expect(formatDeltaTenths(-3)).toBe("−0.3")
+  })
+
+  it("uses plain division for magnitude (10 → 1, not 1.0)", () => {
+    expect(formatDeltaTenths(10)).toBe("+1")
+    expect(formatDeltaTenths(-10)).toBe("−1")
+  })
+})
+
+describe("formatPoints", () => {
+  it("renders an em dash for null", () => {
+    expect(formatPoints(null)).toBe("—")
+  })
+
+  it("renders the bare number when scored", () => {
+    expect(formatPoints(11)).toBe("11")
+    expect(formatPoints(0)).toBe("0")
+    expect(formatPoints(-8)).toBe("-8")
+    expect(formatPoints(11.5)).toBe("11.5")
+  })
+})
+
+describe("formatSignedPoints", () => {
+  it("renders a middle dot for zero", () => {
+    expect(formatSignedPoints(0)).toBe("·")
+  })
+
+  it("prefixes a plain plus for positive", () => {
+    expect(formatSignedPoints(11)).toBe("+11")
+  })
+
+  it("prefixes U+2212 (not hyphen) for negative", () => {
+    expect(formatSignedPoints(-8)).toBe("−8")
+  })
+})
+
+describe("formatDateISO", () => {
+  it("renders a TZ-stable YYYY-MM-DD slice", () => {
+    expect(formatDateISO(Date.UTC(2026, 5, 5))).toBe("2026-06-05")
+  })
+
+  it("takes the UTC date even near a day boundary", () => {
+    // 23:30 UTC stays on the same UTC day regardless of the runner's TZ.
+    expect(formatDateISO(Date.UTC(2026, 0, 1, 23, 30))).toBe("2026-01-01")
+  })
+})

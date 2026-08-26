@@ -270,6 +270,58 @@ describe("custom-blend", () => {
   })
 })
 
+describe("custom blend linearity", () => {
+  // Pins custom-blend == the exact per-session lerp of its two endpoint
+  // presets: E_custom(w) = (1−w)·E_season-average + w·E_weighted-recent, for
+  // both totals and every perSession entry, on normal AND sprint weekends.
+  //
+  // Why exact, and why it matters: α (sprint shrinkage) and the grid ratio R
+  // are preset-INDEPENDENT scalars, so the sprint guard
+  //   E = α·raw + (1−α)·E_race·R
+  // stays affine in the underlying preset means — blending two presets and
+  // blending the resulting expectations are the same operation. That exactness
+  // is what licenses the M3 client to derive custom-blend by lerping the two
+  // endpoint preset projections in the browser, instead of shipping the full
+  // SeasonHistory across the RSC boundary to recompute it.
+  for (const isSprint of [false, true]) {
+    const label = isSprint ? "sprint weekend" : "normal weekend"
+    const seasonAvg = projection(SEASON, "season-average", isSprint)
+    const weightedRecent = projection(SEASON, "weighted-recent", isSprint)
+
+    for (const w of [0.25, 0.5, 0.9]) {
+      it(`w=${w} (${label}): total + per-session == lerp of endpoints`, () => {
+        const blended = projection(SEASON, "custom-blend", isSprint, w)
+        for (const [playerId, p] of Object.entries(blended.byPlayerId)) {
+          const lo = seasonAvg.byPlayerId[playerId]
+          const hi = weightedRecent.byPlayerId[playerId]
+          expect(lo).toBeDefined()
+          expect(hi).toBeDefined()
+          if (!lo || !hi) continue
+
+          const lerp = (a: number, b: number) => (1 - w) * a + w * b
+
+          expect(p.totalPoints).toBeCloseTo(
+            lerp(lo.totalPoints, hi.totalPoints),
+            10
+          )
+
+          for (const session of p.perSession) {
+            const loS = lo.perSession.find((s) => s.session === session.session)
+            const hiS = hi.perSession.find((s) => s.session === session.session)
+            expect(loS).toBeDefined()
+            expect(hiS).toBeDefined()
+            if (!loS || !hiS) continue
+            expect(session.expected).toBeCloseTo(
+              lerp(loS.expected, hiS.expected),
+              10
+            )
+          }
+        }
+      })
+    }
+  }
+})
+
 describe("cold start & fallbacks", () => {
   it("no completed races → coldStart, equal-ppm locked, price ranking", () => {
     // Race 6 alone is entirely pending.

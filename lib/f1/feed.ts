@@ -22,7 +22,11 @@ import "server-only"
 
 import { cacheLife, cacheTag } from "next/cache"
 
-import { fetchOrSnapshot, type Feed } from "./fetch-or-snapshot"
+import {
+  fetchOrSnapshot,
+  probeFeedPublished,
+  type Feed,
+} from "./fetch-or-snapshot"
 import { feedPaths } from "./config"
 import {
   type Asset,
@@ -107,6 +111,25 @@ export async function getMixapi(): Promise<Feed<Mixapi | null>> {
   return fetchOrSnapshot(feedPaths.mixapi(), parseMixapi, snapshotMixapi, {
     empty: null,
   })
+}
+
+/**
+ * Has the race AFTER currentRace been published yet?
+ *
+ * Status-only probe (probeFeedPublished) — getDrivers can't tell, it degrades
+ * the unpublished-race 403 to the snapshot. Cheap to keep slightly stale:
+ * publication flips at most twice a fortnight, so 5-min 'orchestration'
+ * staleness is fine. Like the other wrappers, this is verified by
+ * typecheck + the online/offline builds, not Vitest ('use cache' needs the
+ * Next runtime).
+ */
+export async function getNextRacePublished(
+  currentRace: number
+): Promise<boolean> {
+  "use cache"
+  cacheTag("f1", "f1:next-race-published")
+  cacheLife("orchestration")
+  return probeFeedPublished(feedPaths.drivers(currentRace + 1))
 }
 
 /**

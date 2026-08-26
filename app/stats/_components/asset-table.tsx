@@ -9,11 +9,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getConstraints, getDrivers } from "@/lib/f1/feed"
+import {
+  formatDeltaTenths,
+  formatPoints,
+  formatPriceTenths,
+} from "@/lib/format"
 import { DataAsOf } from "./data-as-of"
-
-function price(tenths: number): string {
-  return `$${(tenths / 10).toFixed(1)}M`
-}
 
 /**
  * /stats v0: the typed-feed debug table (M1 exit criterion). Async RSC —
@@ -74,15 +75,13 @@ export async function AssetTable() {
                   {asset.teamName ?? "—"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {price(asset.priceTenths)}
+                  {formatPriceTenths(asset.priceTenths)}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {delta === 0
-                    ? "·"
-                    : `${delta > 0 ? "+" : "−"}${Math.abs(delta) / 10}`}
+                  {formatDeltaTenths(delta)}
                 </TableCell>
                 <TableCell className="text-right">
-                  {asset.racePoints ?? "—"}
+                  {formatPoints(asset.racePoints)}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
                   {asset.selectedPercent}%

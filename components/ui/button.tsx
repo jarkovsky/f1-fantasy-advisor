@@ -10,6 +10,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        /* The ONLY red fill in the app — primary action (spec §10). */
+        "primary-f1":
+          "bg-accent-f1 text-accent-f1-foreground hover:bg-accent-f1-hover focus-visible:border-accent-f1/40 focus-visible:ring-accent-f1/30",
         outline:
           "border-border bg-background shadow-xs hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:

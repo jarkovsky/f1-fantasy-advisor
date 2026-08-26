@@ -102,3 +102,33 @@ export async function fetchOrSnapshot<T>(
     meta: { source: "snapshot", asOf: "", race },
   }
 }
+
+/**
+ * Probe whether a feed path is published, by HTTP status alone.
+ *
+ * Exists because getDrivers (via fetchOrSnapshot) CANNOT answer "is race N+1
+ * published?": it degrades a 403 to the committed snapshot, swallowing the
+ * status. Unpublished races return 403 (S3 deny-on-missing-key), not 404, so
+ * status is the only signal — but it never surfaces through the degradation
+ * path. This probe reads status only (no body) and reports res.ok.
+ *
+ * Like fetchOrSnapshot, it NEVER throws: every failure mode (403, 5xx, network
+ * error, timeout/abort) collapses to false. It runs inside a 'use cache' scope
+ * at build time, where a throw would abort prerender.
+ */
+export async function probeFeedPublished(
+  path: string,
+  opts?: { fetchImpl?: typeof fetch }
+): Promise<boolean> {
+  const fetchImpl = opts?.fetchImpl ?? fetch
+  try {
+    const res = await fetchImpl(F1_FEED_BASE + path, {
+      headers: { "user-agent": FEED_UA },
+      signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+    })
+    return res.ok
+  } catch {
+    // Network down, DNS failure, timeout/abort — treat as not published.
+    return false
+  }
+}

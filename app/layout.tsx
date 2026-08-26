@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import { Geist_Mono, Inter } from "next/font/google"
 
+import { Footer } from "@/app/_components/footer"
+
 import "./globals.css"
 
 const fontSans = Inter({
@@ -33,7 +35,10 @@ export default function RootLayout({
       lang="en"
       className={`dark ${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
     >
-      <body className="tabular-nums">{children}</body>
+      <body className="flex min-h-dvh flex-col tabular-nums">
+        <div className="flex-1">{children}</div>
+        <Footer />
+      </body>
     </html>
   )
 }

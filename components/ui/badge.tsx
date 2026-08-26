@@ -19,6 +19,9 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        /* Race-week chrome: SPRINT weekend marker and live-session indicator. */
+        sprint: "bg-accent-f1-quiet text-accent-f1",
+        live: "bg-accent-f1-quiet text-accent-f1",
       },
     },
     defaultVariants: {
