@@ -1,21 +1,25 @@
-import { Badge } from "@/components/ui/badge"
+import { Suspense } from "react"
 
-// Plain sync RSC for now — the feed-backed advisor arrives in M1.
+import { AdvisorData } from "./_components/advisor-data"
+import { AdvisorSkeleton } from "./_components/advisor-skeleton"
+
+// Sync shell (prerendered) + one streamed data hole (plan D3). The static
+// header renders instantly; <AdvisorData/> streams in behind the skeleton.
 export default function AdvisorPage() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-5xl flex-col gap-4 p-6">
-      <header className="flex items-center gap-3">
+    <main className="container mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8">
+      <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Race-Weekend Advisor
+          Fantasy F1 Race-Weekend Advisor
         </h1>
-        <Badge variant="secondary">M0 shell</Badge>
+        <p className="text-sm text-muted-foreground">
+          Optimal transfers and DRS Boost for the upcoming Grand Prix — free,
+          with the math shown.
+        </p>
       </header>
-      <p className="max-w-prose text-sm text-muted-foreground">
-        Enter your F1 Fantasy team and get the mathematically optimal transfers
-        and DRS Boost pick for the upcoming Grand Prix — with the reasoning
-        shown. Coming up: data layer (M1), projection engine and optimizer (M2),
-        the full advisor UI (M3).
-      </p>
+      <Suspense fallback={<AdvisorSkeleton />}>
+        <AdvisorData />
+      </Suspense>
     </main>
   )
 }

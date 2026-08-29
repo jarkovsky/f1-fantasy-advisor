@@ -66,6 +66,16 @@ describe("formatSignedPoints", () => {
   it("prefixes U+2212 (not hyphen) for negative", () => {
     expect(formatSignedPoints(-8)).toBe("−8")
   })
+
+  it("rounds float projections to one decimal", () => {
+    expect(formatSignedPoints(79.59363858951383)).toBe("+79.6")
+    expect(formatSignedPoints(-11.884173915113747)).toBe("−11.9")
+  })
+
+  it("collapses near-zero to the middle dot (incl. -0)", () => {
+    expect(formatSignedPoints(0.04)).toBe("·")
+    expect(formatSignedPoints(-0.04)).toBe("·")
+  })
 })
 
 describe("formatDateISO", () => {

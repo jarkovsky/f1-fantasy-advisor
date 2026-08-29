@@ -32,10 +32,17 @@ export function formatPoints(p: number | null): string {
   return p == null ? "—" : String(p)
 }
 
-/** Signed points (advisor <Delta>) → `+11` / `−8` / `·` (zero). */
+/**
+ * Signed points (advisor <Delta>) → `+11` / `−8` / `+18.4` / `·` (zero).
+ * Projections are floats — round to one decimal first (the timing-screen
+ * precision), THEN test for zero so `+0.04` collapses to `·`, not `+0.0`.
+ * Integer magnitudes stay bare (`+11`, never `+11.0`).
+ */
 export function formatSignedPoints(p: number): string {
-  if (p === 0) return "·"
-  return `${p > 0 ? "+" : "−"}${Math.abs(p)}`
+  const rounded = Math.round(p * 10) / 10
+  if (rounded === 0) return "·"
+  const magnitude = Math.abs(rounded)
+  return `${rounded > 0 ? "+" : "−"}${magnitude}`
 }
 
 /** Epoch ms → TZ-stable `YYYY-MM-DD` (UTC slice of the ISO string). */

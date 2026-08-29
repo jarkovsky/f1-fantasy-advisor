@@ -524,7 +524,11 @@ describe("full-size grid (22 drivers / 11 constructors)", () => {
       freeTransfers: 2,
       mode: "limitless",
     })
-    expect(performance.now() - start).toBeLessThan(100)
+    // Smoke, not a benchmark: unloaded this is ~7ms (pnpm bench is the
+    // record), but with the full suite saturating every core it has measured
+    // 300ms+. 1s still catches an algorithmic regression (losing the prune or
+    // the SoA layout is a >10× blowup) without flaking under parallel load.
+    expect(performance.now() - start).toBeLessThan(1_000)
   })
 
   it("all money fields are integers across every returned plan", () => {
