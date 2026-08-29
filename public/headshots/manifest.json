@@ -1,0 +1,93 @@
+{
+  "attribution": "Driver imagery via OpenF1 (CC BY-NC-SA)",
+  "byPlayerId": {
+    "11": {
+      "file": "11.png",
+      "tla": "ALB"
+    },
+    "12": {
+      "file": "12.png",
+      "tla": "ALO"
+    },
+    "13": {
+      "file": "13.png",
+      "tla": "BOT"
+    },
+    "18": {
+      "file": "18.png",
+      "tla": "GAS"
+    },
+    "110": {
+      "file": "110.png",
+      "tla": "HAM"
+    },
+    "111": {
+      "file": "111.png",
+      "tla": "HUL"
+    },
+    "114": {
+      "file": "114.png",
+      "tla": "LAW"
+    },
+    "115": {
+      "file": "115.png",
+      "tla": "LEC"
+    },
+    "117": {
+      "file": "117.png",
+      "tla": "NOR"
+    },
+    "118": {
+      "file": "118.png",
+      "tla": "OCO"
+    },
+    "121": {
+      "file": "121.png",
+      "tla": "PER"
+    },
+    "124": {
+      "file": "124.png",
+      "tla": "RUS"
+    },
+    "125": {
+      "file": "125.png",
+      "tla": "SAI"
+    },
+    "129": {
+      "file": "129.png",
+      "tla": "STR"
+    },
+    "131": {
+      "file": "131.png",
+      "tla": "VER"
+    },
+    "1982": {
+      "file": "1982.png",
+      "tla": "PIA"
+    },
+    "11031": {
+      "file": "11031.png",
+      "tla": "BEA"
+    },
+    "11032": {
+      "file": "11032.png",
+      "tla": "HAD"
+    },
+    "11051": {
+      "file": "11051.png",
+      "tla": "BOR"
+    },
+    "11059": {
+      "file": "11059.png",
+      "tla": "COL"
+    },
+    "11149": {
+      "file": "11149.png",
+      "tla": "LIN"
+    },
+    "11161": {
+      "file": "11161.png",
+      "tla": "ANT"
+    }
+  }
+}
