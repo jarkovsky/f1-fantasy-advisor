@@ -7,9 +7,9 @@
  * single synchronous read at first import is correct and cheap; any failure
  * (missing file, bad JSON, unexpected shape) collapses to an empty map.
  *
- * Shape: public/headshots/manifest.json maps playerId → bundled filename, e.g.
- *   { "44": "44.png", "1": "max-verstappen.webp" }
- * headshotPath joins that to the public URL `/headshots/{file}`.
+ * Shape (written by scripts/assets.ts — the only writer):
+ *   { "attribution": "…", "byPlayerId": { "131": { "file": "131.png", "tla": "VER" } } }
+ * headshotPath joins the file to the public URL `/headshots/{file}`.
  */
 import "server-only"
 
@@ -26,17 +26,16 @@ const MANIFEST_PATH = path.join(
 function loadManifest(): Record<string, string> {
   try {
     const raw = readFileSync(MANIFEST_PATH, "utf8")
-    const parsed: unknown = JSON.parse(raw)
-    if (
-      parsed === null ||
-      typeof parsed !== "object" ||
-      Array.isArray(parsed)
-    ) {
-      return {}
+    const parsed = JSON.parse(raw) as {
+      byPlayerId?: Record<string, { file?: unknown }>
     }
+    const entries = parsed?.byPlayerId
+    if (entries === null || typeof entries !== "object") return {}
     const map: Record<string, string> = {}
-    for (const [id, file] of Object.entries(parsed)) {
-      if (typeof file === "string" && file.length > 0) map[id] = file
+    for (const [id, entry] of Object.entries(entries)) {
+      if (typeof entry?.file === "string" && entry.file.length > 0) {
+        map[id] = entry.file
+      }
     }
     return map
   } catch {

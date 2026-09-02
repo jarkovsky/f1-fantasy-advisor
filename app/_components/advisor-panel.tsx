@@ -19,6 +19,7 @@ import type {
 } from "@/app/_components/advisor-types"
 import { Alternatives } from "@/app/_components/alternatives"
 import { BetweenRounds } from "@/app/_components/between-rounds"
+import { BottomTabNav } from "@/app/_components/bottom-tab-nav"
 import { CaptainPanel } from "@/app/_components/captain-panel"
 import { HonestyNote } from "@/app/_components/honesty-note"
 import { LockedView } from "@/app/_components/locked-view"
@@ -43,6 +44,7 @@ import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer-adapter"
 import { resolveClientProjection } from "@/lib/projection-resolve"
 import { PRESET_IDS, type PresetId } from "@/lib/projections"
 import { useTeamStore } from "@/lib/store"
+import { cn } from "@/lib/utils"
 
 // Type-only import of the optimizer module for the dynamic import contract; the
 // actual value is loaded lazily (no static value import — keeps it out of the
@@ -111,6 +113,10 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
   const [whatIf, setWhatIf] = useState<WhatIfMode>("none")
   const [showEditor, setShowEditor] = useState(false)
   const [applied, setApplied] = useState(false)
+  // Mobile bottom-tab section (lg+ shows both columns, so this is inert there).
+  const [activeSection, setActiveSection] = useState<"advice" | "team">(
+    "advice"
+  )
 
   // --- Projection (cheap; resolved every render) ----------------------------
   const deferredBlend = useDeferredValue(blendWeight)
@@ -363,16 +369,21 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
       }
 
       return (
-        <div className="flex flex-col gap-4">
+        // pb-20 keeps the fixed bottom-tab bar from occluding content below lg.
+        <div className="flex flex-col gap-4 pb-20 lg:pb-0">
           {liveRegion}
           <SnapshotBanner meta={props.meta} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-            <div
-              className={
-                isPending
-                  ? "flex flex-col gap-6 opacity-60"
-                  : "flex flex-col gap-6"
-              }
+            {/* Both sections stay MOUNTED below lg (display toggling only) so the
+                optimizer state survives a tab switch. */}
+            <section
+              id="advice-section"
+              aria-label="Advice"
+              className={cn(
+                "flex flex-col gap-6",
+                isPending && "opacity-60",
+                activeSection !== "advice" && "hidden lg:flex"
+              )}
             >
               {currentWeekend && (
                 <RaceHeader
@@ -413,9 +424,16 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
               ) : (
                 <Skeleton className="h-64 w-full" />
               )}
-            </div>
+            </section>
 
-            <div className="flex flex-col gap-6">
+            <section
+              id="team-section"
+              aria-label="Your team & controls"
+              className={cn(
+                "flex flex-col gap-6",
+                activeSection !== "team" && "hidden lg:flex"
+              )}
+            >
               <YourTeamPanel
                 roster={roster ?? []}
                 assetsById={assetsById}
@@ -440,8 +458,9 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
                 projection={projection}
               />
               <HonestyNote />
-            </div>
+            </section>
           </div>
+          <BottomTabNav active={activeSection} onSelect={setActiveSection} />
         </div>
       )
     }

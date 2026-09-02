@@ -22,5 +22,9 @@ export default defineConfig({
     css: false,
     include: ["**/*.{test,spec}.{ts,tsx}"],
     exclude: ["node_modules", ".next"],
+    // Long user-event flows (picker save, Radix portals, optimizer settles)
+    // finish in ms unloaded but have blown the 5s default when the full suite
+    // saturates every core. The ceiling is a flake guard, not a target.
+    testTimeout: 30_000,
   },
 })

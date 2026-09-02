@@ -17,15 +17,14 @@ function TableSkeleton() {
   )
 }
 
-// Sync shell (prerendered) + one streamed data hole. The full sortable
-// explorer with per-session splits and sparklines lands in M3.
+// Sync shell (prerendered) + one streamed data hole (the sortable explorer).
 export default function StatsPage() {
   return (
-    <main className="mx-auto flex min-h-svh max-w-5xl flex-col gap-4 p-6">
+    <main className="mx-auto flex min-h-svh max-w-6xl flex-col gap-4 p-6">
       <h1 className="text-2xl font-semibold tracking-tight">Stats explorer</h1>
       <p className="max-w-prose text-sm text-muted-foreground">
         All 33 assets from the official F1 Fantasy feed, parsed through the
-        typed boundary — prices, price moves, race points, selection.
+        typed boundary — prices, season form, per-session splits, selection.
       </p>
       <Suspense fallback={<TableSkeleton />}>
         <AssetTable />
