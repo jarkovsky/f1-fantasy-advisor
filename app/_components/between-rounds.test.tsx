@@ -85,6 +85,7 @@ function renderView(props?: Partial<Parameters<typeof BetweenRounds>[0]>) {
   return render(
     <BetweenRounds
       lastCompleted={5}
+      pointsRace={5}
       roster={ROSTER}
       assetsById={ASSETS_BY_ID}
       lastRacePoints={LAST_RACE_POINTS}
@@ -121,5 +122,18 @@ describe("BetweenRounds", () => {
     expect(
       screen.getByText(/Next race not published yet — check back soon\./)
     ).toBeInTheDocument()
+  })
+
+  it("suppresses stale numbers in the transient window (points race ≠ derived lastCompleted)", () => {
+    // The wall clock crossed race 6's end but the feed pointer still says 5:
+    // showing race-5 points under a race-6 headline would be a lie.
+    renderView({ lastCompleted: 6, pointsRace: 5 })
+
+    expect(screen.getByText(/Race 6 has finished\./)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Results are still being scored — check back soon\./)
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/You scored/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Actual vs projected/)).not.toBeInTheDocument()
   })
 })

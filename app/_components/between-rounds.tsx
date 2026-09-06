@@ -12,9 +12,18 @@ import type { TeamStateV1 } from "@/lib/store"
  * machine flips to ROLLOVER automatically). We show honest results: what the
  * user scored versus what we projected, plus a per-asset actual-vs-projected
  * table. No roll-over CTA here — that belongs to ROLLOVER.
+ *
+ * Transient-window honesty: the state machine derives `lastCompleted` from the
+ * wall clock (race end crossed), but the server's points map belongs to
+ * `pointsRace` (constraints.lastCompletedRace), which lags until the feed
+ * rescores. In the hours after a race ends those disagree — showing the OLD
+ * race's numbers under the NEW race's headline would be a lie, so the
+ * comparison renders only when the races match.
  */
 type BetweenRoundsProps = {
   lastCompleted: number
+  /** Which race the lastRacePoints map belongs to (server-side pointer). */
+  pointsRace: number | null
   roster: string[]
   assetsById: Record<string, AssetLite>
   lastRacePoints: Record<string, number | null>
@@ -23,6 +32,7 @@ type BetweenRoundsProps = {
 
 export function BetweenRounds({
   lastCompleted,
+  pointsRace,
   roster,
   assetsById,
   lastRacePoints,
@@ -33,6 +43,20 @@ export function BetweenRounds({
     .filter((a): a is AssetLite => a !== undefined)
 
   const scored = roster.reduce((sum, id) => sum + (lastRacePoints[id] ?? 0), 0)
+  const pointsMatch = pointsRace === lastCompleted
+
+  if (!pointsMatch) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold">
+          Race {lastCompleted} has finished.
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Results are still being scored — check back soon.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">

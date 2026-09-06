@@ -343,6 +343,11 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
       return (
         <BetweenRounds
           lastCompleted={raceState.lastCompleted}
+          pointsRace={
+            props.constraints.lastCompletedRace >= 1
+              ? props.constraints.lastCompletedRace
+              : null
+          }
           roster={roster ?? []}
           assetsById={assetsById}
           lastRacePoints={props.lastRacePoints}
