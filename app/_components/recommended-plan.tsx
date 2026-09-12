@@ -142,10 +142,13 @@ export function RecommendedPlan({
             return (
               <li key={i} className="flex items-center gap-2 text-sm">
                 {s.outId ? (
-                  <span className="flex min-w-0 items-center gap-1.5 opacity-60">
+                  // Muted color + strikethrough mark the outgoing asset; no
+                  // extra opacity — stacking it under muted-foreground fails
+                  // WCAG AA contrast (caught by the M4 Lighthouse pass).
+                  <span className="flex min-w-0 items-center gap-1.5">
                     <span
                       aria-hidden="true"
-                      className="h-3 w-[3px] shrink-0 rounded-full"
+                      className="h-3 w-[3px] shrink-0 rounded-full opacity-60"
                       style={{ background: colorFor(s.outId) }}
                     />
                     <span className="truncate text-muted-foreground line-through">
@@ -204,7 +207,9 @@ export function RecommendedPlan({
       <div className="rounded-md bg-surface-2 p-3">
         <p className="text-sm font-medium">
           DRS Boost → {captainName}{" "}
-          <span className="text-accent-f1">(×{DRS_BOOST_MULTIPLIER})</span>
+          {/* warn, not red: small text on the raised surface — red fails AA
+              there, and §10 reserves red for the primary action + deltas. */}
+          <span className="text-warn">(×{DRS_BOOST_MULTIPLIER})</span>
         </p>
         <p className="text-xs text-muted-foreground">
           {formatSignedPoints(captainBoost)} pts boosted

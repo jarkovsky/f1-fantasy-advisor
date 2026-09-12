@@ -42,6 +42,8 @@
     --color-accent-f1-foreground: var(--accent-f1-foreground);
     --color-accent-f1-hover: var(--accent-f1-hover);
     --color-accent-f1-quiet: var(--accent-f1-quiet);
+    --color-accent-f1-fill: var(--accent-f1-fill);
+    --color-accent-f1-fill-hover: var(--accent-f1-fill-hover);
     --color-pos: var(--pos);
     --color-pos-quiet: var(--pos-quiet);
     --color-neg: var(--neg);
@@ -136,6 +138,10 @@
     --accent-f1-foreground: oklch(0.985 0 0);
     --accent-f1-hover: oklch(0.66 0.225 26);
     --accent-f1-quiet: oklch(0.62 0.233 26 / 12%);
+    /* Button FILL red — darker than the text red: white-on-fill must clear
+       WCAG AA (the 0.62 text red passes ON carbon but fails UNDER white). */
+    --accent-f1-fill: oklch(0.53 0.21 26);
+    --accent-f1-fill-hover: oklch(0.58 0.215 26);
 
     /* Directional deltas — color is never the sole signal (always paired with ±). */
     --pos: oklch(0.78 0.17 150);
