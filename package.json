@@ -15,13 +15,15 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx}\"",
     "typecheck": "next typegen && tsc --noEmit",
-    "assets": "tsx scripts/assets.ts"
+    "assets": "tsx scripts/assets.ts",
+    "pattern": "tsx scripts/dot-pattern.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.17.0",
     "next": "16.2.7",
+    "next-themes": "^0.4.6",
     "radix-ui": "^1.4.3",
     "react": "19.2.7",
     "react-dom": "19.2.7",

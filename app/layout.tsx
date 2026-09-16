@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Geist_Mono, Inter } from "next/font/google"
 
 import { Footer } from "@/app/_components/footer"
+import { ThemeProvider } from "@/app/_components/theme-provider"
 
 import "./globals.css"
 
@@ -35,14 +36,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    // Dark-only telemetry design: the dark class is applied statically (no theme island).
+    // suppressHydrationWarning: next-themes mutates the html class pre-paint,
+    // so the server markup (class-free) intentionally differs on this element.
     <html
       lang="en"
-      className={`dark ${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
+      suppressHydrationWarning
+      className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
     >
       <body className="flex min-h-dvh flex-col tabular-nums">
-        <div className="flex-1">{children}</div>
-        <Footer />
+        <ThemeProvider>
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   )

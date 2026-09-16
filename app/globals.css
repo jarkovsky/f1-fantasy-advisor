@@ -64,7 +64,9 @@
 }
 
 :root {
-    --background: oklch(1 0 0);
+    /* Light-first (spec §10 M5): grey paper page, white cards — modeled on the
+       timing-sheet-on-paper look. The page grey matches --surface-0. */
+    --background: oklch(0.975 0.002 247);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
@@ -96,6 +98,33 @@
     --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
+
+    /* F1 red — reserved for the primary action and deltas ONLY (spec §10).
+       Darker than the dark-theme red: small red text must clear AA on the
+       white card AND the grey page. */
+    --accent-f1: oklch(0.505 0.215 26);
+    --accent-f1-foreground: oklch(0.985 0 0);
+    --accent-f1-hover: oklch(0.46 0.21 26);
+    --accent-f1-quiet: oklch(0.505 0.215 26 / 10%);
+    /* Button FILL red — white-on-fill must clear WCAG AA. Hover darkens
+       (light-theme convention; dark theme lightens). */
+    --accent-f1-fill: oklch(0.5 0.21 26);
+    --accent-f1-fill-hover: oklch(0.45 0.205 26);
+
+    /* Directional deltas — color is never the sole signal (always paired
+       with ±). Deep values: the dark theme's bright green/amber fail on white. */
+    --pos: oklch(0.52 0.15 150);
+    --pos-quiet: oklch(0.52 0.15 150 / 10%);
+    --neg: oklch(0.52 0.21 26);
+    --neg-quiet: oklch(0.52 0.21 26 / 10%);
+    --warn: oklch(0.52 0.12 75);
+
+    /* Paper surface ramp + hairlines (black alphas; dark uses white alphas). */
+    --surface-0: oklch(0.975 0.002 247);
+    --surface-1: oklch(1 0 0);
+    --surface-2: oklch(0.955 0.003 247);
+    --grid-line: oklch(0 0 0 / 8%);
+    --grid-line-strong: oklch(0 0 0 / 14%);
 }
 
 .dark {
@@ -164,6 +193,13 @@
     }
   body {
     @apply bg-background text-foreground;
+    /* Scattered-dot texture over the page grey (deterministic SVG tiles,
+       regenerate with `pnpm pattern`). Cards sit opaque on top. */
+    background-image: url("/patterns/dot-pattern-light.svg");
+    background-repeat: repeat;
+    }
+  .dark body {
+    background-image: url("/patterns/dot-pattern-dark.svg");
     }
   html {
     @apply font-sans;
