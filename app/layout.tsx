@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist_Mono, Inter } from "next/font/google"
 
+import { AppSidebar, MobileTopBar } from "@/app/_components/app-sidebar"
 import { Footer } from "@/app/_components/footer"
 import { ThemeProvider } from "@/app/_components/theme-provider"
 
@@ -43,10 +44,14 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
     >
-      <body className="flex min-h-dvh flex-col tabular-nums">
+      <body className="flex min-h-dvh tabular-nums">
         <ThemeProvider>
-          <div className="flex-1">{children}</div>
-          <Footer />
+          <AppSidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <MobileTopBar />
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
         </ThemeProvider>
       </body>
     </html>
