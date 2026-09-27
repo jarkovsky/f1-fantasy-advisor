@@ -19,18 +19,16 @@ import type {
 } from "@/app/_components/advisor-types"
 import { Alternatives } from "@/app/_components/alternatives"
 import { BetweenRounds } from "@/app/_components/between-rounds"
-import { BottomTabNav } from "@/app/_components/bottom-tab-nav"
-import { CaptainPanel } from "@/app/_components/captain-panel"
 import { HonestyNote } from "@/app/_components/honesty-note"
 import { LockedView } from "@/app/_components/locked-view"
 import { ProjectionControls } from "@/app/_components/projection-controls"
 import { RaceHeader } from "@/app/_components/race-header"
-import { RecommendedPlan } from "@/app/_components/recommended-plan"
 import { RolloverForm } from "@/app/_components/rollover-form"
 import { SeasonEnded } from "@/app/_components/season-ended"
 import { SnapshotBanner } from "@/app/_components/snapshot-banner"
 import { TeamPicker } from "@/app/_components/team-picker"
-import { YourTeamPanel } from "@/app/_components/your-team-panel"
+import { TeamPlanCard } from "@/app/_components/team-plan-card"
+import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { AssetLite } from "@/lib/asset-lite"
 import { currentTimeMs } from "@/lib/dev-now"
@@ -56,17 +54,11 @@ const POLL_MS = 30_000
 /** Neutral block layout mirrored by the Suspense fallback + pre-derive shell. */
 function PanelShell() {
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </div>
-      <div className="flex flex-col gap-6">
-        <Skeleton className="h-56 w-full" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-48 w-full" />
-      </div>
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-96 w-full" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-48 w-full" />
     </div>
   )
 }
@@ -113,10 +105,6 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
   const [whatIf, setWhatIf] = useState<WhatIfMode>("none")
   const [showEditor, setShowEditor] = useState(false)
   const [applied, setApplied] = useState(false)
-  // Mobile bottom-tab section (lg+ shows both columns, so this is inert there).
-  const [activeSection, setActiveSection] = useState<"advice" | "team">(
-    "advice"
-  )
 
   // --- Projection (cheap; resolved every render) ----------------------------
   const deferredBlend = useDeferredValue(blendWeight)
@@ -374,98 +362,73 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
       }
 
       return (
-        // pb-20 keeps the fixed bottom-tab bar from occluding content below lg.
-        <div className="flex flex-col gap-4 pb-20 lg:pb-0">
+        // Single centered column (M5): Grand Prix card → merged team/plan card →
+        // alternatives → controls → honesty note. No more two-pane command
+        // center; the merged card absorbs your-team + recommended-plan + captain.
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
           {liveRegion}
           <SnapshotBanner meta={props.meta} />
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-            {/* Both sections stay MOUNTED below lg (display toggling only) so the
-                optimizer state survives a tab switch. */}
-            <section
-              id="advice-section"
-              aria-label="Advice"
-              className={cn(
-                "flex flex-col gap-6",
-                isPending && "opacity-60",
-                activeSection !== "advice" && "hidden lg:flex"
-              )}
-            >
-              {currentWeekend && (
-                <RaceHeader
-                  gpName={raceState.gpName}
-                  circuitLocation={currentWeekend.circuitLocation}
-                  isSprint={raceState.isSprint}
-                  sessions={currentWeekend.sessions}
-                  lockAtMs={raceState.lockAtMs}
-                />
-              )}
-              {optError ? (
-                <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-warn">
-                  {optError}
-                </p>
-              ) : result ? (
-                <>
-                  <RecommendedPlan
-                    result={result}
-                    baseline={baseline}
-                    assetsById={assetsById}
-                    totals={totals}
-                    freeTransfers={
-                      whatIf !== "none" ? "unlimited" : storeFreeTransfers
-                    }
-                    whatIf={whatIf}
-                    unresolvedIds={unresolvedIds}
-                    applied={applied}
-                    onApply={handleApply}
-                    onKeep={() => setShowEditor(true)}
-                  />
-                  <Alternatives
-                    result={result}
-                    baseline={baseline}
-                    assetsById={assetsById}
-                    projection={projection}
-                  />
-                </>
-              ) : (
-                <Skeleton className="h-64 w-full" />
-              )}
-            </section>
 
-            <section
-              id="team-section"
-              aria-label="Your team & controls"
-              className={cn(
-                "flex flex-col gap-6",
-                activeSection !== "team" && "hidden lg:flex"
-              )}
-            >
-              <YourTeamPanel
+          {currentWeekend && (
+            // The Grand Prix card — the race header framed as the first card.
+            <Card className="bg-surface-1 p-5">
+              <RaceHeader
+                gpName={raceState.gpName}
+                circuitLocation={currentWeekend.circuitLocation}
+                isSprint={raceState.isSprint}
+                sessions={currentWeekend.sessions}
+                lockAtMs={raceState.lockAtMs}
+              />
+            </Card>
+          )}
+
+          <div className={cn(isPending && "opacity-60")}>
+            {optError ? (
+              <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-warn">
+                {optError}
+              </p>
+            ) : result ? (
+              <TeamPlanCard
                 roster={roster ?? []}
+                result={result}
+                baseline={baseline}
                 assetsById={assetsById}
                 totals={totals}
                 budgetTenths={budgetTenths}
+                freeTransfers={
+                  whatIf !== "none" ? "unlimited" : storeFreeTransfers
+                }
+                whatIf={whatIf}
+                unresolvedIds={unresolvedIds}
+                applied={applied}
+                onApply={handleApply}
+                onKeep={() => setShowEditor(true)}
                 onEdit={() => setShowEditor(true)}
               />
-              {result && (
-                <CaptainPanel
-                  result={result}
-                  assetsById={assetsById}
-                  totals={totals}
-                />
-              )}
-              <ProjectionControls
-                preset={preset}
-                onPresetChange={onPresetChange}
-                blendWeight={blendWeight}
-                onBlendWeightChange={setBlendWeight}
-                whatIf={whatIf}
-                onWhatIfChange={setWhatIf}
-                projection={projection}
-              />
-              <HonestyNote />
-            </section>
+            ) : (
+              <Skeleton className="h-96 w-full" />
+            )}
           </div>
-          <BottomTabNav active={activeSection} onSelect={setActiveSection} />
+
+          {result && (
+            <Alternatives
+              result={result}
+              baseline={baseline}
+              assetsById={assetsById}
+              projection={projection}
+            />
+          )}
+
+          <ProjectionControls
+            preset={preset}
+            onPresetChange={onPresetChange}
+            blendWeight={blendWeight}
+            onBlendWeightChange={setBlendWeight}
+            whatIf={whatIf}
+            onWhatIfChange={setWhatIf}
+            projection={projection}
+          />
+          <HonestyNote />
         </div>
       )
     }

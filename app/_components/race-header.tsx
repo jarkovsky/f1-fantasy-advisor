@@ -40,7 +40,8 @@ export function RaceHeader({
   return (
     <header className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-2xl font-semibold">{gpName}</h1>
+        {/* h2: the page hero owns the h1 (M5 single-column redesign). */}
+        <h2 className="text-2xl font-semibold">{gpName}</h2>
         {isSprint && <Badge variant="sprint">SPRINT</Badge>}
       </div>
       <p className="text-sm text-muted-foreground">{circuitLocation}</p>
