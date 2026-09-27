@@ -1,10 +1,8 @@
 "use client"
 
-import { useId, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -19,21 +17,19 @@ import { teamColor } from "@/lib/team-colors"
 import { cn } from "@/lib/utils"
 
 /**
- * The single searchable data table of ALL assets — drivers and constructors in
- * one list (the user's M5 redesign: the old two-tab card grid showed the TLA
- * twice, once in a monogram and again in the label, which they flagged). This is
- * a DUMB component: it owns search/filter/sort UI state only. Selection and
- * quota validation live in the container (team-picker.tsx) and arrive via props,
- * so the table never knows the squad rules — it just renders `selected`,
- * disables rows the container says are blocked, and reports toggles back.
+ * One searchable, sortable data table for ONE asset kind — the picker renders
+ * two of these, Drivers and Constructors, stacked (the user's M5 follow-up:
+ * separate tables beat one combined list with filter chips). This is a DUMB
+ * component: it owns sort UI state only. Selection and quota validation live
+ * in the container (team-picker.tsx) and arrive via props, as does the shared
+ * search query — one search box in the container filters both tables.
  *
  * Sorting mirrors stats-table.tsx EXACTLY (SortState, desc→asc→default cycle,
- * aria-sort on the th, nulls last, an sr-only role=status announcement) so the
- * two tables behave identically for keyboard + screen-reader users. Default
- * order is price descending (the most expensive assets first).
+ * aria-sort on the th, nulls last, an sr-only role=status announcement) so all
+ * tables in the app behave identically for keyboard + screen-reader users.
+ * Announcements are prefixed with the table heading so the two live regions
+ * stay distinguishable. Default order is price descending.
  */
-
-type FilterKind = "all" | "driver" | "constructor"
 
 type SortKey = "price" | "pts" | "ppm" | "sel"
 type SortDir = "desc" | "asc"
@@ -71,59 +67,48 @@ function compare(a: number | null, b: number | null, dir: SortDir): number {
 }
 
 type PickerTableProps = {
+  /** Assets of ONE kind — the container splits drivers from constructors. */
   assets: AssetLite[]
+  /** Table heading ("Drivers" / "Constructors"); prefixes sort announcements. */
+  heading: string
   selected: ReadonlySet<string>
-  /** Driver quota full → unselected drivers are disabled. */
-  driversFull: boolean
-  /** Constructor quota full → unselected constructors are disabled. */
-  constructorsFull: boolean
+  /** Kind quota full → unselected rows are disabled. */
+  quotaFull: boolean
+  /** Shared search query from the container's single search box. */
+  query: string
   onToggle: (id: string) => void
 }
 
 export function PickerTable({
   assets,
+  heading,
   selected,
-  driversFull,
-  constructorsFull,
+  quotaFull,
+  query,
   onToggle,
 }: PickerTableProps) {
-  const [query, setQuery] = useState("")
-  const [filter, setFilter] = useState<FilterKind>("all")
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT)
   // Last announced sort change for the sr-only live region. Empty at first
   // render (the region must exist so AT registers it before any change).
   const [announcement, setAnnouncement] = useState("")
 
-  const searchId = useId()
-
-  // Counts come from the full list, independent of the active filter/search, so
-  // the chips always show the grid totals (Drivers 22 / Constructors 11).
-  const driverTotal = useMemo(
-    () => assets.filter((a) => a.kind === "driver").length,
-    [assets]
-  )
-  const constructorTotal = useMemo(
-    () => assets.filter((a) => a.kind === "constructor").length,
-    [assets]
-  )
-
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    const filtered = assets.filter((a) => {
-      if (filter !== "all" && a.kind !== filter) return false
-      if (needle === "") return true
-      return (
-        a.displayName.toLowerCase().includes(needle) ||
-        a.fullName.toLowerCase().includes(needle) ||
-        a.tla.toLowerCase().includes(needle)
-      )
-    })
+    const filtered =
+      needle === ""
+        ? assets
+        : assets.filter(
+            (a) =>
+              a.displayName.toLowerCase().includes(needle) ||
+              a.fullName.toLowerCase().includes(needle) ||
+              a.tla.toLowerCase().includes(needle)
+          )
     const column = COLUMNS.find((c) => c.key === sort.key)
     if (!column) return filtered
     return [...filtered].sort((x, y) =>
       compare(column.value(x), column.value(y), sort.dir)
     )
-  }, [assets, filter, query, sort])
+  }, [assets, query, sort])
 
   function cycle(key: SortKey): void {
     setSort((prev) => {
@@ -138,58 +123,25 @@ export function PickerTable({
       }
       const label = COLUMNS.find((c) => c.key === next.key)?.label ?? next.key
       const dirWord = next.dir === "desc" ? "descending" : "ascending"
-      setAnnouncement(`Sorted by ${label}, ${dirWord}.`)
+      setAnnouncement(`${heading} sorted by ${label}, ${dirWord}.`)
       return next
     })
   }
 
-  const FILTERS: { key: FilterKind; label: string }[] = [
-    { key: "all", label: `All (${driverTotal + constructorTotal})` },
-    { key: "driver", label: `Drivers (${driverTotal})` },
-    { key: "constructor", label: `Constructors (${constructorTotal})` },
-  ]
-
   return (
-    <div className="flex flex-col gap-3">
+    <section aria-label={heading} className="flex flex-col gap-2">
       {/* sr-only live region — present from first render so AT registers it
           before any sort change; updates politely on each cycle. */}
       <div className="sr-only" role="status" aria-live="polite">
         {announcement}
       </div>
 
-      {/* Toolbar: search + filter chips */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          id={searchId}
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search drivers & constructors…"
-          aria-label="Search drivers and constructors"
-          className="sm:max-w-xs"
-        />
-        <div
-          role="group"
-          aria-label="Filter by kind"
-          className="flex gap-1.5 self-start"
-        >
-          {FILTERS.map((f) => {
-            const active = filter === f.key
-            return (
-              <Button
-                key={f.key}
-                type="button"
-                aria-pressed={active}
-                variant={active ? "secondary" : "outline"}
-                size="sm"
-                onClick={() => setFilter(f.key)}
-              >
-                {f.label}
-              </Button>
-            )
-          })}
-        </div>
-      </div>
+      <h3 className="text-sm font-semibold">
+        {heading}{" "}
+        <span className="font-normal text-muted-foreground">
+          ({assets.length})
+        </span>
+      </h3>
 
       {/* The data table. The shadcn Table already wraps itself in an
           overflow-x-auto container, so it degrades gracefully on mobile. */}
@@ -233,24 +185,29 @@ export function PickerTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map((asset) => {
-            const isSelected = selected.has(asset.playerId)
-            const quotaFull =
-              asset.kind === "driver" ? driversFull : constructorsFull
-            const disabled = quotaFull && !isSelected
-            return (
+          {rows.length === 0 ? (
+            <TableRow className="border-grid-line hover:bg-transparent">
+              <TableCell
+                colSpan={2 + COLUMNS.length}
+                className="text-center text-sm text-muted-foreground"
+              >
+                No matches.
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((asset) => (
               <PickerRow
                 key={asset.playerId}
                 asset={asset}
-                selected={isSelected}
-                disabled={disabled}
+                selected={selected.has(asset.playerId)}
+                disabled={quotaFull && !selected.has(asset.playerId)}
                 onToggle={onToggle}
               />
-            )
-          })}
+            ))
+          )}
         </TableBody>
       </Table>
-    </div>
+    </section>
   )
 }
 

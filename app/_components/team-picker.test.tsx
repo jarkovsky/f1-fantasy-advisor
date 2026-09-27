@@ -119,19 +119,20 @@ function idToName(id: string): string {
 }
 
 describe("TeamPicker", () => {
-  it("renders one card with filter chips counting drivers and constructors", () => {
+  it("renders one card with a table per kind and exactly one save CTA", () => {
     renderPicker()
     // Exactly one Card wraps the whole flow (one save button, not two).
     expect(
       screen.getAllByRole("button", { name: /save team & get advice/i })
     ).toHaveLength(1)
+    // Two separate kind tables, each counting its own assets.
     expect(
-      screen.getByRole("button", { name: "Drivers (8)" })
+      screen.getByRole("heading", { name: "Drivers (8)" })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("button", { name: "Constructors (3)" })
+      screen.getByRole("heading", { name: "Constructors (3)" })
     ).toBeInTheDocument()
-    // Default order is price descending — the priciest asset (d1, $30M) is first.
+    // Default order is price descending — the priciest driver (d1, $30M) leads.
     expect(
       within(bodyRows()[0] as HTMLElement).getByText("$30.0M")
     ).toBeInTheDocument()
@@ -239,16 +240,20 @@ describe("TeamPicker", () => {
     expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
   })
 
-  it("switching the kind filter preserves selections", async () => {
+  it("the shared search narrows both tables and preserves selections", async () => {
     const user = userEvent.setup()
     renderPicker()
     await user.click(checkboxFor("Firstname Lastname1")) // d1
-    // Filter to constructors only — d1 is hidden but still selected.
-    await user.click(screen.getByRole("button", { name: /^constructors/i }))
+    // Search for constructors — the drivers table empties but d1 stays selected.
+    const search = screen.getByRole("searchbox", {
+      name: /search drivers and constructors/i,
+    })
+    await user.type(search, "Constructor")
+    expect(screen.getByText("No matches.")).toBeInTheDocument() // drivers table
     await user.click(checkboxFor("Constructor 1 Full")) // c1
     expect(screen.getByText(/Constructors 1\/2/)).toBeInTheDocument()
-    // Back to all — d1 still checked.
-    await user.click(screen.getByRole("button", { name: /^all/i }))
+    // Clear the search — d1 is visible again and still checked.
+    await user.clear(search)
     expect(checkboxFor("Firstname Lastname1")).toBeChecked()
     expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
   })

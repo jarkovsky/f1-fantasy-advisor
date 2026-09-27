@@ -6,9 +6,10 @@ import { PickerTable } from "@/app/_components/picker-table"
 import type { AssetLite } from "@/lib/asset-lite"
 
 // ---------------------------------------------------------------------------
-// PickerTable is dumb: selection + quota arrive as props, toggles report back.
-// We hand-roll a small deterministic set so search / filter / sort assertions
-// are exact (real parsed fixtures carry only 4 assets — too few).
+// PickerTable is dumb and per-kind: the container splits drivers from
+// constructors, owns selection + quota + the shared search box, and passes
+// everything down. We hand-roll a small deterministic set so search / sort
+// assertions are exact (real parsed fixtures carry only 4 assets — too few).
 // ---------------------------------------------------------------------------
 
 function driver(n: number, priceTenths: number): AssetLite {
@@ -56,17 +57,17 @@ const CONSTRUCTORS: AssetLite[] = [
   constructor(2, 200),
   constructor(3, 150),
 ]
-const ASSETS: AssetLite[] = [...DRIVERS, ...CONSTRUCTORS]
 
 afterEach(cleanup)
 
 function renderTable(props?: Partial<Parameters<typeof PickerTable>[0]>) {
   return render(
     <PickerTable
-      assets={ASSETS}
+      heading="Drivers"
+      assets={DRIVERS}
       selected={new Set<string>()}
-      driversFull={false}
-      constructorsFull={false}
+      quotaFull={false}
+      query=""
       onToggle={vi.fn()}
       {...props}
     />
@@ -87,62 +88,68 @@ function rowTlas(): (string | undefined)[] {
 }
 
 describe("PickerTable", () => {
-  it("renders all assets with one row each and filter chips show counts", () => {
+  it("renders one row per asset of its kind, with the heading count", () => {
     renderTable()
-    expect(bodyRows()).toHaveLength(11)
-    expect(screen.getByRole("button", { name: "All (11)" })).toBeInTheDocument()
+    expect(bodyRows()).toHaveLength(8)
     expect(
-      screen.getByRole("button", { name: "Drivers (8)" })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Constructors (3)" })
+      screen.getByRole("heading", { name: "Drivers (8)" })
     ).toBeInTheDocument()
   })
 
-  it("defaults to price-descending order across drivers and constructors", () => {
+  it("a constructors table renders only the constructor rows", () => {
+    renderTable({ heading: "Constructors", assets: CONSTRUCTORS })
+    expect(
+      screen.getByRole("heading", { name: "Constructors (3)" })
+    ).toBeInTheDocument()
+    expect(bodyRows()).toHaveLength(3)
+    expect(rowTlas()).toEqual(["C01", "C02", "C03"])
+  })
+
+  it("defaults to price-descending order", () => {
     renderTable()
-    // d1..d8 (300..160) then c-prices interleave by price: 300,280,...,160 for
-    // drivers and 250,200,150 for constructors — merged descending.
     const prices = bodyRows().map(
       (r) => within(r).getByText(/^\$\d/).textContent
     )
     expect(prices).toEqual([
-      "$30.0M", // d1 300
-      "$28.0M", // d2 280
-      "$26.0M", // d3 260
-      "$25.0M", // c1 250
-      "$24.0M", // d4 240
-      "$22.0M", // d5 220
-      "$20.0M", // d6 200 (d6 before c2: stable sort keeps source order on ties)
-      "$20.0M", // c2 200
-      "$18.0M", // d7 180
-      "$16.0M", // d8 160
-      "$15.0M", // c3 150
+      "$30.0M",
+      "$28.0M",
+      "$26.0M",
+      "$24.0M",
+      "$22.0M",
+      "$20.0M",
+      "$18.0M",
+      "$16.0M",
     ])
   })
 
-  it("search filters rows by TLA / name, case-insensitive", async () => {
-    const user = userEvent.setup()
-    renderTable()
-    const search = screen.getByRole("searchbox", {
-      name: /search drivers and constructors/i,
-    })
-    await user.type(search, "d03")
+  it("the query prop filters rows by TLA / name, case-insensitive; no match → empty state", () => {
+    const { rerender } = renderTable({ query: "d03" })
     expect(bodyRows()).toHaveLength(1)
     expect(rowTlas()).toEqual(["D03"])
 
-    await user.clear(search)
-    await user.type(search, "constructor 2 full")
-    expect(bodyRows()).toHaveLength(1)
-    expect(rowTlas()).toEqual(["C02"])
-  })
+    rerender(
+      <PickerTable
+        heading="Drivers"
+        assets={DRIVERS}
+        selected={new Set<string>()}
+        quotaFull={false}
+        query="LASTNAME5"
+        onToggle={vi.fn()}
+      />
+    )
+    expect(rowTlas()).toEqual(["D05"])
 
-  it("Constructors filter shows only the constructor rows", async () => {
-    const user = userEvent.setup()
-    renderTable()
-    await user.click(screen.getByRole("button", { name: /^constructors/i }))
-    expect(bodyRows()).toHaveLength(3)
-    expect(rowTlas()).toEqual(["C01", "C02", "C03"])
+    rerender(
+      <PickerTable
+        heading="Drivers"
+        assets={DRIVERS}
+        selected={new Set<string>()}
+        quotaFull={false}
+        query="zzz"
+        onToggle={vi.fn()}
+      />
+    )
+    expect(screen.getByText("No matches.")).toBeInTheDocument()
   })
 
   it("sort cycle on Pts updates aria-sort and row order (desc→asc→default)", async () => {
@@ -152,10 +159,10 @@ describe("PickerTable", () => {
     const ptsButton = () =>
       within(ptsHeader()).getByRole("button", { name: /^Pts/ })
 
-    // First click → descending. Constructors carry the highest seasonPoints.
+    // First click → descending. d8 carries the highest seasonPoints (108).
     await user.click(ptsButton())
     expect(ptsHeader()).toHaveAttribute("aria-sort", "descending")
-    expect(rowTlas()[0]).toBe("C03") // 203 highest
+    expect(rowTlas()[0]).toBe("D08")
 
     // Second click → ascending.
     await user.click(ptsButton())
@@ -166,24 +173,27 @@ describe("PickerTable", () => {
     await user.click(ptsButton())
     expect(ptsHeader()).toHaveAttribute("aria-sort", "none")
     expect(rowTlas()[0]).toBe("D01") // d1 = 300 most expensive
+
+    // Announcements carry the table heading so the two live regions stay
+    // distinguishable for screen readers.
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Drivers sorted by Price, descending."
+    )
   })
 
   it("checkbox reflects selection and disables unselected at quota", () => {
     renderTable({
       selected: new Set(["d1"]),
-      driversFull: true,
+      quotaFull: true,
     })
     // d1 is selected → enabled checkbox, checked.
     const d1 = screen.getByRole("checkbox", { name: /Firstname Lastname1/ })
     expect(d1).toBeChecked()
     expect(d1).toBeEnabled()
-    // d2 (a driver) is unselected with the driver quota full → disabled.
+    // d2 is unselected with the kind quota full → disabled.
     const d2 = screen.getByRole("checkbox", { name: /Firstname Lastname2/ })
     expect(d2).not.toBeChecked()
     expect(d2).toBeDisabled()
-    // Constructors are unaffected (their quota is not full).
-    const c1 = screen.getByRole("checkbox", { name: /Constructor 1 Full/ })
-    expect(c1).toBeEnabled()
   })
 
   it("clicking a checkbox calls onToggle once with the asset id", async () => {

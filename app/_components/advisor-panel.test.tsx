@@ -246,7 +246,7 @@ describe("FIRST_VISIT", () => {
     render(<AdvisorPanel {...makeProps()} />)
 
     expect(
-      await screen.findByRole("button", { name: "Drivers (8)" })
+      await screen.findByRole("heading", { name: "Drivers (8)" })
     ).toBeInTheDocument()
     expect(
       screen.queryByText("vs keeping your current team")

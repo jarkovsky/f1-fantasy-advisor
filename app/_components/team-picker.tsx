@@ -5,6 +5,7 @@ import { useId, useMemo, useState } from "react"
 import { PickerTable } from "@/app/_components/picker-table"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogClose,
@@ -21,8 +22,9 @@ import { formatPriceTenths } from "@/lib/format"
 import { useTeamStore } from "@/lib/store"
 
 /**
- * The team-setup flow as ONE Card (M5 redesign): a searchable asset data table
- * on the left, and a narrow control column on the right (selection summary,
+ * The team-setup flow as ONE Card (M5 redesign): two stacked kind tables on
+ * the left — Drivers and Constructors, filtered by one shared search box —
+ * and a narrow control column on the right (selection summary,
  * remaining-budget input, free-transfers control, status pill, the single Save
  * CTA). Selection is local DRAFT state until Save — nothing touches the store
  * until the user commits (first-run Save, edit Save, or Start over).
@@ -74,6 +76,18 @@ export function TeamPicker({
   // budget as a raw string so the field can be empty ("" = not yet entered).
   const [bankInput, setBankInput] = useState<string>("")
   const [freeTransfers, setFreeTransfers] = useState<FreeTransfers>("unlimited")
+  // One search box filters BOTH kind tables below.
+  const [query, setQuery] = useState("")
+
+  // The two kind tables (user feedback: separate tables, not one filtered list).
+  const drivers = useMemo(
+    () => assets.filter((a) => a.kind === "driver"),
+    [assets]
+  )
+  const constructors = useMemo(
+    () => assets.filter((a) => a.kind === "constructor"),
+    [assets]
+  )
 
   // Edit mode seeds the draft from the store, but the store hydrates AFTER the
   // first render (localStorage is read lazily on subscribe). Seeding during
@@ -193,14 +207,33 @@ export function TeamPicker({
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-          {/* LEFT: the searchable asset table (owns its own toolbar). */}
-          <PickerTable
-            assets={assets}
-            selected={selected}
-            driversFull={driversFull}
-            constructorsFull={constructorsFull}
-            onToggle={toggle}
-          />
+          {/* LEFT: one shared search box over the two kind tables. */}
+          <div className="flex flex-col gap-4">
+            <Input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search drivers & constructors…"
+              aria-label="Search drivers and constructors"
+              className="sm:max-w-xs"
+            />
+            <PickerTable
+              heading="Drivers"
+              assets={drivers}
+              selected={selected}
+              quotaFull={driversFull}
+              query={query}
+              onToggle={toggle}
+            />
+            <PickerTable
+              heading="Constructors"
+              assets={constructors}
+              selected={selected}
+              quotaFull={constructorsFull}
+              query={query}
+              onToggle={toggle}
+            />
+          </div>
 
           {/* RIGHT: summary, budget, transfers, status, CTA. */}
           <div className="flex flex-col gap-5 lg:border-l lg:border-grid-line lg:pl-6">
