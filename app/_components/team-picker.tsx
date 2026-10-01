@@ -46,13 +46,6 @@ type FreeTransfers = 2 | 3 | "unlimited"
 
 type TeamPickerProps = {
   assets: AssetLite[]
-  /**
-   * The $100M initial cap, in tenths. Part of the public contract (callers in
-   * advisor-panel / rollover-form pass it), but no longer rendered here: the
-   * sanity warning and budget-share progress bar that consumed it were removed
-   * in the M5 redesign. Kept on the prop so those call sites stay untouched.
-   */
-  budgetCapTenths: number
   raceNumber: number
   mode: "first-run" | "edit"
   onDone?: () => void

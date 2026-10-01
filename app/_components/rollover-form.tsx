@@ -26,7 +26,6 @@ type RolloverFormProps = {
   assets: AssetLite[]
   assetsById: Record<string, AssetLite>
   team: TeamStateV1
-  budgetCapTenths: number
   onConfirm: (args: {
     roster: string[]
     budgetTenths: number
@@ -46,7 +45,6 @@ export function RolloverForm({
   assets,
   assetsById,
   team,
-  budgetCapTenths,
   onConfirm,
 }: RolloverFormProps) {
   const savedRoster = team.roster ?? []
@@ -219,18 +217,19 @@ export function RolloverForm({
               I made transfers — let me edit
             </label>
           </div>
-
-          {editing && (
-            <TeamPicker
-              assets={assets}
-              budgetCapTenths={budgetCapTenths}
-              raceNumber={to}
-              mode="edit"
-              onDone={() => setEditing(false)}
-            />
-          )}
         </fieldset>
       </Card>
+
+      {/* The picker renders its own Card (M5), so it sits BETWEEN the step
+          cards rather than nested inside step 1. */}
+      {editing && (
+        <TeamPicker
+          assets={assets}
+          raceNumber={to}
+          mode="edit"
+          onDone={() => setEditing(false)}
+        />
+      )}
 
       {/* Step 2: budget */}
       {squadChoice !== null && (

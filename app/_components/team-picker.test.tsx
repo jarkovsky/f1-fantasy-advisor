@@ -77,13 +77,7 @@ afterEach(() => {
 
 function renderPicker(props?: Partial<Parameters<typeof TeamPicker>[0]>) {
   return render(
-    <TeamPicker
-      assets={ASSETS}
-      budgetCapTenths={1000}
-      raceNumber={6}
-      mode="first-run"
-      {...props}
-    />
+    <TeamPicker assets={ASSETS} raceNumber={6} mode="first-run" {...props} />
   )
 }
 

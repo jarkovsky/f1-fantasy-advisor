@@ -108,7 +108,6 @@ function renderForm(props?: Partial<Parameters<typeof RolloverForm>[0]>) {
       assets={ASSETS}
       assetsById={ASSETS_BY_ID}
       team={teamStore.getSnapshot()}
-      budgetCapTenths={1000}
       onConfirm={teamStore.confirmRollover}
       {...props}
     />

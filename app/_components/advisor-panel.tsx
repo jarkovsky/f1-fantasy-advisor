@@ -289,7 +289,6 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
           </p>
           <TeamPicker
             assets={props.assets}
-            budgetCapTenths={props.constraints.budgetCapTenths}
             raceNumber={props.constraints.raceNumber}
             mode="first-run"
           />
@@ -305,7 +304,6 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
           assets={props.assets}
           assetsById={assetsById}
           team={team}
-          budgetCapTenths={props.constraints.budgetCapTenths}
           onConfirm={confirmRollover}
         />
       )
@@ -353,7 +351,6 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
         return (
           <TeamPicker
             assets={props.assets}
-            budgetCapTenths={props.constraints.budgetCapTenths}
             raceNumber={props.constraints.raceNumber}
             mode="edit"
             onDone={() => setShowEditor(false)}
