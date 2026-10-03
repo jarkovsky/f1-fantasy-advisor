@@ -190,6 +190,7 @@ export function TeamPicker({
 
   const liveId = useId()
   const bankId = useId()
+  const searchId = useId()
 
   return (
     <Card>
@@ -203,6 +204,7 @@ export function TeamPicker({
           {/* LEFT: one shared search box over the two kind tables. */}
           <div className="flex flex-col gap-4">
             <Input
+              id={searchId}
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

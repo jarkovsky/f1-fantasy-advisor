@@ -77,7 +77,10 @@
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
+    /* Darker than stock shadcn (0.556): muted text must clear AA on the
+       raised --surface-2 grey and the --accent-f1-quiet tint, not just on
+       white (the M4 lesson — text and surface tokens are designed as pairs). */
+    --muted-foreground: oklch(0.5 0 0);
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
