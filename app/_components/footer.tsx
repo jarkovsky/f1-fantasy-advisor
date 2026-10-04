@@ -8,9 +8,8 @@ export function Footer() {
     <footer className="mt-12 border-t border-grid-line">
       <div className="mx-auto flex max-w-5xl flex-col gap-1 px-6 py-6 text-xs text-muted-foreground">
         <p>
-          Unofficial fan project — not affiliated with Formula One Group, the
-          FIA, or F1 Fantasy. No accounts, no tracking; your team stays in your
-          browser.
+          Unofficial fan project — not affiliated with Formula One Group, the FIA, or F1 Fantasy. No
+          accounts, no tracking; your team stays in your browser.
         </p>
         <p>
           Driver imagery via{" "}

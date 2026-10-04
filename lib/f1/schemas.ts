@@ -21,9 +21,7 @@ export type ParseResult<T> =
   | { ok: false; summary: string[] }
 
 function summarize(error: z.ZodError): string[] {
-  return error.issues.map(
-    (i) => `${i.path.join(".") || "<root>"}: ${i.code} (${i.message})`
-  )
+  return error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.code} (${i.message})`)
 }
 
 // ---------------------------------------------------------------------------
@@ -185,8 +183,7 @@ export const AssetSchema = z
   })
   .transform((r, ctx) => {
     // Defense-in-depth: Skill and PositionName must agree.
-    const expected =
-      r.Skill === 1 ? "DRIVER" : r.Skill === 2 ? "CONSTRUCTOR" : null
+    const expected = r.Skill === 1 ? "DRIVER" : r.Skill === 2 ? "CONSTRUCTOR" : null
     if (expected === null || r.PositionName.toUpperCase() !== expected) {
       ctx.addIssue({
         code: "custom",
@@ -245,8 +242,7 @@ const DriversFeedEnvelope = z.object({
  */
 export function parseDriversFeed(raw: unknown): ParseResult<Asset[]> {
   const envelope = DriversFeedEnvelope.safeParse(raw)
-  if (!envelope.success)
-    return { ok: false, summary: summarize(envelope.error) }
+  if (!envelope.success) return { ok: false, summary: summarize(envelope.error) }
   if (!envelope.data.Meta.Success || envelope.data.Meta.StatusCode !== 200) {
     return { ok: false, summary: ["feed Meta indicates failure"] }
   }
@@ -298,9 +294,7 @@ const ConstraintsEnvelope = z.object({
   Meta: FeedMeta,
 })
 
-export function parseConstraints(
-  raw: unknown
-): ParseResult<RaceWeekConstraints> {
+export function parseConstraints(raw: unknown): ParseResult<RaceWeekConstraints> {
   const res = ConstraintsEnvelope.safeParse(raw)
   if (!res.success) return { ok: false, summary: summarize(res.error) }
   return { ok: true, data: res.data.Data.Value }

@@ -11,11 +11,7 @@ import {
 } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import {
-  PRESET_REGISTRY,
-  type PresetId,
-  type ProjectionResult,
-} from "@/lib/projections"
+import { PRESET_REGISTRY, type PresetId, type ProjectionResult } from "@/lib/projections"
 
 /**
  * The "Advanced" projection controls: the model preset picker (history presets
@@ -53,20 +49,14 @@ export function ProjectionControls({
       <h2 className="text-sm font-semibold">Advanced</h2>
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted-foreground">
-          Projection model
-        </span>
-        <Select
-          value={preset}
-          onValueChange={(v) => onPresetChange(v as PresetId)}
-        >
+        <span className="text-xs font-medium text-muted-foreground">Projection model</span>
+        <Select value={preset} onValueChange={(v) => onPresetChange(v as PresetId)}>
           <SelectTrigger className="w-full" aria-label="Projection model">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {PRESET_REGISTRY.map((def) => {
-              const gated =
-                def.historyBased && (coldStart || completedRaces < def.minRaces)
+              const gated = def.historyBased && (coldStart || completedRaces < def.minRaces)
               return (
                 <SelectItem key={def.id} value={def.id} disabled={gated}>
                   {def.label}
@@ -135,10 +125,7 @@ export function ProjectionControls({
         {completedSprints > 0
           ? `, ${completedSprints} sprint${completedSprints === 1 ? "" : "s"}`
           : ""}
-        .
-        {coldStart && (
-          <> Race 1 — no history yet; projections use price-based Equal PPM.</>
-        )}
+        .{coldStart && <> Race 1 — no history yet; projections use price-based Equal PPM.</>}
       </p>
     </Card>
   )

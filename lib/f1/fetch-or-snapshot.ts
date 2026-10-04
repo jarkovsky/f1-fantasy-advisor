@@ -51,9 +51,7 @@ export async function fetchOrSnapshot<T>(
       const parsed = parse(json)
       if (parsed.ok) {
         if (parsed.dropped) {
-          console.warn(
-            `[f1-feed] ${path}: dropped ${parsed.dropped} corrupt row(s)`
-          )
+          console.warn(`[f1-feed] ${path}: dropped ${parsed.dropped} corrupt row(s)`)
         }
         return {
           data: parsed.data,
@@ -69,15 +67,11 @@ export async function fetchOrSnapshot<T>(
       )
     } else {
       // 403 = race not yet published (S3 deny) — expected, not an error.
-      console.warn(
-        `[f1-feed] ${path} → HTTP ${res.status}, degrading to snapshot`
-      )
+      console.warn(`[f1-feed] ${path} → HTTP ${res.status}, degrading to snapshot`)
     }
   } catch (err) {
     // Network down, DNS failure, timeout, malformed JSON body.
-    console.warn(
-      `[f1-feed] ${path} fetch failed (${String(err)}), degrading to snapshot`
-    )
+    console.warn(`[f1-feed] ${path} fetch failed (${String(err)}), degrading to snapshot`)
   }
 
   // 2. Committed snapshot (schema-validated when written, re-parsed defensively).
@@ -90,9 +84,7 @@ export async function fetchOrSnapshot<T>(
         meta: { source: "snapshot", asOf: snap.asOf, race },
       }
     }
-    console.error(
-      `[f1-feed] ${path} snapshot ALSO failed schema — serving empty value`
-    )
+    console.error(`[f1-feed] ${path} snapshot ALSO failed schema — serving empty value`)
   }
 
   // 3. Last resort: typed empty value. Dead branch for races within the

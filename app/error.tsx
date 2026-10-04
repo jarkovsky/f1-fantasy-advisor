@@ -11,9 +11,7 @@ export default function ErrorBoundary({
 }) {
   return (
     <main className="mx-auto flex min-h-svh max-w-5xl flex-col items-start justify-center gap-4 p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        Something went wrong
-      </h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
       <p className="text-sm text-muted-foreground">
         {error.digest ? `Error digest: ${error.digest}` : error.message}
       </p>

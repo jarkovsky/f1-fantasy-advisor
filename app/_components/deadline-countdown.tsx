@@ -92,11 +92,7 @@ export function DeadlineCountdown({ lockAtMs }: DeadlineCountdownProps) {
         }).format(lockAtMs)
 
   if (now === null) {
-    return (
-      <span className="font-mono text-sm text-muted-foreground">
-        Locks at —
-      </span>
-    )
+    return <span className="font-mono text-sm text-muted-foreground">Locks at —</span>
   }
 
   const remaining = lockAtMs - now
@@ -109,11 +105,7 @@ export function DeadlineCountdown({ lockAtMs }: DeadlineCountdownProps) {
         aria-hidden="true"
         className={cn(
           "font-medium",
-          locked
-            ? "text-muted-foreground"
-            : urgent
-              ? "text-accent-f1"
-              : "text-foreground"
+          locked ? "text-muted-foreground" : urgent ? "text-accent-f1" : "text-foreground"
         )}
       >
         {locked ? "Locked" : `Locks in ${formatRemaining(remaining)}`}

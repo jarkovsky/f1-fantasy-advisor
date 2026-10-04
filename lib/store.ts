@@ -87,20 +87,14 @@ function emit(): void {
 
 function isRoster(value: unknown): value is string[] | null {
   if (value === null) return true
-  return (
-    Array.isArray(value) &&
-    value.length === 7 &&
-    value.every((id) => typeof id === "string")
-  )
+  return Array.isArray(value) && value.length === 7 && value.every((id) => typeof id === "string")
 }
 
 function isFreeTransfers(value: unknown): value is 2 | 3 | "unlimited" {
   return value === 2 || value === 3 || value === "unlimited"
 }
 
-function isSavedProjection(
-  value: unknown
-): value is TeamStateV1["savedProjection"] {
+function isSavedProjection(value: unknown): value is TeamStateV1["savedProjection"] {
   if (value === null) return true
   if (typeof value !== "object") return false
   const p = value as Record<string, unknown>
@@ -225,11 +219,7 @@ function subscribe(cb: () => void): () => void {
     listeners.delete(cb)
     // Symmetric teardown (StrictMode double-invoke safe): drop the window
     // listener only when the last subscriber leaves.
-    if (
-      listeners.size === 0 &&
-      storageHandler !== null &&
-      typeof window !== "undefined"
-    ) {
+    if (listeners.size === 0 && storageHandler !== null && typeof window !== "undefined") {
       window.removeEventListener("storage", storageHandler)
       storageHandler = null
     }

@@ -15,12 +15,7 @@ describe("fixture helpers", () => {
     for (let race = 1; race <= 6; race++) {
       const assets = fixtureAssets(race)
       expect(assets).toHaveLength(4)
-      expect(assets.map((a) => a.playerId).sort()).toEqual([
-        "131",
-        "18",
-        "28",
-        "29",
-      ])
+      expect(assets.map((a) => a.playerId).sort()).toEqual(["131", "18", "28", "29"])
     }
   })
 

@@ -17,12 +17,8 @@ export function SnapshotBanner({ meta }: { meta: FeedProvenance }) {
   return (
     <p className="rounded-md border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">
       Live feed unavailable — showing snapshot data as of{" "}
-      {Number.isNaN(ms) ? (
-        label
-      ) : (
-        <time dateTime={new Date(ms).toISOString()}>{label}</time>
-      )}
-      . Projections may be stale.
+      {Number.isNaN(ms) ? label : <time dateTime={new Date(ms).toISOString()}>{label}</time>}.
+      Projections may be stale.
     </p>
   )
 }

@@ -157,10 +157,7 @@ describe("corrupt input never throws → DEFAULT", () => {
   })
 
   it("rejects a v1 with non-integer budgetTenths", () => {
-    localStorage.setItem(
-      KEY,
-      JSON.stringify({ ...VALID_V1, budgetTenths: 1.5 })
-    )
+    localStorage.setItem(KEY, JSON.stringify({ ...VALID_V1, budgetTenths: 1.5 }))
     teamStore.subscribe(() => {})
     expect(teamStore.getSnapshot()).toBe(DEFAULT_STATE)
   })
@@ -189,9 +186,7 @@ describe("cross-tab sync", () => {
     teamStore.subscribe(cb)
     cb.mockClear()
 
-    window.dispatchEvent(
-      new StorageEvent("storage", { key: "other:key", newValue: "x" })
-    )
+    window.dispatchEvent(new StorageEvent("storage", { key: "other:key", newValue: "x" }))
 
     expect(cb).not.toHaveBeenCalled()
   })
@@ -223,9 +218,7 @@ describe("unsubscribe detaches", () => {
     b()
     // No window listener should remain → a later event must not call cb.
     cb.mockClear()
-    window.dispatchEvent(
-      new StorageEvent("storage", { key: KEY, newValue: "{}" })
-    )
+    window.dispatchEvent(new StorageEvent("storage", { key: KEY, newValue: "{}" }))
     expect(cb).not.toHaveBeenCalled()
   })
 })
@@ -233,11 +226,9 @@ describe("unsubscribe detaches", () => {
 describe("quota / blocked storage degrades silently", () => {
   it("setItem throwing does not throw and still updates the in-memory snapshot", () => {
     teamStore.subscribe(() => {})
-    const spy = vi
-      .spyOn(Storage.prototype, "setItem")
-      .mockImplementation(() => {
-        throw new DOMException("QuotaExceededError")
-      })
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("QuotaExceededError")
+    })
 
     expect(() => teamStore.setTeam(ROSTER7, 50, 2, 9)).not.toThrow()
     expect(teamStore.getSnapshot().roster).toEqual(ROSTER7)

@@ -42,10 +42,7 @@ export async function AssetTable() {
       priceTenths: asset.priceTenths,
       priceDeltaTenths,
       seasonPoints,
-      ppm:
-        asset.priceTenths === 0
-          ? null
-          : seasonPoints / (asset.priceTenths / 10),
+      ppm: asset.priceTenths === 0 ? null : seasonPoints / (asset.priceTenths / 10),
       form5: form5(hist),
       qualiAvg: sessionAvg(hist, "Qualifying"),
       raceAvg: sessionAvg(hist, "Race"),

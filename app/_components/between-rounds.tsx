@@ -38,9 +38,7 @@ export function BetweenRounds({
   lastRacePoints,
   savedProjection,
 }: BetweenRoundsProps) {
-  const resolved = roster
-    .map((id) => assetsById[id])
-    .filter((a): a is AssetLite => a !== undefined)
+  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
 
   const scored = roster.reduce((sum, id) => sum + (lastRacePoints[id] ?? 0), 0)
   const pointsMatch = pointsRace === lastCompleted
@@ -48,9 +46,7 @@ export function BetweenRounds({
   if (!pointsMatch) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">
-          Race {lastCompleted} has finished.
-        </h1>
+        <h1 className="text-2xl font-semibold">Race {lastCompleted} has finished.</h1>
         <p className="text-sm text-muted-foreground">
           Results are still being scored — check back soon.
         </p>
@@ -60,21 +56,14 @@ export function BetweenRounds({
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">
-        Results are in for race {lastCompleted}.
-      </h1>
+      <h1 className="text-2xl font-semibold">Results are in for race {lastCompleted}.</h1>
 
       {savedProjection && (
         <Card className="gap-1 bg-surface-1 p-4">
           <p className="text-sm">
-            You scored{" "}
-            <span className="font-mono font-semibold tabular-nums">
-              {scored}
-            </span>{" "}
-            · we projected{" "}
-            <span className="font-mono tabular-nums">
-              {savedProjection.totalPoints.toFixed(1)}
-            </span>
+            You scored <span className="font-mono font-semibold tabular-nums">{scored}</span> · we
+            projected{" "}
+            <span className="font-mono tabular-nums">{savedProjection.totalPoints.toFixed(1)}</span>
           </p>
           <Delta
             value={scored - savedProjection.totalPoints}

@@ -32,17 +32,13 @@ async function tlaToPlayerId(): Promise<Map<string, string>> {
     .map((f) => Number.parseInt(f, 10))
     .filter(Number.isFinite)
   const latest = Math.max(...races)
-  const raw: unknown = JSON.parse(
-    await readFile(`data/drivers/${latest}.json`, "utf8")
-  )
+  const raw: unknown = JSON.parse(await readFile(`data/drivers/${latest}.json`, "utf8"))
   const parsed = parseDriversFeed(raw)
   if (!parsed.ok) {
     throw new Error(`data/drivers/${latest}.json failed schema validation`)
   }
   return new Map(
-    parsed.data
-      .filter((a) => a.kind === "driver")
-      .map((a) => [a.tla.toUpperCase(), a.playerId])
+    parsed.data.filter((a) => a.kind === "driver").map((a) => [a.tla.toUpperCase(), a.playerId])
   )
 }
 

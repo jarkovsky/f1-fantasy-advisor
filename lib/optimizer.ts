@@ -173,15 +173,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   let rosterConstructors = 0
   for (const id of input.roster) {
     const asset = byId.get(id)
-    if (!asset)
-      throw new OptimizerInputError(`roster id ${id} not found in assets`)
+    if (!asset) throw new OptimizerInputError(`roster id ${id} not found in assets`)
     if (asset.kind === "driver") rosterDrivers += 1
     else rosterConstructors += 1
   }
-  if (
-    rosterDrivers !== SQUAD_DRIVERS ||
-    rosterConstructors !== SQUAD_CONSTRUCTORS
-  ) {
+  if (rosterDrivers !== SQUAD_DRIVERS || rosterConstructors !== SQUAD_CONSTRUCTORS) {
     throw new OptimizerInputError(
       `roster must be ${SQUAD_DRIVERS} drivers + ${SQUAD_CONSTRUCTORS} constructors, got ${rosterDrivers} + ${rosterConstructors}`
     )
@@ -193,12 +189,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // ---- mode fold ----------------------------------------------------------
   const budgetEnforced = mode !== "limitless"
   const unlimited =
-    mode === "wildcard" ||
-    mode === "limitless" ||
-    input.freeTransfers === "unlimited"
-  const f = unlimited
-    ? Number.POSITIVE_INFINITY
-    : (input.freeTransfers as number)
+    mode === "wildcard" || mode === "limitless" || input.freeTransfers === "unlimited"
+  const f = unlimited ? Number.POSITIVE_INFINITY : (input.freeTransfers as number)
 
   let purseTenths = input.budgetTenths
   for (const id of input.roster) {
@@ -225,8 +217,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // Ascending prefix sums: cheapest `need` drivers from index `start` onward
   // cost dPrefix[start + need] - dPrefix[start] (sorted → they ARE cheapest).
   const dPrefix = new Int32Array(D + 1)
-  for (let i = 0; i < D; i++)
-    dPrefix[i + 1] = (dPrefix[i] ?? 0) + (dPrice[i] ?? 0)
+  for (let i = 0; i < D; i++) dPrefix[i + 1] = (dPrefix[i] ?? 0) + (dPrice[i] ?? 0)
 
   // All constructor pairs, sorted ascending by price.
   const C = constructors.length
@@ -242,11 +233,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     let p = 0
     for (let i = 0; i < C; i++) {
       for (let j = i + 1; j < C; j++) {
-        pairPrice[p] =
-          (constructors[i]?.priceTenths ?? 0) +
-          (constructors[j]?.priceTenths ?? 0)
-        pairProj[p] =
-          (constructors[i]?.projected ?? 0) + (constructors[j]?.projected ?? 0)
+        pairPrice[p] = (constructors[i]?.priceTenths ?? 0) + (constructors[j]?.priceTenths ?? 0)
+        pairProj[p] = (constructors[i]?.projected ?? 0) + (constructors[j]?.projected ?? 0)
         const iIn = rosterSet.has(constructors[i]?.id ?? "") ? 1 : 0
         const jIn = rosterSet.has(constructors[j]?.id ?? "") ? 1 : 0
         pairTransfers[p] = 2 - iIn - jIn
@@ -283,10 +271,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // (the penalty is constant within a bucket, so the ranking is identical).
   const globalBest = emptyScratch()
   let globalBestScore = Number.NEGATIVE_INFINITY
-  const buckets: Scratch[] = Array.from(
-    { length: MAX_TRANSFERS + 1 },
-    emptyScratch
-  )
+  const buckets: Scratch[] = Array.from({ length: MAX_TRANSFERS + 1 }, emptyScratch)
 
   const penaltyFor = (transfers: number): number => {
     const excess = Math.max(0, transfers - f)
@@ -310,11 +295,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     return `${ids.join(",")}|${cons.join(",")}`
   }
 
-  function challenge(
-    incumbent: Scratch,
-    candidate: Scratch,
-    keyDelta: number
-  ): boolean {
+  function challenge(incumbent: Scratch, candidate: Scratch, keyDelta: number): boolean {
     if (!incumbent.occupied) return true
     if (keyDelta !== 0) return keyDelta > 0
     if (candidate.costTenths !== incumbent.costTenths) {
@@ -326,9 +307,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // Fast-path thresholds: the hot loop only takes the slow (tie-break) path
   // when a candidate matches or beats these — rare, so the per-leaf cost is a
   // few float ops. bucketRaw mirrors buckets[t].projectedTotal.
-  const bucketRaw = new Float64Array(MAX_TRANSFERS + 1).fill(
-    Number.NEGATIVE_INFINITY
-  )
+  const bucketRaw = new Float64Array(MAX_TRANSFERS + 1).fill(Number.NEGATIVE_INFINITY)
   // Penalty by transfer count, precomputed (avoids Math.max per leaf).
   const penaltyByT = new Float64Array(MAX_TRANSFERS + 1)
   for (let t = 0; t <= MAX_TRANSFERS; t++) penaltyByT[t] = penaltyFor(t)
@@ -358,22 +337,12 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     candidate.projectedTotal = projectedTotal
     candidate.transfers = transfers
 
-    if (
-      score >= globalBestScore &&
-      challenge(globalBest, candidate, score - globalBestScore)
-    ) {
+    if (score >= globalBestScore && challenge(globalBest, candidate, score - globalBestScore)) {
       Object.assign(globalBest, candidate)
       globalBestScore = score
     }
     const bucket = buckets[transfers]
-    if (
-      bucket &&
-      challenge(
-        bucket,
-        candidate,
-        candidate.projectedTotal - bucket.projectedTotal
-      )
-    ) {
+    if (bucket && challenge(bucket, candidate, candidate.projectedTotal - bucket.projectedTotal)) {
       Object.assign(bucket, candidate)
       bucketRaw[transfers] = projectedTotal
     }
@@ -384,50 +353,32 @@ export function optimize(input: OptimizerInput): OptimizerResult {
 
   // cheapestNext(start, n): sum of the n cheapest drivers at index ≥ start.
   const cheapestNext = (start: number, n: number): number =>
-    start + n <= D
-      ? (dPrefix[start + n] ?? 0) - (dPrefix[start] ?? 0)
-      : Number.MAX_SAFE_INTEGER
+    start + n <= D ? (dPrefix[start + n] ?? 0) - (dPrefix[start] ?? 0) : Number.MAX_SAFE_INTEGER
 
   for (let a = 0; a <= D - 5; a++) {
     const priceA = dPrice[a] ?? 0
-    if (
-      budgetEnforced &&
-      priceA + cheapestNext(a + 1, 4) + minPairPrice > purseTenths
-    )
-      break
+    if (budgetEnforced && priceA + cheapestNext(a + 1, 4) + minPairPrice > purseTenths) break
     const projA = dProj[a] ?? 0
     const capA = projA
     const trA = 1 - (dInRoster[a] ?? 0)
 
     for (let b = a + 1; b <= D - 4; b++) {
       const priceB = priceA + (dPrice[b] ?? 0)
-      if (
-        budgetEnforced &&
-        priceB + cheapestNext(b + 1, 3) + minPairPrice > purseTenths
-      )
-        break
+      if (budgetEnforced && priceB + cheapestNext(b + 1, 3) + minPairPrice > purseTenths) break
       const projB = projA + (dProj[b] ?? 0)
       const capB = Math.max(capA, dProj[b] ?? 0)
       const trB = trA + 1 - (dInRoster[b] ?? 0)
 
       for (let c = b + 1; c <= D - 3; c++) {
         const priceC = priceB + (dPrice[c] ?? 0)
-        if (
-          budgetEnforced &&
-          priceC + cheapestNext(c + 1, 2) + minPairPrice > purseTenths
-        )
-          break
+        if (budgetEnforced && priceC + cheapestNext(c + 1, 2) + minPairPrice > purseTenths) break
         const projC = projB + (dProj[c] ?? 0)
         const capC = Math.max(capB, dProj[c] ?? 0)
         const trC = trB + 1 - (dInRoster[c] ?? 0)
 
         for (let d = c + 1; d <= D - 2; d++) {
           const priceD = priceC + (dPrice[d] ?? 0)
-          if (
-            budgetEnforced &&
-            priceD + cheapestNext(d + 1, 1) + minPairPrice > purseTenths
-          )
-            break
+          if (budgetEnforced && priceD + cheapestNext(d + 1, 1) + minPairPrice > purseTenths) break
           const projD = projC + (dProj[d] ?? 0)
           const capD = Math.max(capC, dProj[d] ?? 0)
           const trD = trC + 1 - (dInRoster[d] ?? 0)
@@ -450,10 +401,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
               const transfers = trE + (pairTransfers[p] ?? 0)
               const raw = baseProj + (pairProj[p] ?? 0)
               const score = raw + (penaltyByT[transfers] ?? 0)
-              if (
-                score >= globalBestScore ||
-                raw >= (bucketRaw[transfers] ?? 0)
-              ) {
+              if (score >= globalBestScore || raw >= (bucketRaw[transfers] ?? 0)) {
                 record(a, b, c, d, e, p, priceE + pp, raw, transfers, score)
               }
             }
@@ -466,9 +414,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // ---- reconstruction -------------------------------------------------------
   function toPlan(s: Scratch): TeamPlan {
     const driverIdx = [s.d0, s.d1, s.d2, s.d3, s.d4]
-    const teamDrivers = driverIdx
-      .map((i) => drivers[i])
-      .filter((x) => x !== undefined)
+    const teamDrivers = driverIdx.map((i) => drivers[i]).filter((x) => x !== undefined)
     const teamConstructors = [
       constructors[pairI[s.pair] ?? 0],
       constructors[pairJ[s.pair] ?? 0],

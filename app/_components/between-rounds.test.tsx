@@ -103,9 +103,7 @@ describe("BetweenRounds", () => {
 
     // The comparison line carries both numbers (scored sum and projected total).
     const comparison = screen.getByText(/You scored/)
-    expect(comparison).toHaveTextContent(
-      `You scored ${SCORED_SUM} · we projected 128.4`
-    )
+    expect(comparison).toHaveTextContent(`You scored ${SCORED_SUM} · we projected 128.4`)
     // The signed delta (140 − 128.4 = +11.6) renders.
     expect(screen.getByText("+11.6")).toBeInTheDocument()
   })
@@ -119,9 +117,7 @@ describe("BetweenRounds", () => {
 
   it("renders the 'Next race not published yet' line", () => {
     renderView()
-    expect(
-      screen.getByText(/Next race not published yet — check back soon\./)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Next race not published yet — check back soon\./)).toBeInTheDocument()
   })
 
   it("suppresses stale numbers in the transient window (points race ≠ derived lastCompleted)", () => {

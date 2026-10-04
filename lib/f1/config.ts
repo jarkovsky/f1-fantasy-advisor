@@ -13,8 +13,7 @@
  */
 
 /** Env override enables tests and the offline-build proof (point at an unroutable host). */
-export const F1_FEED_BASE =
-  process.env.F1_FEED_BASE ?? "https://fantasy.formula1.com/feeds"
+export const F1_FEED_BASE = process.env.F1_FEED_BASE ?? "https://fantasy.formula1.com/feeds"
 
 export const feedPaths = {
   /** Per-race assets feed (the feed's own URL numbering). */
@@ -36,11 +35,7 @@ export const RACE_STATUS = { UPCOMING: 0, CURRENT: 1, COMPLETED: 4 } as const
  * The complete session label set in the feed. Sprint weekends have all three;
  * normal weekends have Qualifying + Race. There is no distinct "Sprint" label.
  */
-export const SESSION_LABELS = [
-  "Qualifying",
-  "Race",
-  "Sprint Qualifying",
-] as const
+export const SESSION_LABELS = ["Qualifying", "Race", "Sprint Qualifying"] as const
 export const SPRINT_LABEL = "Sprint Qualifying" as const
 
 /** Unpublished races return 403 (S3 deny-on-missing-key), NOT 404. */

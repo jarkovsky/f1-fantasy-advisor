@@ -32,12 +32,8 @@ export function Sparkline({ series }: { series: number[] }) {
   // edge (it IS the latest value). y: inverted (SVG y grows downward); a flat
   // series (span 0) pins every point to the vertical midline.
   const points = series.map((value, i) => {
-    const x =
-      series.length === 1
-        ? WIDTH - PAD
-        : PAD + (i / (series.length - 1)) * innerW
-    const y =
-      span === 0 ? PAD + innerH / 2 : PAD + (1 - (value - min) / span) * innerH
+    const x = series.length === 1 ? WIDTH - PAD : PAD + (i / (series.length - 1)) * innerW
+    const y = span === 0 ? PAD + innerH / 2 : PAD + (1 - (value - min) / span) * innerH
     return { x, y }
   })
 
@@ -62,15 +58,7 @@ export function Sparkline({ series }: { series: number[] }) {
           vectorEffect="non-scaling-stroke"
         />
       )}
-      {last && (
-        <circle
-          className="text-pos"
-          cx={last.x}
-          cy={last.y}
-          r={2}
-          fill="currentColor"
-        />
-      )}
+      {last && <circle className="text-pos" cx={last.x} cy={last.y} r={2} fill="currentColor" />}
     </svg>
   )
 }

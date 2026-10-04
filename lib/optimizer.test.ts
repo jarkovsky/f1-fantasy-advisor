@@ -32,17 +32,12 @@ function bruteForce(input: OptimizerInput): OptimizerResult {
   const mode = input.mode ?? "normal"
   const budgetEnforced = mode !== "limitless"
   const unlimited =
-    mode === "wildcard" ||
-    mode === "limitless" ||
-    input.freeTransfers === "unlimited"
-  const f = unlimited
-    ? Number.POSITIVE_INFINITY
-    : (input.freeTransfers as number)
+    mode === "wildcard" || mode === "limitless" || input.freeTransfers === "unlimited"
+  const f = unlimited ? Number.POSITIVE_INFINITY : (input.freeTransfers as number)
   const rosterSet = new Set(input.roster)
   const byId = new Map(input.assets.map((a) => [a.id, a]))
   const purse =
-    input.budgetTenths +
-    input.roster.reduce((sum, id) => sum + (byId.get(id)?.priceTenths ?? 0), 0)
+    input.budgetTenths + input.roster.reduce((sum, id) => sum + (byId.get(id)?.priceTenths ?? 0), 0)
 
   const drivers = input.assets.filter((a) => a.kind === "driver")
   const constructors = input.assets.filter((a) => a.kind === "constructor")
@@ -97,16 +92,11 @@ function bruteForce(input: OptimizerInput): OptimizerResult {
     }
   }
 
-  const better = (
-    cand: TeamPlan,
-    inc: TeamPlan | null,
-    key: keyof TeamPlan
-  ) => {
+  const better = (cand: TeamPlan, inc: TeamPlan | null, key: keyof TeamPlan) => {
     if (!inc) return true
     const delta = (cand[key] as number) - (inc[key] as number)
     if (delta !== 0) return delta > 0
-    if (cand.costTenths !== inc.costTenths)
-      return cand.costTenths < inc.costTenths
+    if (cand.costTenths !== inc.costTenths) return cand.costTenths < inc.costTenths
     const candKey = `${cand.driverIds.join(",")}|${cand.constructorIds.join(",")}`
     const incKey = `${inc.driverIds.join(",")}|${inc.constructorIds.join(",")}`
     return candKey < incKey
@@ -232,10 +222,7 @@ describe("optimality vs brute-force oracle", () => {
   const scenarios: [string, OptimizerInput][] = [
     ["grid A, normal budget", inputA()],
     ["grid A, tight budget (purse = roster cost)", inputA({ budgetTenths: 0 })],
-    [
-      "grid A, generous budget (everything affordable)",
-      inputA({ budgetTenths: 600 }),
-    ],
+    ["grid A, generous budget (everything affordable)", inputA({ budgetTenths: 600 })],
     ["grid A, 3 free transfers", inputA({ freeTransfers: 3 })],
     ["grid A, wildcard", inputA({ mode: "wildcard" })],
     ["grid A, limitless", inputA({ mode: "limitless" })],
@@ -247,20 +234,14 @@ describe("optimality vs brute-force oracle", () => {
     })
 
     it(`every transfer bucket matches the oracle — ${name}`, () => {
-      expect(optimize(input).byTransferCount).toEqual(
-        bruteForce(input).byTransferCount
-      )
+      expect(optimize(input).byTransferCount).toEqual(bruteForce(input).byTransferCount)
     })
   }
 
   it("mid-size grid (16/8) matches the oracle end to end", () => {
     const drivers: [string, number, number][] = []
     for (let i = 0; i < 16; i++) {
-      drivers.push([
-        `d${String(i).padStart(2, "0")}`,
-        40 + i * 11,
-        4 + ((i * 7) % 19),
-      ])
+      drivers.push([`d${String(i).padStart(2, "0")}`, 40 + i * 11, 4 + ((i * 7) % 19)])
     }
     const constructors: [string, number, number][] = []
     for (let i = 0; i < 8; i++) {
@@ -330,9 +311,7 @@ describe("penalty accounting", () => {
     for (const plan of result.byTransferCount) {
       if (plan) expect(result.best.score).toBeGreaterThanOrEqual(plan.score)
     }
-    expect(rawBest.projectedTotal).toBeGreaterThanOrEqual(
-      result.best.projectedTotal
-    )
+    expect(rawBest.projectedTotal).toBeGreaterThanOrEqual(result.best.projectedTotal)
   })
 })
 
@@ -458,27 +437,23 @@ describe("modes", () => {
 
 describe("validation", () => {
   it("throws on a roster that is not 7 ids", () => {
-    expect(() => optimize(inputA({ roster: ["d0"] }))).toThrow(
-      OptimizerInputError
-    )
-    expect(() => optimize(inputA({ roster: ["d0"] }))).toThrow(
-      /roster must have 7/
-    )
+    expect(() => optimize(inputA({ roster: ["d0"] }))).toThrow(OptimizerInputError)
+    expect(() => optimize(inputA({ roster: ["d0"] }))).toThrow(/roster must have 7/)
   })
 
   it("throws on a 4+3 roster split", () => {
-    expect(() =>
-      optimize(inputA({ roster: ["d0", "d1", "d2", "d3", "c0", "c1", "c2"] }))
-    ).toThrow(/5 drivers \+ 2 constructors/)
+    expect(() => optimize(inputA({ roster: ["d0", "d1", "d2", "d3", "c0", "c1", "c2"] }))).toThrow(
+      /5 drivers \+ 2 constructors/
+    )
   })
 
   it("throws on unknown roster ids and duplicates", () => {
     expect(() =>
       optimize(inputA({ roster: ["nope", "d1", "d2", "d3", "d4", "c0", "c1"] }))
     ).toThrow(/not found/)
-    expect(() =>
-      optimize(inputA({ roster: ["d0", "d0", "d2", "d3", "d4", "c0", "c1"] }))
-    ).toThrow(/duplicate/)
+    expect(() => optimize(inputA({ roster: ["d0", "d0", "d2", "d3", "d4", "c0", "c1"] }))).toThrow(
+      /duplicate/
+    )
   })
 
   it("throws on a grid too small to field a team", () => {
@@ -489,16 +464,10 @@ describe("validation", () => {
   it("throws on non-integer money and bad freeTransfers", () => {
     const floaty = makeGrid([["d0", 50.5, 5]], [])
     expect(() =>
-      optimize(
-        inputA({ assets: [...GRID_A.filter((a) => a.id !== "d0"), ...floaty] })
-      )
+      optimize(inputA({ assets: [...GRID_A.filter((a) => a.id !== "d0"), ...floaty] }))
     ).toThrow(/non-integer/)
-    expect(() => optimize(inputA({ budgetTenths: 10.5 }))).toThrow(
-      /budgetTenths/
-    )
-    expect(() => optimize(inputA({ freeTransfers: -1 }))).toThrow(
-      /freeTransfers/
-    )
+    expect(() => optimize(inputA({ budgetTenths: 10.5 }))).toThrow(/budgetTenths/)
+    expect(() => optimize(inputA({ freeTransfers: -1 }))).toThrow(/freeTransfers/)
   })
 })
 

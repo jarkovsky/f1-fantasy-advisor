@@ -42,11 +42,8 @@ export function LockedView({
   projection,
   nextLockAtMs,
 }: LockedViewProps) {
-  const resolved = roster
-    .map((id) => assetsById[id])
-    .filter((a): a is AssetLite => a !== undefined)
-  const projOf = (id: string): number =>
-    projection.byPlayerId[id]?.totalPoints ?? 0
+  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
+  const projOf = (id: string): number => projection.byPlayerId[id]?.totalPoints ?? 0
 
   const drivers = resolved.filter((a) => a.kind === "driver")
   const captain = [...drivers].sort((a, b) => {
@@ -54,9 +51,7 @@ export function LockedView({
     return d !== 0 ? d : a.playerId < b.playerId ? -1 : 1
   })[0]
   const projectedSum = resolved.reduce((s, a) => s + projOf(a.playerId), 0)
-  const captainBonus = captain
-    ? projOf(captain.playerId) * (DRS_BOOST_MULTIPLIER - 1)
-    : 0
+  const captainBonus = captain ? projOf(captain.playerId) * (DRS_BOOST_MULTIPLIER - 1) : 0
 
   return (
     <div className="flex flex-col gap-4">
@@ -76,18 +71,13 @@ export function LockedView({
       <Card className="gap-3 bg-surface-1 p-4">
         <ul className="flex flex-col gap-0.5">
           {resolved.map((a) => (
-            <li
-              key={a.playerId}
-              className="flex items-center gap-2 py-1 text-sm"
-            >
+            <li key={a.playerId} className="flex items-center gap-2 py-1 text-sm">
               <span
                 aria-hidden="true"
                 className="h-4 w-[3px] shrink-0 rounded-full"
                 style={{ background: teamColor(assetColorKey(a)) }}
               />
-              <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">
-                {a.tla}
-              </span>
+              <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">{a.tla}</span>
               <span className="min-w-0 flex-1 truncate">{a.displayName}</span>
               <span className="w-16 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
                 {formatPriceTenths(a.priceTenths)}
@@ -106,9 +96,7 @@ export function LockedView({
 
       <p className="text-xs text-muted-foreground">
         Transfers reopen after the race.
-        {nextLockAtMs !== null && (
-          <> Next lock: {lockFmt.format(nextLockAtMs)}.</>
-        )}
+        {nextLockAtMs !== null && <> Next lock: {lockFmt.format(nextLockAtMs)}.</>}
       </p>
     </div>
   )

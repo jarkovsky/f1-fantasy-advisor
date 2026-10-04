@@ -44,11 +44,7 @@ function unionNotes(a: string[], b: string[]): string[] {
  * fixtures prove it). basisRaces is preset-independent (it counts scored
  * sessions), so it is copied; priorBlended carries through identically.
  */
-function lerpAsset(
-  a: AssetProjection,
-  b: AssetProjection,
-  w: number
-): AssetProjection {
+function lerpAsset(a: AssetProjection, b: AssetProjection, w: number): AssetProjection {
   // Per-asset fallback: when the B-side asset fell back to equal-ppm (no
   // history / mid-season swap), BOTH endpoints hold the identical equal-ppm
   // value (the engine forces equal-ppm for that asset under every history
@@ -75,17 +71,13 @@ function lerpAsset(
   const perSession: SessionExpectation[] = b.perSession.map((bs, i) => {
     const as = a.perSession[i]
     if (!as || as.session !== bs.session) {
-      throw new Error(
-        `projection-resolve: session label mismatch for ${b.playerId} at ${i}`
-      )
+      throw new Error(`projection-resolve: session label mismatch for ${b.playerId} at ${i}`)
     }
     return {
       session: bs.session,
       expected: (1 - w) * as.expected + w * bs.expected,
       basisRaces: bs.basisRaces,
-      ...(bs.priorBlended !== undefined
-        ? { priorBlended: bs.priorBlended }
-        : {}),
+      ...(bs.priorBlended !== undefined ? { priorBlended: bs.priorBlended } : {}),
     }
   })
 
@@ -132,9 +124,7 @@ export function resolveClientProjection(
     const bp = b.byPlayerId[id]
     const ap = a.byPlayerId[id]
     if (!bp || !ap) {
-      throw new Error(
-        `projection-resolve: asset ${id} missing from an endpoint`
-      )
+      throw new Error(`projection-resolve: asset ${id} missing from an endpoint`)
     }
     byPlayerId[id] = lerpAsset(ap, bp, w)
   }

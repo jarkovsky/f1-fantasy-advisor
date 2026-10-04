@@ -3,10 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AdvisorPanel } from "@/app/_components/advisor-panel"
-import type {
-  AdvisorServerProps,
-  ConcretePresetId,
-} from "@/app/_components/advisor-types"
+import type { AdvisorServerProps, ConcretePresetId } from "@/app/_components/advisor-types"
 import type { AssetLite } from "@/lib/asset-lite"
 import { fixtureWeekends } from "@/test/fixtures"
 import type { RaceWeekConstraints } from "@/lib/f1/schemas"
@@ -15,10 +12,7 @@ import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer-adapter"
 import { formatSignedPoints } from "@/lib/format"
 import type { AssetProjection, ProjectionResult } from "@/lib/projections"
 import { teamStore } from "@/lib/store"
-import {
-  installMatchMediaStub,
-  installResizeObserverStub,
-} from "@/test/stubs/dom"
+import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
 // next/navigation is mocked at module level. `searchParamsMock` is mutable so a
@@ -74,14 +68,8 @@ function constructor(n: number, priceTenths: number): AssetLite {
   }
 }
 
-const DRIVERS: AssetLite[] = Array.from({ length: 8 }, (_, i) =>
-  driver(i + 1, 300 - i * 20)
-) // d1=300 … d8=160
-const CONSTRUCTORS: AssetLite[] = [
-  constructor(1, 250),
-  constructor(2, 200),
-  constructor(3, 150),
-]
+const DRIVERS: AssetLite[] = Array.from({ length: 8 }, (_, i) => driver(i + 1, 300 - i * 20)) // d1=300 … d8=160
+const CONSTRUCTORS: AssetLite[] = [constructor(1, 250), constructor(2, 200), constructor(3, 150)]
 const GRID: AssetLite[] = [...DRIVERS, ...CONSTRUCTORS]
 
 // ---------------------------------------------------------------------------
@@ -166,9 +154,7 @@ function projectionsByPreset(
 // ---------------------------------------------------------------------------
 // Constraints + props builders.
 // ---------------------------------------------------------------------------
-function makeConstraints(
-  over: Partial<RaceWeekConstraints> = {}
-): RaceWeekConstraints {
+function makeConstraints(over: Partial<RaceWeekConstraints> = {}): RaceWeekConstraints {
   return {
     raceNumber: 6,
     lastCompletedRace: 5,
@@ -245,12 +231,8 @@ describe("FIRST_VISIT", () => {
     seedDevNow(BEFORE_LOCK)
     render(<AdvisorPanel {...makeProps()} />)
 
-    expect(
-      await screen.findByRole("heading", { name: "Drivers (8)" })
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByText("vs keeping your current team")
-    ).not.toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
+    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
   })
 })
 
@@ -265,9 +247,7 @@ describe("OPEN", () => {
     seedTeam(ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    expect(
-      await screen.findByRole("heading", { name: "Monaco Grand Prix" })
-    ).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { name: "Monaco Grand Prix" })).toBeInTheDocument()
     expect(
       await screen.findByText("vs keeping your current team", undefined, {
         timeout: 15_000,
@@ -308,18 +288,14 @@ describe("OPEN — oracle equality", () => {
     const exp = expected()
 
     // Transfer chip.
-    const tLabel = `${exp.best.transfers} transfer${
-      exp.best.transfers === 1 ? "" : "s"
-    }`
+    const tLabel = `${exp.best.transfers} transfer${exp.best.transfers === 1 ? "" : "s"}`
     expect(screen.getByText(tLabel)).toBeInTheDocument()
 
     // DRS Boost pick = the optimizer's captain.
-    const captainName =
-      GRID.find((a) => a.playerId === exp.best.captainId)?.displayName ?? "?"
+    const captainName = GRID.find((a) => a.playerId === exp.best.captainId)?.displayName ?? "?"
     const drsLine = screen.getByText(
       (_, el) =>
-        el?.tagName === "P" &&
-        Boolean(el.textContent?.startsWith(`DRS Boost → ${captainName} `))
+        el?.tagName === "P" && Boolean(el.textContent?.startsWith(`DRS Boost → ${captainName} `))
     )
     expect(drsLine).toBeInTheDocument()
 
@@ -327,8 +303,7 @@ describe("OPEN — oracle equality", () => {
     // formatSignedPoints. Scope to the "vs keeping your current team" block.
     const baseline = exp.byTransferCount[0]?.projectedTotal ?? 0
     const gainText = formatSignedPoints(exp.best.score - baseline)
-    const block = screen.getByText("vs keeping your current team")
-      .parentElement as HTMLElement
+    const block = screen.getByText("vs keeping your current team").parentElement as HTMLElement
     expect(within(block).getByText(gainText)).toBeInTheDocument()
   })
 })
@@ -390,9 +365,7 @@ describe("OPEN — transfer penalty", () => {
     // Alternatives: open the disclosure, then the 3-transfer bucket carries the
     // "(−10 penalty)" note.
     const user = userEvent.setup()
-    await user.click(
-      screen.getByRole("button", { name: /other transfer counts/i })
-    )
+    await user.click(screen.getByRole("button", { name: /other transfer counts/i }))
     expect(await screen.findByText(/\(−10 penalty\)/)).toBeInTheDocument()
   })
 })
@@ -436,21 +409,13 @@ describe("OPEN — DRS Boost ranking", () => {
     const rows = within(content).getAllByRole("listitem")
 
     // The plan's five drivers, sorted by projection desc.
-    const sorted = [...exp.best.driverIds].sort(
-      (a, b) => (WEIGHTED[b] ?? 0) - (WEIGHTED[a] ?? 0)
-    )
-    const expectedNames = sorted.map(
-      (id) => GRID.find((a) => a.playerId === id)?.displayName
-    )
-    const rowNames = rows.map((r) =>
-      r.textContent?.replace("★", "").replace(/\+.*$/, "").trim()
-    )
+    const sorted = [...exp.best.driverIds].sort((a, b) => (WEIGHTED[b] ?? 0) - (WEIGHTED[a] ?? 0))
+    const expectedNames = sorted.map((id) => GRID.find((a) => a.playerId === id)?.displayName)
+    const rowNames = rows.map((r) => r.textContent?.replace("★", "").replace(/\+.*$/, "").trim())
     expect(rowNames).toEqual(expectedNames)
 
     // Top row = the captain.
-    const captainName = GRID.find(
-      (a) => a.playerId === exp.best.captainId
-    )?.displayName
+    const captainName = GRID.find((a) => a.playerId === exp.best.captainId)?.displayName
     expect(rows[0]?.textContent).toContain(captainName)
   })
 })
@@ -471,22 +436,14 @@ describe("OPEN — wildcard what-if", () => {
       timeout: 15_000,
     })
     // Pre-toggle: an Apply button exists.
-    expect(
-      screen.getByRole("button", { name: /apply this plan/i })
-    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /apply this plan/i })).toBeInTheDocument()
 
     const user = userEvent.setup()
     await user.click(screen.getByRole("switch", { name: "Wildcard (what-if)" }))
 
-    expect(
-      await screen.findByText("Hypothetical — not saved")
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/Within your free transfers — no penalty\./)
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByRole("button", { name: /apply this plan/i })
-    ).not.toBeInTheDocument()
+    expect(await screen.findByText("Hypothetical — not saved")).toBeInTheDocument()
+    expect(screen.getByText(/Within your free transfers — no penalty\./)).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /apply this plan/i })).not.toBeInTheDocument()
   })
 })
 
@@ -509,13 +466,9 @@ describe("OPEN — limitless what-if", () => {
     })
 
     const user = userEvent.setup()
-    await user.click(
-      screen.getByRole("switch", { name: "Limitless (what-if)" })
-    )
+    await user.click(screen.getByRole("switch", { name: "Limitless (what-if)" }))
 
-    expect(
-      await screen.findByText(/Limitless ignores budget/)
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/Limitless ignores budget/)).toBeInTheDocument()
 
     // The optimizer ignores budget → the best squad is the priciest drivers, so
     // the post-transfer bank is negative (rendered with a leading minus).
@@ -544,23 +497,13 @@ describe("ROLLOVER", () => {
     seedTeam(ROSTER, 500, 3, 5) // entered for race 5; pointer is on 6
     render(<AdvisorPanel {...makeProps()} />)
 
-    expect(
-      await screen.findByText("New race week — confirm your team.")
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByText("vs keeping your current team")
-    ).not.toBeInTheDocument()
+    expect(await screen.findByText("New race week — confirm your team.")).toBeInTheDocument()
+    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
 
     const user = userEvent.setup()
-    await user.click(
-      screen.getByRole("radio", { name: /I kept this exact team/i })
-    )
-    await user.click(
-      screen.getByRole("radio", { name: /Standard \(2 free\)/i })
-    )
-    await user.click(
-      screen.getByRole("button", { name: /confirm and continue/i })
-    )
+    await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
+    await user.click(screen.getByRole("radio", { name: /Standard \(2 free\)/i }))
+    await user.click(screen.getByRole("button", { name: /confirm and continue/i }))
 
     // raceNumber bumped to 6 → OPEN → the command center appears.
     expect(
@@ -583,18 +526,12 @@ describe("LOCKED", () => {
     seedTeam(ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    expect(
-      await screen.findByText(/Team locked for the Monaco Grand Prix\./)
-    ).toBeInTheDocument()
+    expect(await screen.findByText(/Team locked for the Monaco Grand Prix\./)).toBeInTheDocument()
     // Read-only roster is visible …
     expect(screen.getByText("Driver 4")).toBeInTheDocument()
     // … but there is no apply / recommendation CTA.
-    expect(
-      screen.queryByRole("button", { name: /apply this plan/i })
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByText("vs keeping your current team")
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /apply this plan/i })).not.toBeInTheDocument()
+    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
   })
 })
 
@@ -618,12 +555,8 @@ describe("SEASON_ENDED", () => {
       />
     )
 
-    expect(
-      await screen.findByText("That's a wrap on the 2026 season.")
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByText("vs keeping your current team")
-    ).not.toBeInTheDocument()
+    expect(await screen.findByText("That's a wrap on the 2026 season.")).toBeInTheDocument()
+    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
   })
 })
 
@@ -644,9 +577,7 @@ describe("OPEN — unresolvable saved id", () => {
         timeout: 15_000,
       })
     ).toBeInTheDocument()
-    expect(
-      screen.getAllByText(/no longer available\./).length
-    ).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/no longer available\./).length).toBeGreaterThanOrEqual(1)
   })
 })
 
@@ -672,9 +603,7 @@ describe("OPEN — preset switch", () => {
     // d4's season-average total (65.0) differs from its weighted-recent (70.0).
     const heading = screen.getByRole("heading", { name: "Your team" })
     const card = heading.closest("[data-slot=card]") as HTMLElement
-    const d4Row = within(card)
-      .getByText("Driver 4")
-      .closest("li") as HTMLElement
+    const d4Row = within(card).getByText("Driver 4").closest("li") as HTMLElement
     expect(within(d4Row).getByText("65.0")).toBeInTheDocument()
     expect(within(d4Row).queryByText("70.0")).not.toBeInTheDocument()
   })
@@ -710,11 +639,7 @@ describe("OPEN — cold start", () => {
 
     seedDevNow(BEFORE_LOCK)
     seedTeam(ROSTER, 500, 3, 6)
-    render(
-      <AdvisorPanel
-        {...makeProps({ projectionsByPreset: coldStartPresets() })}
-      />
-    )
+    render(<AdvisorPanel {...makeProps({ projectionsByPreset: coldStartPresets() })} />)
 
     await screen.findByText("vs keeping your current team", undefined, {
       timeout: 15_000,
@@ -766,26 +691,19 @@ describe("OPEN — merged card rows", () => {
     const heading = screen.getByRole("heading", { name: "Your team" })
     const card = heading.closest("[data-slot=card]") as HTMLElement
 
-    const nameOf = (id: string) =>
-      GRID.find((a) => a.playerId === id)?.displayName ?? id
+    const nameOf = (id: string) => GRID.find((a) => a.playerId === id)?.displayName ?? id
 
     // A kept driver (in both the roster and the recommended plan) renders
     // without a strikethrough. d4 and d5 survive under weighted-recent.
-    const keptId = exp.best.driverIds.find(
-      (id) => ROSTER.includes(id) && id !== exp.best.captainId
-    )
+    const keptId = exp.best.driverIds.find((id) => ROSTER.includes(id) && id !== exp.best.captainId)
     expect(keptId).toBeDefined()
     const keptName = within(card).getByText(nameOf(keptId as string))
     expect(keptName.className).not.toContain("line-through")
 
     // A swapped slot: the out-asset is struck through, the in-asset is bold.
     // Pick a non-captain in-asset so its name span carries no nested DRS chip.
-    const inId = exp.best.driverIds.find(
-      (id) => !ROSTER.includes(id) && id !== exp.best.captainId
-    )
-    const outId = ROSTER.filter(
-      (id) => id.startsWith("d") && !exp.best.driverIds.includes(id)
-    )[0]
+    const inId = exp.best.driverIds.find((id) => !ROSTER.includes(id) && id !== exp.best.captainId)
+    const outId = ROSTER.filter((id) => id.startsWith("d") && !exp.best.driverIds.includes(id))[0]
     expect(inId).toBeDefined()
     expect(outId).toBeDefined()
     const outName = within(card).getByText(nameOf(outId as string))

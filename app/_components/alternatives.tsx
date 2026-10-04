@@ -1,19 +1,11 @@
 "use client"
 
 import { Delta } from "@/app/_components/delta"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import type { AssetLite } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer"
-import {
-  PRESET_REGISTRY,
-  type AssetProjection,
-  type ProjectionResult,
-} from "@/lib/projections"
+import { PRESET_REGISTRY, type AssetProjection, type ProjectionResult } from "@/lib/projections"
 
 /**
  * "Other transfer counts" — collapsed by default. One row per non-null bucket
@@ -44,9 +36,7 @@ function AssetMath({
   const sessionSplit = proj.perSession
     .map(
       (s) =>
-        `${s.session} ${s.expected.toFixed(1)} (n=${s.basisRaces})${
-          s.priorBlended ? " ※" : ""
-        }`
+        `${s.session} ${s.expected.toFixed(1)} (n=${s.basisRaces})${s.priorBlended ? " ※" : ""}`
     )
     .join(" · ")
 
@@ -57,27 +47,19 @@ function AssetMath({
       </span>
       {sessionSplit && <span className="font-mono">{sessionSplit}</span>}
       {asset && <span>{formatPriceTenths(asset.priceTenths)}</span>}
-      {proj.perSession.some((s) => s.priorBlended) && (
-        <span>※ small-sample prior applied</span>
-      )}
+      {proj.perSession.some((s) => s.priorBlended) && <span>※ small-sample prior applied</span>}
       {proj.fallback && <span>Equal PPM — no race history yet.</span>}
     </div>
   )
 }
 
-export function Alternatives({
-  result,
-  baseline,
-  assetsById,
-  projection,
-}: AlternativesProps) {
+export function Alternatives({ result, baseline, assetsById, projection }: AlternativesProps) {
   const baselineTotal = baseline?.projectedTotal ?? 0
   const rows = result.byTransferCount
     .map((plan, t) => ({ plan, t }))
     .filter((r): r is { plan: TeamPlan; t: number } => r.plan !== null)
 
-  const nameOf = (id: string): string =>
-    assetsById[id]?.displayName ?? `Asset ${id}`
+  const nameOf = (id: string): string => assetsById[id]?.displayName ?? `Asset ${id}`
 
   const { completedRaces, completedSprints } = projection.basis
 
@@ -94,24 +76,17 @@ export function Alternatives({
           const gain = plan.projectedTotal - baselineTotal
           const ins = baseline
             ? [...plan.driverIds, ...plan.constructorIds].filter(
-                (id) =>
-                  ![...baseline.driverIds, ...baseline.constructorIds].includes(
-                    id
-                  )
+                (id) => ![...baseline.driverIds, ...baseline.constructorIds].includes(id)
               )
             : [...plan.driverIds, ...plan.constructorIds]
           const outs = baseline
             ? [...baseline.driverIds, ...baseline.constructorIds].filter(
-                (id) =>
-                  ![...plan.driverIds, ...plan.constructorIds].includes(id)
+                (id) => ![...plan.driverIds, ...plan.constructorIds].includes(id)
               )
             : []
 
           return (
-            <Collapsible
-              key={t}
-              className="rounded-md border border-grid-line/60"
-            >
+            <Collapsible key={t} className="rounded-md border border-grid-line/60">
               <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
                 <span className="flex items-center gap-2">
                   <span>
@@ -119,9 +94,7 @@ export function Alternatives({
                   </span>
                   <Delta value={gain} points className="font-mono text-xs" />
                   {t === result.best.transfers && (
-                    <span className="text-xs text-accent-f1">
-                      ← recommended
-                    </span>
+                    <span className="text-xs text-accent-f1">← recommended</span>
                   )}
                   {plan.penaltyPoints < 0 && (
                     <span className="text-xs text-neg">
@@ -144,10 +117,7 @@ export function Alternatives({
                         <span aria-hidden="true">→ </span>
                         <span className="font-medium">{nameOf(inId)}</span>
                       </p>
-                      <AssetMath
-                        proj={projection.byPlayerId[inId]}
-                        asset={assetsById[inId]}
-                      />
+                      <AssetMath proj={projection.byPlayerId[inId]} asset={assetsById[inId]} />
                     </div>
                   )
                 })}
@@ -157,8 +127,8 @@ export function Alternatives({
         })}
 
         <p className="border-t border-grid-line pt-2 text-xs text-muted-foreground">
-          Projected with {presetLabel(projection.effectivePreset)}, based on{" "}
-          {completedRaces} completed race{completedRaces === 1 ? "" : "s"}
+          Projected with {presetLabel(projection.effectivePreset)}, based on {completedRaces}{" "}
+          completed race{completedRaces === 1 ? "" : "s"}
           {completedSprints > 0
             ? `, ${completedSprints} sprint${completedSprints === 1 ? "" : "s"}`
             : ""}

@@ -9,11 +9,7 @@
  */
 import os from "node:os"
 
-import {
-  optimize,
-  type OptimizerAsset,
-  type OptimizerInput,
-} from "../lib/optimizer"
+import { optimize, type OptimizerAsset, type OptimizerInput } from "../lib/optimizer"
 
 const WARMUP = 50
 const MEASURED = 500
@@ -59,16 +55,12 @@ function quantile(sorted: number[], q: number): number {
   return sorted[idx] ?? 0
 }
 
-console.log(
-  "Optimizer benchmark — C(22,5) × C(11,2) = 1,448,370 candidate squads"
-)
+console.log("Optimizer benchmark — C(22,5) × C(11,2) = 1,448,370 candidate squads")
 console.log(
   `machine: ${os.cpus()[0]?.model ?? "unknown CPU"} ×${os.cpus().length}, ` +
     `${Math.round(os.totalmem() / 2 ** 30)}GB, node ${process.version}, ${process.platform}/${process.arch}`
 )
-console.log(
-  `runs: ${WARMUP} warmup + ${MEASURED} measured, seeds ${SEEDS.join("/")}\n`
-)
+console.log(`runs: ${WARMUP} warmup + ${MEASURED} measured, seeds ${SEEDS.join("/")}\n`)
 console.log("| mode      | min ms | median ms | p95 ms |")
 console.log("|-----------|--------|-----------|--------|")
 

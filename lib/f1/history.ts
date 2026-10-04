@@ -130,8 +130,7 @@ export function assembleHistory(payloads: RacePayload[]): SeasonHistory {
 
     const first = history.perRace[0]
     const last = history.perRace[history.perRace.length - 1]
-    history.priceDeltaTenths =
-      first && last ? last.priceTenths - first.priceTenths : 0
+    history.priceDeltaTenths = first && last ? last.priceTenths - first.priceTenths : 0
 
     // Price-chain invariant: price[race] === prevPrice[race+1] for CONSECUTIVE
     // races (a gap from a mid-season swap legitimately breaks the chain).
@@ -139,10 +138,7 @@ export function assembleHistory(payloads: RacePayload[]): SeasonHistory {
       const prev = history.perRace[i - 1]
       const curr = history.perRace[i]
       if (!prev || !curr) continue
-      if (
-        curr.raceNumber === prev.raceNumber + 1 &&
-        curr.prevPriceTenths !== prev.priceTenths
-      ) {
+      if (curr.raceNumber === prev.raceNumber + 1 && curr.prevPriceTenths !== prev.priceTenths) {
         warnings.push(
           `price chain broken for ${history.playerId} at race ${curr.raceNumber}: ` +
             `${prev.priceTenths} → declared prev ${curr.prevPriceTenths}`

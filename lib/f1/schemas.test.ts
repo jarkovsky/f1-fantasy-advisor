@@ -63,9 +63,7 @@ describe("parseDriversFeed — real fixture acceptance", () => {
   it("parses a sprint weekend (race 4): 3 sessions incl. 'Sprint Qualifying'", () => {
     const ver = asset(race4, "131")
     expect(ver.sessionPoints).toHaveLength(3)
-    expect(ver.sessionPoints.map((s) => s.session)).toContain(
-      "Sprint Qualifying"
-    )
+    expect(ver.sessionPoints.map((s) => s.session)).toContain("Sprint Qualifying")
     // race-weekend total equals the session sum (6 + 9 + 37 = 52)
     const sum = ver.sessionPoints.reduce((acc, s) => acc + (s.points ?? 0), 0)
     expect(sum).toBe(52)
@@ -109,9 +107,7 @@ describe("parseDriversFeed — real fixture acceptance", () => {
 
 describe("AssetSchema edge cases", () => {
   it("rejects a Skill/PositionName contradiction", () => {
-    const raw = structuredClone(
-      (race1.Data.Value as { Skill: number }[])[0]
-    ) as { Skill: number }
+    const raw = structuredClone((race1.Data.Value as { Skill: number }[])[0]) as { Skill: number }
     raw.Skill = 2 // driver row claiming to be a constructor
     expect(AssetSchema.safeParse(raw).success).toBe(false)
   })
@@ -178,9 +174,7 @@ describe("parseRaceday — session rows → RaceWeekend[]", () => {
     if (!monaco) throw new Error("no race 6")
     // Monaco quali 2026-06-06 16:00 +02:00 — NOT constraints.DeadlineDate
     expect(monaco.lockAtMs).toBe(Date.parse("2026-06-06T16:00:00+02:00"))
-    expect(monaco.raceEndsApproxMs).toBe(
-      Date.parse("2026-06-07T17:00:00+02:00")
-    )
+    expect(monaco.raceEndsApproxMs).toBe(Date.parse("2026-06-07T17:00:00+02:00"))
     expect(monaco.gpName).toBe("Monaco Grand Prix")
   })
 

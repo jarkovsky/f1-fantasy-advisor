@@ -16,12 +16,7 @@ import "server-only"
 import { readFileSync } from "node:fs"
 import path from "node:path"
 
-const MANIFEST_PATH = path.join(
-  process.cwd(),
-  "public",
-  "headshots",
-  "manifest.json"
-)
+const MANIFEST_PATH = path.join(process.cwd(), "public", "headshots", "manifest.json")
 
 function loadManifest(): Record<string, string> {
   try {

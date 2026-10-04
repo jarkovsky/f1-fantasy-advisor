@@ -22,11 +22,7 @@ import "server-only"
 
 import { cacheLife, cacheTag } from "next/cache"
 
-import {
-  fetchOrSnapshot,
-  probeFeedPublished,
-  type Feed,
-} from "./fetch-or-snapshot"
+import { fetchOrSnapshot, probeFeedPublished, type Feed } from "./fetch-or-snapshot"
 import { feedPaths } from "./config"
 import {
   type Asset,
@@ -54,10 +50,7 @@ export type { Feed } from "./fetch-or-snapshot"
  * primitive args keep the cache key clean. Completed races are immutable and
  * cache effectively forever.
  */
-export async function getDrivers(
-  race: number,
-  completed: boolean
-): Promise<Feed<Asset[]>> {
+export async function getDrivers(race: number, completed: boolean): Promise<Feed<Asset[]>> {
   "use cache"
   cacheTag("f1", "f1:drivers", `f1:drivers:${race}`)
   // Branched (not a ternary argument): cacheLife is overloaded per profile
@@ -77,20 +70,13 @@ export async function getDrivers(
 }
 
 /** Current race pointer, last completed race, budget cap. */
-export async function getConstraints(): Promise<
-  Feed<RaceWeekConstraints | null>
-> {
+export async function getConstraints(): Promise<Feed<RaceWeekConstraints | null>> {
   "use cache"
   cacheTag("f1", "f1:constraints")
   cacheLife("orchestration")
-  return fetchOrSnapshot(
-    feedPaths.constraints(),
-    parseConstraints,
-    snapshotConstraints,
-    {
-      empty: null,
-    }
-  )
+  return fetchOrSnapshot(feedPaths.constraints(), parseConstraints, snapshotConstraints, {
+    empty: null,
+  })
 }
 
 /** The season schedule grouped into RaceWeekends (real locks live here). */
@@ -123,9 +109,7 @@ export async function getMixapi(): Promise<Feed<Mixapi | null>> {
  * typecheck + the online/offline builds, not Vitest ('use cache' needs the
  * Next runtime).
  */
-export async function getNextRacePublished(
-  currentRace: number
-): Promise<boolean> {
+export async function getNextRacePublished(currentRace: number): Promise<boolean> {
   "use cache"
   cacheTag("f1", "f1:next-race-published")
   cacheLife("orchestration")
@@ -155,9 +139,7 @@ export async function getHistory(
       return getDrivers(race, race <= lastCompletedRace)
     })
   )
-  const history = assembleHistory(
-    feeds.map((f, i) => ({ raceNumber: i + 1, assets: f.data }))
-  )
+  const history = assembleHistory(feeds.map((f, i) => ({ raceNumber: i + 1, assets: f.data })))
   const degraded = feeds.some((f) => f.meta.source === "snapshot")
   return {
     data: history,

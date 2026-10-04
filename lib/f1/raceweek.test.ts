@@ -60,18 +60,12 @@ describe("deriveRaceWeekState — happy path through the Monaco weekend", () => 
   })
 
   it("LOCKED exactly at the lock instant (>= semantics)", () => {
-    expect(deriveRaceWeekState(input({ now: new Date(LOCK) })).kind).toBe(
-      "LOCKED"
-    )
+    expect(deriveRaceWeekState(input({ now: new Date(LOCK) })).kind).toBe("LOCKED")
   })
 
   it("OPEN one second before, LOCKED one second after", () => {
-    expect(deriveRaceWeekState(input({ now: new Date(LOCK - 1) })).kind).toBe(
-      "OPEN"
-    )
-    expect(deriveRaceWeekState(input({ now: new Date(LOCK + 1) })).kind).toBe(
-      "LOCKED"
-    )
+    expect(deriveRaceWeekState(input({ now: new Date(LOCK - 1) })).kind).toBe("OPEN")
+    expect(deriveRaceWeekState(input({ now: new Date(LOCK + 1) })).kind).toBe("LOCKED")
   })
 
   it("LOCKED mid-weekend (between quali and race)", () => {
@@ -85,16 +79,12 @@ describe("deriveRaceWeekState — happy path through the Monaco weekend", () => 
   })
 
   it("LOCKED carries the mixapi live flag", () => {
-    const state = deriveRaceWeekState(
-      input({ now: new Date(LOCK + 1), live: true })
-    )
+    const state = deriveRaceWeekState(input({ now: new Date(LOCK + 1), live: true }))
     expect(state).toMatchObject({ kind: "LOCKED", live: true })
   })
 
   it("LOCKED at the race-end instant (<= semantics), BETWEEN_ROUNDS after", () => {
-    expect(deriveRaceWeekState(input({ now: new Date(RACE_END) })).kind).toBe(
-      "LOCKED"
-    )
+    expect(deriveRaceWeekState(input({ now: new Date(RACE_END) })).kind).toBe("LOCKED")
     const after = deriveRaceWeekState(input({ now: new Date(RACE_END + 1) }))
     expect(after).toEqual({
       kind: "BETWEEN_ROUNDS",
@@ -107,32 +97,24 @@ describe("deriveRaceWeekState — happy path through the Monaco weekend", () => 
 
 describe("deriveRaceWeekState — ROLLOVER precedence", () => {
   it("ROLLOVER when the stored race is behind, even inside an OPEN window", () => {
-    const state = deriveRaceWeekState(
-      input({ storedRaceNumber: 5, now: new Date(LOCK - 60_000) })
-    )
+    const state = deriveRaceWeekState(input({ storedRaceNumber: 5, now: new Date(LOCK - 60_000) }))
     expect(state).toEqual({ kind: "ROLLOVER", from: 5, to: 6 })
   })
 
   it("after the user confirms (stored = current), the same instant is OPEN", () => {
-    const state = deriveRaceWeekState(
-      input({ storedRaceNumber: 6, now: new Date(LOCK - 60_000) })
-    )
+    const state = deriveRaceWeekState(input({ storedRaceNumber: 6, now: new Date(LOCK - 60_000) }))
     expect(state.kind).toBe("OPEN")
   })
 
   it("FIRST_VISIT beats ROLLOVER (null stored is not a rollover)", () => {
-    expect(deriveRaceWeekState(input({ storedRaceNumber: null })).kind).toBe(
-      "FIRST_VISIT"
-    )
+    expect(deriveRaceWeekState(input({ storedRaceNumber: null })).kind).toBe("FIRST_VISIT")
   })
 })
 
 describe("deriveRaceWeekState — season boundaries & fallbacks", () => {
   it("SEASON_ENDED when the last race is completed", () => {
     const done = { ...constraints(), raceNumber: 22, lastCompletedRace: 22 }
-    const state = deriveRaceWeekState(
-      input({ constraints: done, storedRaceNumber: 22 })
-    )
+    const state = deriveRaceWeekState(input({ constraints: done, storedRaceNumber: 22 }))
     expect(state).toEqual({ kind: "SEASON_ENDED", lastRace: 22 })
   })
 
@@ -153,9 +135,7 @@ describe("deriveRaceWeekState — season boundaries & fallbacks", () => {
 
   it("fallback: constraints point at a race the schedule doesn't know", () => {
     const c = { ...constraints(), raceNumber: 99 }
-    const state = deriveRaceWeekState(
-      input({ constraints: c, storedRaceNumber: 99 })
-    )
+    const state = deriveRaceWeekState(input({ constraints: c, storedRaceNumber: 99 }))
     expect(state).toEqual({
       kind: "BETWEEN_ROUNDS",
       lastCompleted: 5,

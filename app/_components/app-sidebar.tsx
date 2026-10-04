@@ -6,12 +6,7 @@ import { ChartColumn, Flag, Gauge, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 /**
@@ -67,10 +62,7 @@ export function AppSidebar() {
       <div className="flex h-full w-16 flex-col items-center gap-3 rounded-xl border border-grid-line bg-card py-4 shadow-md">
         <Brand className="size-10" />
         <TooltipProvider>
-          <nav
-            aria-label="Primary"
-            className="flex flex-col items-center gap-2"
-          >
+          <nav aria-label="Primary" className="flex flex-col items-center gap-2">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const active = pathname === href
               return (

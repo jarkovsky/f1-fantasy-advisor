@@ -88,8 +88,7 @@ export function reconcileRoster(
 
   const assets = [...grid]
   for (const id of unresolvedIds) {
-    const kind: OptimizerAsset["kind"] =
-      driverDeficit > 0 ? "driver" : "constructor"
+    const kind: OptimizerAsset["kind"] = driverDeficit > 0 ? "driver" : "constructor"
     if (kind === "driver") driverDeficit -= 1
     else constructorDeficit -= 1
     assets.push({ id, kind, priceTenths: 0, projected: 0 })

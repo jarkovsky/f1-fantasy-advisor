@@ -77,9 +77,7 @@ const TOTALS: Record<string, number> = {
 
 const PRESET: ConcretePresetId = "weighted-recent"
 
-function makeProjection(
-  totalsByPlayerId: Record<string, number>
-): ProjectionResult {
+function makeProjection(totalsByPlayerId: Record<string, number>): ProjectionResult {
   const byPlayerId: ProjectionResult["byPlayerId"] = {}
   for (const [playerId, total] of Object.entries(totalsByPlayerId)) {
     byPlayerId[playerId] = {
@@ -132,9 +130,7 @@ function renderView(props?: Partial<Parameters<typeof LockedView>[0]>) {
 describe("LockedView", () => {
   it("renders the 'Team locked for the {gpName}' banner", () => {
     renderView()
-    expect(
-      screen.getByText(/Team locked for the Monaco Grand Prix\./)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Team locked for the Monaco Grand Prix\./)).toBeInTheDocument()
   })
 
   it("shows the live badge with a pulsing dot when live", () => {
@@ -150,22 +146,14 @@ describe("LockedView", () => {
   it("renders the projected score and DRS pick from the stored roster's projection (no optimizer)", () => {
     renderView()
     // Σ totals 120 + captain bonus 20 (d1) = 140.0; DRS Boost = Driver 1.
-    expect(
-      screen.getByText(/Projected 140\.0 pts · DRS Boost Driver 1/)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Projected 140\.0 pts · DRS Boost Driver 1/)).toBeInTheDocument()
   })
 
   it("renders no transfer / apply CTA anywhere", () => {
     renderView()
-    expect(
-      screen.queryByRole("button", { name: /transfer/i })
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole("button", { name: /apply/i })
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole("button", { name: /save team/i })
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /transfer/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /apply/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /save team/i })).not.toBeInTheDocument()
     // Read-only view: no actionable buttons at all.
     expect(screen.queryAllByRole("button")).toHaveLength(0)
   })

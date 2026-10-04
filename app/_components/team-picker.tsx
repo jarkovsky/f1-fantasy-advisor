@@ -51,18 +51,10 @@ type TeamPickerProps = {
   onDone?: () => void
 }
 
-export function TeamPicker({
-  assets,
-  raceNumber,
-  mode,
-  onDone,
-}: TeamPickerProps) {
+export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps) {
   const { state, hydrated, setTeam, reset } = useTeamStore()
 
-  const byId = useMemo(
-    () => new Map(assets.map((a) => [a.playerId, a])),
-    [assets]
-  )
+  const byId = useMemo(() => new Map(assets.map((a) => [a.playerId, a])), [assets])
 
   // --- Draft state (local until Save) -------------------------------------
   const [selected, setSelected] = useState<Set<string>>(() => new Set())
@@ -73,14 +65,8 @@ export function TeamPicker({
   const [query, setQuery] = useState("")
 
   // The two kind tables (user feedback: separate tables, not one filtered list).
-  const drivers = useMemo(
-    () => assets.filter((a) => a.kind === "driver"),
-    [assets]
-  )
-  const constructors = useMemo(
-    () => assets.filter((a) => a.kind === "constructor"),
-    [assets]
-  )
+  const drivers = useMemo(() => assets.filter((a) => a.kind === "driver"), [assets])
+  const constructors = useMemo(() => assets.filter((a) => a.kind === "constructor"), [assets])
 
   // Edit mode seeds the draft from the store, but the store hydrates AFTER the
   // first render (localStorage is read lazily on subscribe). Seeding during
@@ -121,13 +107,11 @@ export function TeamPicker({
   // --- Bank parsing --------------------------------------------------------
   const bankTrimmed = bankInput.trim()
   const bankNumber = bankTrimmed === "" ? null : Number(bankTrimmed)
-  const bankEntered =
-    bankNumber !== null && Number.isFinite(bankNumber) && bankNumber >= 0
+  const bankEntered = bankNumber !== null && Number.isFinite(bankNumber) && bankNumber >= 0
   const bankTenths = bankEntered ? Math.round(bankNumber * 10) : 0
 
   // --- Validation (spec §5.1) ---------------------------------------------
-  const squadComplete =
-    driverCount === SQUAD_DRIVERS && constructorCount === SQUAD_CONSTRUCTORS
+  const squadComplete = driverCount === SQUAD_DRIVERS && constructorCount === SQUAD_CONSTRUCTORS
   const blocked = !squadComplete || !bankEntered
 
   // --- Live-region copy ----------------------------------------------------
@@ -174,12 +158,7 @@ export function TeamPicker({
     const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
     driverIds.sort(cmp)
     constructorIds.sort(cmp)
-    setTeam(
-      [...driverIds, ...constructorIds],
-      bankTenths,
-      freeTransfers,
-      raceNumber
-    )
+    setTeam([...driverIds, ...constructorIds], bankTenths, freeTransfers, raceNumber)
     onDone?.()
   }
 
@@ -233,9 +212,8 @@ export function TeamPicker({
           {/* RIGHT: summary, budget, transfers, status, CTA. */}
           <div className="flex flex-col gap-5 lg:border-l lg:border-grid-line lg:pl-6">
             <p className="font-mono text-sm tabular-nums">
-              Drivers {driverCount}/{SQUAD_DRIVERS} · Constructors{" "}
-              {constructorCount}/{SQUAD_CONSTRUCTORS} · Spent{" "}
-              {formatPriceTenths(teamValueTenths)}
+              Drivers {driverCount}/{SQUAD_DRIVERS} · Constructors {constructorCount}/
+              {SQUAD_CONSTRUCTORS} · Spent {formatPriceTenths(teamValueTenths)}
             </p>
 
             <div className="flex flex-col gap-1.5">
@@ -243,10 +221,7 @@ export function TeamPicker({
                 Remaining budget
               </label>
               <div className="flex items-center gap-2">
-                <span
-                  aria-hidden="true"
-                  className="font-mono text-muted-foreground"
-                >
+                <span aria-hidden="true" className="font-mono text-muted-foreground">
                   $
                 </span>
                 <input
@@ -265,23 +240,16 @@ export function TeamPicker({
                   }}
                   className="h-9 w-32 rounded-md border border-input bg-surface-1 px-2.5 font-mono text-sm tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-accent-f1"
                 />
-                <span className="font-mono text-sm text-muted-foreground">
-                  M
-                </span>
+                <span className="font-mono text-sm text-muted-foreground">M</span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Your bank from F1 Fantasy — after any transfers you already
-                made.
+                Your bank from F1 Fantasy — after any transfers you already made.
               </p>
             </div>
 
             <fieldset className="flex flex-col gap-1.5">
               <legend className="text-sm font-medium">Free transfers</legend>
-              <div
-                role="radiogroup"
-                aria-label="Free transfers"
-                className="flex gap-1.5"
-              >
+              <div role="radiogroup" aria-label="Free transfers" className="flex gap-1.5">
                 {FREE_TRANSFER_OPTIONS.map((opt) => {
                   const active = freeTransfers === opt.value
                   return (
@@ -300,9 +268,8 @@ export function TeamPicker({
                 })}
               </div>
               <p className="text-xs text-muted-foreground">
-                3 only if you banked an unused transfer last week; none carry
-                over after Wildcard or Limitless. Unlimited = your first race or
-                an active Wildcard.
+                3 only if you banked an unused transfer last week; none carry over after Wildcard or
+                Limitless. Unlimited = your first race or an active Wildcard.
               </p>
             </fieldset>
 
@@ -337,11 +304,7 @@ export function TeamPicker({
                   </Button>
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="text-muted-foreground"
-                      >
+                      <Button type="button" variant="ghost" className="text-muted-foreground">
                         Start over
                       </Button>
                     </DialogTrigger>
@@ -349,8 +312,7 @@ export function TeamPicker({
                       <DialogHeader>
                         <DialogTitle>Start over?</DialogTitle>
                         <DialogDescription>
-                          This clears your saved team, budget, and transfer
-                          count.
+                          This clears your saved team, budget, and transfer count.
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter>
@@ -359,11 +321,7 @@ export function TeamPicker({
                             Keep my team
                           </Button>
                         </DialogClose>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          onClick={handleStartOver}
-                        >
+                        <Button type="button" variant="destructive" onClick={handleStartOver}>
                           Start over
                         </Button>
                       </DialogFooter>

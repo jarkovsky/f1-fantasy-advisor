@@ -172,10 +172,7 @@ function applyPreset(preset: HistoryPresetId, series: number[]): number {
 // ---------------------------------------------------------------------------
 
 /** Chronological per-race points for one session of one asset. */
-function sessionSeries(
-  history: AssetHistory,
-  session: SessionLabelType
-): number[] {
+function sessionSeries(history: AssetHistory, session: SessionLabelType): number[] {
   const series: number[] = []
   for (const race of history.perRace) {
     if (race.status !== "scored") continue
@@ -200,11 +197,7 @@ function currentPriceTenths(history: AssetHistory): number {
   return history.perRace[history.perRace.length - 1]?.priceTenths ?? 0
 }
 
-function computeClassK(
-  season: SeasonHistory,
-  completedRaces: number,
-  notes: string[]
-): ClassK {
+function computeClassK(season: SeasonHistory, completedRaces: number, notes: string[]): ClassK {
   // Cold start: no scored points anywhere — degenerate to a pure price
   // ranking (k = 1 point per tenth), labeled via the cold-start fallback.
   if (completedRaces === 0) return { driver: 1, constructor: 1 }
@@ -221,9 +214,7 @@ function computeClassK(
   const k = (kind: AssetHistory["kind"]): number => {
     const { points, priceTenths } = sums[kind]
     if (points <= 0 || priceTenths <= 0) {
-      notes.push(
-        `equal-ppm: ${kind} class has non-positive points or price — k forced to 0`
-      )
+      notes.push(`equal-ppm: ${kind} class has non-positive points or price — k forced to 0`)
       return 0
     }
     // Per-race calibration: season points / season price / races → the
@@ -239,11 +230,7 @@ function computeClassK(
 // ---------------------------------------------------------------------------
 
 const NORMAL_SESSIONS: SessionLabelType[] = ["Qualifying", "Race"]
-const SPRINT_SESSIONS: SessionLabelType[] = [
-  "Sprint Qualifying",
-  "Qualifying",
-  "Race",
-]
+const SPRINT_SESSIONS: SessionLabelType[] = ["Sprint Qualifying", "Qualifying", "Race"]
 
 /**
  * Grid-wide sprint/race points ratio over completed sprint races — the prior
@@ -255,9 +242,7 @@ function gridSprintRaceRatio(season: SeasonHistory): number {
   for (const history of Object.values(season.byPlayerId)) {
     for (const r of history.perRace) {
       if (r.status !== "scored") continue
-      const sprintSession = r.sessionPoints.find(
-        (s) => s.session === "Sprint Qualifying"
-      )
+      const sprintSession = r.sessionPoints.find((s) => s.session === "Sprint Qualifying")
       if (!sprintSession || sprintSession.points === null) continue
       sprint += sprintSession.points
       race += r.sessionPoints.find((s) => s.session === "Race")?.points ?? 0
@@ -294,8 +279,7 @@ function composeSessions(
     // scaled by the grid-wide sprint/race ratio (spec §6.3).
     const raceSeries = sessionSeries(history, "Race")
     const raceExpectation = expectFor(raceSeries)
-    const alpha =
-      completedSprints / (completedSprints + SPRINT_PRIOR_SHRINKAGE_K)
+    const alpha = completedSprints / (completedSprints + SPRINT_PRIOR_SHRINKAGE_K)
     const expected = alpha * raw + (1 - alpha) * raceExpectation * gridRatio
     return { session, expected, basisRaces: series.length, priorBlended: true }
   })
@@ -317,17 +301,13 @@ export function projectAssets(
   const notes: string[] = []
 
   // Basis: completed races/sprints over the whole assembly.
-  const completedRaces = season.raceNumbers.filter(
-    (n) => n !== season.pendingRace
-  ).length
+  const completedRaces = season.raceNumbers.filter((n) => n !== season.pendingRace).length
   let completedSprints = 0
   for (const n of season.raceNumbers) {
     if (n === season.pendingRace) continue
     const hasSprint = Object.values(season.byPlayerId).some((h) =>
       h.perRace.some(
-        (r) =>
-          r.raceNumber === n &&
-          r.sessionPoints.some((s) => s.session === "Sprint Qualifying")
+        (r) => r.raceNumber === n && r.sessionPoints.some((s) => s.session === "Sprint Qualifying")
       )
     )
     if (hasSprint) completedSprints += 1
@@ -352,9 +332,7 @@ export function projectAssets(
   for (const history of Object.values(season.byPlayerId)) {
     const scoredRaces = history.perRace.filter((r) => r.status === "scored")
 
-    const equalPpm = (
-      fallback?: AssetProjection["fallback"]
-    ): AssetProjection => ({
+    const equalPpm = (fallback?: AssetProjection["fallback"]): AssetProjection => ({
       playerId: history.playerId,
       kind: history.kind,
       totalPoints: currentPriceTenths(history) * classK[history.kind],

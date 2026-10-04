@@ -3,12 +3,7 @@ import { readdirSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
 import manifest from "@/data/manifest.json"
-import {
-  DRIVERS_RAW,
-  snapshotConstraints,
-  snapshotDrivers,
-  snapshotRaceday,
-} from "./snapshot-data"
+import { DRIVERS_RAW, snapshotConstraints, snapshotDrivers, snapshotRaceday } from "./snapshot-data"
 import { parseConstraints, parseDriversFeed, parseRaceday } from "./schemas"
 
 describe("snapshot-data ↔ data/ drift", () => {

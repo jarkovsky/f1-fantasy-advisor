@@ -8,11 +8,7 @@ import { UnavailableAssetTile } from "@/app/_components/unavailable-asset-tile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Progress } from "@/components/ui/progress"
 import type { AssetLite } from "@/lib/asset-lite"
 import { assetColorKey } from "@/lib/asset-lite"
@@ -93,9 +89,7 @@ function slotRows(
   ): SlotRow[] => {
     // Incoming ids (in the plan, not in the baseline), each paired with the
     // matching outgoing id from the symmetric diff so the row can render out→in.
-    const incoming = baselineIds
-      ? planIds.filter((id) => !baselineIds.includes(id))
-      : []
+    const incoming = baselineIds ? planIds.filter((id) => !baselineIds.includes(id)) : []
     const outsForIn = new Map<string, string | null>()
     for (const s of classSwaps) {
       if (s.inId !== null) outsForIn.set(s.inId, s.outId)
@@ -107,11 +101,7 @@ function slotRows(
   }
   return {
     drivers: build(plan.driverIds, baseline?.driverIds, swaps.drivers),
-    constructors: build(
-      plan.constructorIds,
-      baseline?.constructorIds,
-      swaps.constructors
-    ),
+    constructors: build(plan.constructorIds, baseline?.constructorIds, swaps.constructors),
   }
 }
 
@@ -136,11 +126,7 @@ export function TeamPlanCard({
   const swaps = [...diff.drivers, ...diff.constructors].filter(
     (s) => s.outId !== null || s.inId !== null
   )
-  const { drivers: driverRows, constructors: constructorRows } = slotRows(
-    baseline,
-    best,
-    diff
-  )
+  const { drivers: driverRows, constructors: constructorRows } = slotRows(baseline, best, diff)
 
   const free = freeTransfers === "unlimited" ? best.transfers : freeTransfers
   const extra = Math.max(0, best.transfers - (free || 0))
@@ -158,11 +144,9 @@ export function TeamPlanCard({
   // total purse, since a transfer never changes the total money on the table).
   const squadValueTenths = best.costTenths
   const purseTenths = squadValueTenths + best.budgetLeftTenths
-  const spentPct =
-    purseTenths > 0 ? Math.min(100, (squadValueTenths / purseTenths) * 100) : 0
+  const spentPct = purseTenths > 0 ? Math.min(100, (squadValueTenths / purseTenths) * 100) : 0
 
-  const nameOf = (id: string): string =>
-    assetsById[id]?.displayName ?? `Asset ${id}`
+  const nameOf = (id: string): string => assetsById[id]?.displayName ?? `Asset ${id}`
   const tlaOf = (id: string): string => assetsById[id]?.tla ?? "—"
   const priceOf = (id: string): number => assetsById[id]?.priceTenths ?? 0
   const projOf = (id: string): number => totals[id] ?? 0
@@ -232,9 +216,7 @@ export function TeamPlanCard({
               className="h-3 w-[3px] shrink-0 rounded-full opacity-60"
               style={{ background: colorFor(row.outId) }}
             />
-            <span className="truncate text-muted-foreground line-through">
-              {nameOf(row.outId)}
-            </span>
+            <span className="truncate text-muted-foreground line-through">{nameOf(row.outId)}</span>
           </span>
           <span aria-hidden="true" className="text-muted-foreground">
             →
@@ -258,32 +240,21 @@ export function TeamPlanCard({
 
   return (
     <Card className="relative gap-4 overflow-hidden bg-surface-1 p-5">
-      <span
-        aria-hidden="true"
-        className="absolute inset-x-0 top-0 h-[2px] bg-accent-f1"
-      />
+      <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-accent-f1" />
 
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-base font-semibold">Your team</h2>
         <Badge variant="secondary">
           {best.transfers} transfer{best.transfers === 1 ? "" : "s"}
         </Badge>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onEdit}
-          className="ml-auto"
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={onEdit} className="ml-auto">
           Edit team
         </Button>
       </div>
 
       <div className="flex flex-col gap-0.5">
         <Delta value={netGain} points className="font-mono text-3xl" />
-        <p className="text-xs text-muted-foreground">
-          vs keeping your current team
-        </p>
+        <p className="text-xs text-muted-foreground">vs keeping your current team</p>
       </div>
 
       <ul className="flex flex-col gap-0.5">
@@ -316,26 +287,19 @@ export function TeamPlanCard({
             {free} free + {extra} extra · −{penaltyPts} pts penalty
           </span>
         ) : (
-          <span className="text-muted-foreground">
-            Within your free transfers — no penalty.
-          </span>
+          <span className="text-muted-foreground">Within your free transfers — no penalty.</span>
         )}
       </p>
 
       <p className="text-xs text-muted-foreground">
         Budget after:{" "}
-        <span
-          className={cn("font-mono tabular-nums", budgetNegative && "text-neg")}
-        >
+        <span className={cn("font-mono tabular-nums", budgetNegative && "text-neg")}>
           {formatPriceTenths(best.budgetLeftTenths)}
         </span>
         {whatIf === "limitless" && " (Limitless ignores budget)"}
       </p>
 
-      <Progress
-        value={spentPct}
-        aria-label="Squad value as a share of your purse"
-      />
+      <Progress value={spentPct} aria-label="Squad value as a share of your purse" />
 
       <div className="rounded-md bg-surface-2 p-3">
         <p className="text-sm font-medium">
@@ -347,9 +311,7 @@ export function TeamPlanCard({
         <p className="text-xs text-muted-foreground">
           {formatSignedPoints(captainBoost)} pts boosted
         </p>
-        <p className="text-xs text-muted-foreground">
-          Highest projected driver in this squad.
-        </p>
+        <p className="text-xs text-muted-foreground">Highest projected driver in this squad.</p>
       </div>
 
       <div className="flex items-center gap-2">
@@ -398,10 +360,7 @@ export function TeamPlanCard({
                 >
                   <span className={cn("truncate", isCaptain && "font-medium")}>
                     {isCaptain && (
-                      <span
-                        className="mr-1.5 text-accent-f1"
-                        aria-hidden="true"
-                      >
+                      <span className="mr-1.5 text-accent-f1" aria-hidden="true">
                         ★
                       </span>
                     )}

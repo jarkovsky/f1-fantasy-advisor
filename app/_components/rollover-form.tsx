@@ -39,25 +39,14 @@ type SquadChoice = "kept" | "edit"
 type TransferChoice = "standard" | "banked" | "chip"
 type ChipChoice = "wildcard" | "limitless"
 
-export function RolloverForm({
-  from,
-  to,
-  assets,
-  assetsById,
-  team,
-  onConfirm,
-}: RolloverFormProps) {
+export function RolloverForm({ from, to, assets, assetsById, team, onConfirm }: RolloverFormProps) {
   const savedRoster = team.roster ?? []
 
   const [squadChoice, setSquadChoice] = useState<SquadChoice | null>(null)
   const [draftRoster, setDraftRoster] = useState<string[]>(savedRoster)
   const [editing, setEditing] = useState(false)
-  const [bankInput, setBankInput] = useState<string>(
-    (team.budgetTenths / 10).toFixed(1)
-  )
-  const [transferChoice, setTransferChoice] = useState<TransferChoice | null>(
-    null
-  )
+  const [bankInput, setBankInput] = useState<string>((team.budgetTenths / 10).toFixed(1))
+  const [transferChoice, setTransferChoice] = useState<TransferChoice | null>(null)
   const [chipChoice, setChipChoice] = useState<ChipChoice | null>(null)
 
   // Move focus to each newly revealed step's legend.
@@ -80,16 +69,11 @@ export function RolloverForm({
 
   const bankTrimmed = bankInput.trim()
   const bankNumber = bankTrimmed === "" ? null : Number(bankTrimmed)
-  const bankEntered =
-    bankNumber !== null && Number.isFinite(bankNumber) && bankNumber >= 0
+  const bankEntered = bankNumber !== null && Number.isFinite(bankNumber) && bankNumber >= 0
   const bankTenths = bankEntered ? Math.round(bankNumber * 10) : 0
 
   const freeTransfers: 2 | 3 | "unlimited" =
-    transferChoice === "chip"
-      ? "unlimited"
-      : transferChoice === "banked"
-        ? 3
-        : 2
+    transferChoice === "chip" ? "unlimited" : transferChoice === "banked" ? 3 : 2
   const activeChip: "none" | "wildcard" | "limitless" =
     transferChoice === "chip" ? (chipChoice ?? "none") : "none"
 
@@ -97,10 +81,7 @@ export function RolloverForm({
     transferChoice === "chip" ? chipChoice !== null : transferChoice !== null
 
   const canConfirm =
-    squadChoice !== null &&
-    draftRoster.length === 7 &&
-    bankEntered &&
-    transfersResolved
+    squadChoice !== null && draftRoster.length === 7 && bankEntered && transfersResolved
 
   const summary = canConfirm
     ? `Confirming ${
@@ -130,42 +111,30 @@ export function RolloverForm({
       <div className="rounded-lg bg-surface-2 p-4">
         <p className="font-medium">New race week — confirm your team.</p>
         <p className="text-sm text-muted-foreground">
-          Race {from} is done; race {to} is open. Reconcile your squad to
-          continue.
+          Race {from} is done; race {to} is open. Reconcile your squad to continue.
         </p>
       </div>
 
       {/* Step 1: squad */}
       <Card className="gap-3 bg-surface-1 p-4">
         <fieldset className="flex flex-col gap-3">
-          <legend className="text-sm font-semibold">
-            Did your squad change?
-          </legend>
+          <legend className="text-sm font-semibold">Did your squad change?</legend>
 
           <ul className="flex flex-col gap-0.5">
             {resolved.map((a) => {
               const priceDelta = a.priceTenths - a.prevPriceTenths
               return (
-                <li
-                  key={a.playerId}
-                  className="flex items-center gap-2 py-1 text-sm"
-                >
+                <li key={a.playerId} className="flex items-center gap-2 py-1 text-sm">
                   <span
                     aria-hidden="true"
                     className="h-4 w-[3px] shrink-0 rounded-full"
                     style={{ background: teamColor(assetColorKey(a)) }}
                   />
-                  <span className="min-w-0 flex-1 truncate">
-                    {a.displayName}
-                  </span>
+                  <span className="min-w-0 flex-1 truncate">{a.displayName}</span>
                   <span className="font-mono text-xs text-muted-foreground tabular-nums">
                     {formatPriceTenths(a.priceTenths)}
                   </span>
-                  <Delta
-                    value={priceDelta}
-                    tenths
-                    className="font-mono text-xs"
-                  />
+                  <Delta value={priceDelta} tenths className="font-mono text-xs" />
                 </li>
               )
             })}
@@ -223,30 +192,18 @@ export function RolloverForm({
       {/* The picker renders its own Card (M5), so it sits BETWEEN the step
           cards rather than nested inside step 1. */}
       {editing && (
-        <TeamPicker
-          assets={assets}
-          raceNumber={to}
-          mode="edit"
-          onDone={() => setEditing(false)}
-        />
+        <TeamPicker assets={assets} raceNumber={to} mode="edit" onDone={() => setEditing(false)} />
       )}
 
       {/* Step 2: budget */}
       {squadChoice !== null && (
         <Card className="gap-3 bg-surface-1 p-4">
           <fieldset className="flex flex-col gap-2">
-            <legend
-              ref={step2Ref}
-              tabIndex={-1}
-              className="text-sm font-semibold outline-none"
-            >
+            <legend ref={step2Ref} tabIndex={-1} className="text-sm font-semibold outline-none">
               What&apos;s your remaining budget now?
             </legend>
             <div className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="font-mono text-muted-foreground"
-              >
+              <span aria-hidden="true" className="font-mono text-muted-foreground">
                 $
               </span>
               <input
@@ -261,9 +218,7 @@ export function RolloverForm({
               />
               <span className="font-mono text-sm text-muted-foreground">M</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              From F1 Fantasy, after price changes.
-            </p>
+            <p className="text-xs text-muted-foreground">From F1 Fantasy, after price changes.</p>
           </fieldset>
         </Card>
       )}
@@ -272,11 +227,7 @@ export function RolloverForm({
       {squadChoice !== null && bankEntered && (
         <Card className="gap-3 bg-surface-1 p-4">
           <fieldset className="flex flex-col gap-2">
-            <legend
-              ref={step3Ref}
-              tabIndex={-1}
-              className="text-sm font-semibold outline-none"
-            >
+            <legend ref={step3Ref} tabIndex={-1} className="text-sm font-semibold outline-none">
               Transfers this week?
             </legend>
             <div
@@ -335,8 +286,7 @@ export function RolloverForm({
                     checked={chipChoice === "limitless"}
                     onChange={() => setChipChoice("limitless")}
                   />
-                  Limitless — unlimited + budget ignored; your pre-chip roster
-                  comes back next week
+                  Limitless — unlimited + budget ignored; your pre-chip roster comes back next week
                 </label>
               </div>
             )}

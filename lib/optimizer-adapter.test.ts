@@ -60,12 +60,7 @@ describe("toOptimizerAssets", () => {
   })
 
   it("preserves input order", () => {
-    expect(toOptimizerAssets(GRID, {}).map((a) => a.id)).toEqual([
-      "d0",
-      "d1",
-      "c0",
-      "c1",
-    ])
+    expect(toOptimizerAssets(GRID, {}).map((a) => a.id)).toEqual(["d0", "d1", "c0", "c1"])
   })
 
   it("preserves integer money (Number.isInteger on every priceTenths)", () => {
@@ -148,24 +143,18 @@ const SEASON = assembleHistory([
 
 describe("integration smoke — fixtures → projections → adapter → optimize", () => {
   it("optimize() runs and best.transfers is an integer", () => {
-    const projection = projectAssets(
-      SEASON,
-      { isSprint: false },
-      { preset: "weighted-recent" }
-    )
+    const projection = projectAssets(SEASON, { isSprint: false }, { preset: "weighted-recent" })
     const totals: Record<string, number> = {}
     for (const [id, p] of Object.entries(projection.byPlayerId)) {
       totals[id] = p.totalPoints
     }
 
     // Fixture assets are 18, 131 (drivers) + 28, 29 (constructors).
-    const fixtureGrid: GridAsset[] = Object.values(SEASON.byPlayerId).map(
-      (h) => ({
-        playerId: h.playerId,
-        kind: h.kind,
-        priceTenths: h.perRace[h.perRace.length - 1]?.priceTenths ?? 0,
-      })
-    )
+    const fixtureGrid: GridAsset[] = Object.values(SEASON.byPlayerId).map((h) => ({
+      playerId: h.playerId,
+      kind: h.kind,
+      priceTenths: h.perRace[h.perRace.length - 1]?.priceTenths ?? 0,
+    }))
     const fixtureAssets = toOptimizerAssets(fixtureGrid, totals)
 
     // Synthesize the rest of the grid as plain literals (need ≥5 drivers,
@@ -180,15 +169,7 @@ describe("integration smoke — fixtures → projections → adapter → optimiz
 
     // Pick a valid 5+2 roster from this grid: 2 fixture drivers + 3 fillers,
     // 1 fixture constructor + 1 filler constructor.
-    const roster = [
-      "18",
-      "131",
-      "fill-d1",
-      "fill-d2",
-      "fill-d3",
-      "28",
-      "fill-c1",
-    ]
+    const roster = ["18", "131", "fill-d1", "fill-d2", "fill-d3", "28", "fill-c1"]
 
     const rosterCost = roster.reduce((sum, id) => {
       const a = grid.find((g) => g.id === id)

@@ -17,12 +17,9 @@ type DeltaProps =
 export function Delta(props: DeltaProps) {
   const { value, className } = props
   const text =
-    "points" in props && props.points
-      ? formatSignedPoints(value)
-      : formatDeltaTenths(value)
+    "points" in props && props.points ? formatSignedPoints(value) : formatDeltaTenths(value)
 
-  const tone =
-    value > 0 ? "text-pos" : value < 0 ? "text-neg" : "text-muted-foreground"
+  const tone = value > 0 ? "text-pos" : value < 0 ? "text-neg" : "text-muted-foreground"
 
   return <span className={cn("tabular-nums", tone, className)}>{text}</span>
 }

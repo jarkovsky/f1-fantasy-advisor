@@ -7,20 +7,10 @@ import race3 from "@/lib/f1/__fixtures__/drivers.race3.json"
 import race4 from "@/lib/f1/__fixtures__/drivers.race4.json"
 import race5 from "@/lib/f1/__fixtures__/drivers.race5.json"
 import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
-import {
-  assembleHistory,
-  type RacePayload,
-  type SeasonHistory,
-} from "@/lib/f1/history"
+import { assembleHistory, type RacePayload, type SeasonHistory } from "@/lib/f1/history"
 import { parseDriversFeed } from "@/lib/f1/schemas"
 import type { SessionPoints } from "@/lib/f1/schemas"
-import {
-  PRESET_IDS,
-  PRESET_REGISTRY,
-  type PresetId,
-  ewma,
-  projectAssets,
-} from "@/lib/projections"
+import { PRESET_IDS, PRESET_REGISTRY, type PresetId, ewma, projectAssets } from "@/lib/projections"
 
 // Real fixtures (captured 2026-06-05): Gasly 18, Verstappen 131, Mercedes 28,
 // Red Bull 29 across races 1..6 (race 6 = Monaco, pending). Sprints: 2, 4, 5.
@@ -71,10 +61,7 @@ function qualiPlusRaceSeries(playerId: string): number[] {
   return series
 }
 
-function presetReference(
-  preset: (typeof HISTORY_PRESETS)[number],
-  series: number[]
-) {
+function presetReference(preset: (typeof HISTORY_PRESETS)[number], series: number[]) {
   if (preset === "weighted-recent") return ewma(series, EWMA_HALF_LIFE)
   const window = preset === "form-5" ? series.slice(-5) : series
   return window.reduce((a, b) => a + b, 0) / window.length
@@ -152,10 +139,7 @@ describe("session-sum invariant (normal weekend) — spec exit criterion", () =>
       const result = projection(SEASON, preset)
       for (const playerId of ["18", "131", "28", "29"]) {
         const reference = presetReference(preset, qualiPlusRaceSeries(playerId))
-        expect(result.byPlayerId[playerId]?.totalPoints).toBeCloseTo(
-          reference,
-          9
-        )
+        expect(result.byPlayerId[playerId]?.totalPoints).toBeCloseTo(reference, 9)
       }
     }
   })
@@ -166,22 +150,10 @@ describe("equal-ppm (per-race calibrated)", () => {
 
   it("projects on the single-race scale (k per class / completed races)", () => {
     // k_driver = (53+155)/(122+284)/5; k_con = (483+187)/(308+293)/5
-    expect(result.byPlayerId["18"]?.totalPoints).toBeCloseTo(
-      122 * (208 / 406 / 5),
-      6
-    )
-    expect(result.byPlayerId["131"]?.totalPoints).toBeCloseTo(
-      284 * (208 / 406 / 5),
-      6
-    )
-    expect(result.byPlayerId["28"]?.totalPoints).toBeCloseTo(
-      308 * (670 / 601 / 5),
-      6
-    )
-    expect(result.byPlayerId["29"]?.totalPoints).toBeCloseTo(
-      293 * (670 / 601 / 5),
-      6
-    )
+    expect(result.byPlayerId["18"]?.totalPoints).toBeCloseTo(122 * (208 / 406 / 5), 6)
+    expect(result.byPlayerId["131"]?.totalPoints).toBeCloseTo(284 * (208 / 406 / 5), 6)
+    expect(result.byPlayerId["28"]?.totalPoints).toBeCloseTo(308 * (670 / 601 / 5), 6)
+    expect(result.byPlayerId["29"]?.totalPoints).toBeCloseTo(293 * (670 / 601 / 5), 6)
   })
 
   it("constructors score ~2× drivers per price (class-separated k)", () => {
@@ -256,10 +228,7 @@ describe("custom-blend", () => {
 
   it("blendWeight 0.5 is the per-session midpoint, summed", () => {
     const half = projection(SEASON, "custom-blend", false, 0.5)
-    expect(half.byPlayerId["18"]?.totalPoints).toBeCloseTo(
-      (7.789973 + 9) / 2,
-      5
-    )
+    expect(half.byPlayerId["18"]?.totalPoints).toBeCloseTo((7.789973 + 9) / 2, 5)
   })
 
   it("clamps out-of-range blendWeight", () => {
@@ -300,10 +269,7 @@ describe("custom blend linearity", () => {
 
           const lerp = (a: number, b: number) => (1 - w) * a + w * b
 
-          expect(p.totalPoints).toBeCloseTo(
-            lerp(lo.totalPoints, hi.totalPoints),
-            10
-          )
+          expect(p.totalPoints).toBeCloseTo(lerp(lo.totalPoints, hi.totalPoints), 10)
 
           for (const session of p.perSession) {
             const loS = lo.perSession.find((s) => s.session === session.session)
@@ -311,10 +277,7 @@ describe("custom blend linearity", () => {
             expect(loS).toBeDefined()
             expect(hiS).toBeDefined()
             if (!loS || !hiS) continue
-            expect(session.expected).toBeCloseTo(
-              lerp(loS.expected, hiS.expected),
-              10
-            )
+            expect(session.expected).toBeCloseTo(lerp(loS.expected, hiS.expected), 10)
           }
         }
       })

@@ -22,9 +22,9 @@ export function HonestyNote() {
         ✕
       </button>
       <p className="pr-6 leading-relaxed">
-        These are projections from public stats, not predictions. The optimizer
-        finds the mathematically best squad for the chosen model — it can&apos;t
-        see crashes, weather, or strategy. Use it as a starting point.
+        These are projections from public stats, not predictions. The optimizer finds the
+        mathematically best squad for the chosen model — it can&apos;t see crashes, weather, or
+        strategy. Use it as a starting point.
       </p>
     </Card>
   )

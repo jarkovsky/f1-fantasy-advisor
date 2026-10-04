@@ -127,8 +127,7 @@ export default async function OpengraphImage() {
               maxWidth: 940,
             }}
           >
-            Optimal transfers and DRS Boost for the upcoming Grand Prix — free,
-            with the math shown.
+            Optimal transfers and DRS Boost for the upcoming Grand Prix — free, with the math shown.
           </div>
         </div>
 

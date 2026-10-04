@@ -20,9 +20,7 @@ const fontMono = Geist_Mono({
 export const metadata: Metadata = {
   // Canonical base for OG/social URLs. Until the app has a deployed domain,
   // the env override keeps this honest (deploy sets NEXT_PUBLIC_SITE_URL).
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-  ),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: "Fantasy F1 Race-Weekend Advisor",
     template: "%s · Fantasy F1 Advisor",

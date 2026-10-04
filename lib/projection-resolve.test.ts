@@ -4,21 +4,12 @@ import type { ConcretePresetId } from "@/app/_components/advisor-types"
 import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
 import { assembleHistory } from "@/lib/f1/history"
 import { parseDriversFeed } from "@/lib/f1/schemas"
-import {
-  type ProjectionResult,
-  type UpcomingWeekend,
-  projectAssets,
-} from "@/lib/projections"
+import { type ProjectionResult, type UpcomingWeekend, projectAssets } from "@/lib/projections"
 import { resolveClientProjection } from "@/lib/projection-resolve"
 import { fixtureHistory } from "@/test/fixtures"
 
 // The concrete presets the server materializes (custom-blend is client-derived).
-const CONCRETE: ConcretePresetId[] = [
-  "weighted-recent",
-  "form-5",
-  "season-average",
-  "equal-ppm",
-]
+const CONCRETE: ConcretePresetId[] = ["weighted-recent", "form-5", "season-average", "equal-ppm"]
 
 /** Build the byPreset record exactly as the server does: projectAssets ×4. */
 function buildByPreset(
@@ -91,9 +82,7 @@ describe("resolveClientProjection — custom-blend wire format", () => {
     const pendingOnly = assembleHistory([{ raceNumber: 6, assets: res.data }])
     const byPreset = buildByPreset(pendingOnly, { isSprint: false })
     expect(byPreset["season-average"].coldStart).toBe(true)
-    expect(resolveClientProjection(byPreset, "custom-blend", 0.5)).toBe(
-      byPreset["equal-ppm"]
-    )
+    expect(resolveClientProjection(byPreset, "custom-blend", 0.5)).toBe(byPreset["equal-ppm"])
   })
 
   it("clamps blendWeight to [0, 1]", () => {

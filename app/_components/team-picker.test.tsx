@@ -50,14 +50,8 @@ function constructor(n: number, priceTenths: number): AssetLite {
 }
 
 // 8 drivers priced 300..160 step −20; 3 constructors 250/200/150.
-const DRIVERS: AssetLite[] = Array.from({ length: 8 }, (_, i) =>
-  driver(i + 1, 300 - i * 20)
-)
-const CONSTRUCTORS: AssetLite[] = [
-  constructor(1, 250),
-  constructor(2, 200),
-  constructor(3, 150),
-]
+const DRIVERS: AssetLite[] = Array.from({ length: 8 }, (_, i) => driver(i + 1, 300 - i * 20))
+const CONSTRUCTORS: AssetLite[] = [constructor(1, 250), constructor(2, 200), constructor(3, 150)]
 const ASSETS: AssetLite[] = [...DRIVERS, ...CONSTRUCTORS]
 
 let uninstallMatchMedia: () => void
@@ -76,9 +70,7 @@ afterEach(() => {
 })
 
 function renderPicker(props?: Partial<Parameters<typeof TeamPicker>[0]>) {
-  return render(
-    <TeamPicker assets={ASSETS} raceNumber={6} mode="first-run" {...props} />
-  )
+  return render(<TeamPicker assets={ASSETS} raceNumber={6} mode="first-run" {...props} />)
 }
 
 /** All data rows (excludes the header row). */
@@ -89,17 +81,12 @@ function bodyRows(): HTMLElement[] {
 /** The checkbox for a given asset, addressed by its full-name aria-label. */
 function checkboxFor(fullName: string | RegExp): HTMLElement {
   return screen.getByRole("checkbox", {
-    name: new RegExp(
-      `Select ${typeof fullName === "string" ? fullName : fullName.source}`
-    ),
+    name: new RegExp(`Select ${typeof fullName === "string" ? fullName : fullName.source}`),
   })
 }
 
 /** Click the leading checkbox of the first n body rows (price-desc order). */
-async function pickFirst(
-  user: ReturnType<typeof userEvent.setup>,
-  ids: string[]
-): Promise<void> {
+async function pickFirst(user: ReturnType<typeof userEvent.setup>, ids: string[]): Promise<void> {
   for (const id of ids) {
     const cb = screen.getByRole("checkbox", { name: new RegExp(idToName(id)) })
     await user.click(cb)
@@ -116,20 +103,12 @@ describe("TeamPicker", () => {
   it("renders one card with a table per kind and exactly one save CTA", () => {
     renderPicker()
     // Exactly one Card wraps the whole flow (one save button, not two).
-    expect(
-      screen.getAllByRole("button", { name: /save team & get advice/i })
-    ).toHaveLength(1)
+    expect(screen.getAllByRole("button", { name: /save team & get advice/i })).toHaveLength(1)
     // Two separate kind tables, each counting its own assets.
-    expect(
-      screen.getByRole("heading", { name: "Drivers (8)" })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole("heading", { name: "Constructors (3)" })
-    ).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Constructors (3)" })).toBeInTheDocument()
     // Default order is price descending — the priciest driver (d1, $30M) leads.
-    expect(
-      within(bodyRows()[0] as HTMLElement).getByText("$30.0M")
-    ).toBeInTheDocument()
+    expect(within(bodyRows()[0] as HTMLElement).getByText("$30.0M")).toBeInTheDocument()
   })
 
   it("selecting 5 drivers disables the remaining drivers' checkboxes", async () => {
@@ -204,9 +183,7 @@ describe("TeamPicker", () => {
     const bank = screen.getByLabelText(/remaining budget/i)
     await user.type(bank, "5")
 
-    expect(
-      screen.getByRole("button", { name: /save team & get advice/i })
-    ).toBeEnabled()
+    expect(screen.getByRole("button", { name: /save team & get advice/i })).toBeEnabled()
     // The killed sanity warning never appears.
     expect(screen.queryByText(/Heads up/)).not.toBeInTheDocument()
   })
@@ -214,9 +191,7 @@ describe("TeamPicker", () => {
   it("summary panel shows counts and Spent updates with formatPriceTenths", async () => {
     const user = userEvent.setup()
     renderPicker()
-    expect(
-      screen.getByText(/Drivers 0\/5 · Constructors 0\/2/)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Drivers 0\/5 · Constructors 0\/2/)).toBeInTheDocument()
     expect(screen.getByText(/Spent \$0\.0M/)).toBeInTheDocument()
     await user.click(checkboxFor("Firstname Lastname1")) // d1 = 300 tenths
     expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
@@ -263,9 +238,7 @@ describe("TeamPicker", () => {
     await user.clear(bank)
     await user.type(bank, "2.5")
     await user.click(screen.getByRole("radio", { name: "3" }))
-    await user.click(
-      screen.getByRole("button", { name: /save team & get advice/i })
-    )
+    await user.click(screen.getByRole("button", { name: /save team & get advice/i }))
 
     const snap = teamStore.getSnapshot()
     expect(snap.roster).toEqual(["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
@@ -306,9 +279,7 @@ describe("TeamPicker", () => {
     await user.click(screen.getByRole("button", { name: /^start over$/i }))
     // Dialog open — confirm the destructive action.
     const dialog = screen.getByRole("dialog")
-    await user.click(
-      within(dialog).getByRole("button", { name: /^start over$/i })
-    )
+    await user.click(within(dialog).getByRole("button", { name: /^start over$/i }))
 
     expect(teamStore.getSnapshot().roster).toBeNull()
     expect(onDone).toHaveBeenCalledTimes(1)
@@ -324,9 +295,7 @@ describe("TeamPicker", () => {
     await user.type(bank, "2.5")
     await user.click(screen.getByRole("radio", { name: "3" }))
     await user.click(screen.getByRole("radio", { name: "Unlimited" }))
-    await user.click(
-      screen.getByRole("button", { name: /save team & get advice/i })
-    )
+    await user.click(screen.getByRole("button", { name: /save team & get advice/i }))
 
     expect(teamStore.getSnapshot().freeTransfers).toBe("unlimited")
   })

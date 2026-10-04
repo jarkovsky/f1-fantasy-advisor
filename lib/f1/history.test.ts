@@ -45,9 +45,9 @@ describe("assembleHistory — cumulative recompute (the contamination fix)", () 
 
   it("the race-4 running sum differs from the feed's contaminated season total", () => {
     // The raw race-4 fixture says OverallPpints '53.00' (regenerated at race-5 time).
-    const raw = (
-      race4.Data.Value as { PlayerId: string; OverallPpints: string }[]
-    ).find((a) => a.PlayerId === "18")
+    const raw = (race4.Data.Value as { PlayerId: string; OverallPpints: string }[]).find(
+      (a) => a.PlayerId === "18"
+    )
     expect(raw?.OverallPpints).toBe("53.00") // what the feed CLAIMS at race 4
     const history = assembleHistory(ALL).byPlayerId["18"]
     const atRace4 = history?.cumulativeByRace.find((c) => c.raceNumber === 4)
@@ -108,9 +108,7 @@ describe("assembleHistory — robustness", () => {
     const gasly = assembleHistory(partial).byPlayerId["18"]
     expect(gasly?.perRace.map((p) => p.raceNumber)).toEqual([1, 3])
     // gap means the race-3 chain check is skipped (no false warning)
-    expect(
-      assembleHistory(partial).warnings.filter((w) => w.includes("price chain"))
-    ).toEqual([])
+    expect(assembleHistory(partial).warnings.filter((w) => w.includes("price chain"))).toEqual([])
   })
 
   it("duplicate races are dropped with a warning", () => {
@@ -120,11 +118,7 @@ describe("assembleHistory — robustness", () => {
   })
 
   it("unsorted input is handled", () => {
-    const season = assembleHistory([
-      payload(3, race3),
-      payload(1, race1),
-      payload(2, race2),
-    ])
+    const season = assembleHistory([payload(3, race3), payload(1, race1), payload(2, race2)])
     expect(season.raceNumbers).toEqual([1, 2, 3])
     expect(season.byPlayerId["18"]?.cumulativePoints).toBe(45)
   })

@@ -69,9 +69,7 @@ export type RaceWeekState =
 export function deriveRaceWeekState(input: RaceWeekInput): RaceWeekState {
   const { constraints, raceWeekends, storedRaceNumber } = input
   const nowMs = input.now.getTime()
-  const current = raceWeekends.find(
-    (w) => w.raceNumber === constraints.raceNumber
-  )
+  const current = raceWeekends.find((w) => w.raceNumber === constraints.raceNumber)
 
   // 1. FIRST_VISIT — nothing stored, nothing to reconcile.
   if (storedRaceNumber === null) {

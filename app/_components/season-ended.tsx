@@ -20,34 +20,25 @@ type SeasonEndedProps = {
 }
 
 export function SeasonEnded({ roster, assetsById }: SeasonEndedProps) {
-  const resolved = roster
-    .map((id) => assetsById[id])
-    .filter((a): a is AssetLite => a !== undefined)
+  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
 
   const seasonPoints = resolved.reduce((s, a) => s + a.seasonPoints, 0)
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">
-        That&apos;s a wrap on the 2026 season.
-      </h1>
+      <h1 className="text-2xl font-semibold">That&apos;s a wrap on the 2026 season.</h1>
 
       <Card className="gap-3 bg-surface-1 p-4">
         <h2 className="text-sm font-semibold">Your final squad</h2>
         <ul className="flex flex-col gap-0.5">
           {resolved.map((a) => (
-            <li
-              key={a.playerId}
-              className="flex items-center gap-2 py-1 text-sm"
-            >
+            <li key={a.playerId} className="flex items-center gap-2 py-1 text-sm">
               <span
                 aria-hidden="true"
                 className="h-4 w-[3px] shrink-0 rounded-full"
                 style={{ background: teamColor(assetColorKey(a)) }}
               />
-              <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">
-                {a.tla}
-              </span>
+              <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">{a.tla}</span>
               <span className="min-w-0 flex-1 truncate">{a.displayName}</span>
               <span className="w-16 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
                 {formatPriceTenths(a.priceTenths)}

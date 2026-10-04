@@ -49,14 +49,8 @@ function constructor(n: number, priceTenths: number): AssetLite {
 }
 
 // 8 drivers priced 300..160 step −20; 3 constructors 250/200/150.
-const DRIVERS: AssetLite[] = Array.from({ length: 8 }, (_, i) =>
-  driver(i + 1, 300 - i * 20)
-)
-const CONSTRUCTORS: AssetLite[] = [
-  constructor(1, 250),
-  constructor(2, 200),
-  constructor(3, 150),
-]
+const DRIVERS: AssetLite[] = Array.from({ length: 8 }, (_, i) => driver(i + 1, 300 - i * 20))
+const CONSTRUCTORS: AssetLite[] = [constructor(1, 250), constructor(2, 200), constructor(3, 150)]
 
 afterEach(cleanup)
 
@@ -82,34 +76,26 @@ function bodyRows(): HTMLElement[] {
 
 /** The leading-cell TLA text for each body row, in order. */
 function rowTlas(): (string | undefined)[] {
-  return bodyRows().map(
-    (r) => within(r).getByText(/^[DC]0\d$/).textContent ?? undefined
-  )
+  return bodyRows().map((r) => within(r).getByText(/^[DC]0\d$/).textContent ?? undefined)
 }
 
 describe("PickerTable", () => {
   it("renders one row per asset of its kind, with the heading count", () => {
     renderTable()
     expect(bodyRows()).toHaveLength(8)
-    expect(
-      screen.getByRole("heading", { name: "Drivers (8)" })
-    ).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
   })
 
   it("a constructors table renders only the constructor rows", () => {
     renderTable({ heading: "Constructors", assets: CONSTRUCTORS })
-    expect(
-      screen.getByRole("heading", { name: "Constructors (3)" })
-    ).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Constructors (3)" })).toBeInTheDocument()
     expect(bodyRows()).toHaveLength(3)
     expect(rowTlas()).toEqual(["C01", "C02", "C03"])
   })
 
   it("defaults to price-descending order", () => {
     renderTable()
-    const prices = bodyRows().map(
-      (r) => within(r).getByText(/^\$\d/).textContent
-    )
+    const prices = bodyRows().map((r) => within(r).getByText(/^\$\d/).textContent)
     expect(prices).toEqual([
       "$30.0M",
       "$28.0M",
@@ -156,8 +142,7 @@ describe("PickerTable", () => {
     const user = userEvent.setup()
     renderTable()
     const ptsHeader = () => screen.getByRole("columnheader", { name: /^Pts/ })
-    const ptsButton = () =>
-      within(ptsHeader()).getByRole("button", { name: /^Pts/ })
+    const ptsButton = () => within(ptsHeader()).getByRole("button", { name: /^Pts/ })
 
     // First click → descending. d8 carries the highest seasonPoints (108).
     await user.click(ptsButton())
@@ -176,9 +161,7 @@ describe("PickerTable", () => {
 
     // Announcements carry the table heading so the two live regions stay
     // distinguishable for screen readers.
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Drivers sorted by Price, descending."
-    )
+    expect(screen.getByRole("status")).toHaveTextContent("Drivers sorted by Price, descending.")
   })
 
   it("checkbox reflects selection and disables unselected at quota", () => {
@@ -200,9 +183,7 @@ describe("PickerTable", () => {
     const user = userEvent.setup()
     const onToggle = vi.fn()
     renderTable({ onToggle })
-    await user.click(
-      screen.getByRole("checkbox", { name: /Firstname Lastname1/ })
-    )
+    await user.click(screen.getByRole("checkbox", { name: /Firstname Lastname1/ }))
     expect(onToggle).toHaveBeenCalledTimes(1)
     expect(onToggle).toHaveBeenCalledWith("d1")
   })

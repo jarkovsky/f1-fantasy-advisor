@@ -13,10 +13,7 @@ import {
   useTransition,
 } from "react"
 
-import type {
-  AdvisorServerProps,
-  WhatIfMode,
-} from "@/app/_components/advisor-types"
+import type { AdvisorServerProps, WhatIfMode } from "@/app/_components/advisor-types"
 import { Alternatives } from "@/app/_components/alternatives"
 import { BetweenRounds } from "@/app/_components/between-rounds"
 import { HonestyNote } from "@/app/_components/honesty-note"
@@ -88,9 +85,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
 
   // --- Preset (URL-driven) --------------------------------------------------
   const presetParam = searchParams.get("preset")
-  const preset: PresetId = (PRESET_IDS as readonly string[]).includes(
-    presetParam ?? ""
-  )
+  const preset: PresetId = (PRESET_IDS as readonly string[]).includes(presetParam ?? "")
     ? (presetParam as PresetId)
     : "weighted-recent"
 
@@ -108,11 +103,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
 
   // --- Projection (cheap; resolved every render) ----------------------------
   const deferredBlend = useDeferredValue(blendWeight)
-  const projection = resolveClientProjection(
-    props.projectionsByPreset,
-    preset,
-    deferredBlend
-  )
+  const projection = resolveClientProjection(props.projectionsByPreset, preset, deferredBlend)
 
   const totals = useMemo<Record<string, number>>(() => {
     const out: Record<string, number> = {}
@@ -186,16 +177,12 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
       if (cancelled) return
 
       const grid = toOptimizerAssets(props.assets, totals)
-      const { assets: grid2, unresolvedIds: missing } = reconcileRoster(
-        roster,
-        grid
-      )
+      const { assets: grid2, unresolvedIds: missing } = reconcileRoster(roster, grid)
       const input = {
         assets: grid2,
         roster,
         budgetTenths,
-        freeTransfers:
-          whatIf !== "none" ? ("unlimited" as const) : storeFreeTransfers,
+        freeTransfers: whatIf !== "none" ? ("unlimited" as const) : storeFreeTransfers,
         mode: whatIf === "none" ? ("normal" as const) : whatIf,
       }
 
@@ -216,14 +203,11 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
       } catch (err) {
         if (cancelled) return
         const isInputErr =
-          err instanceof
-          (mod.OptimizerInputError as typeof OptimizerInputErrorType)
+          err instanceof (mod.OptimizerInputError as typeof OptimizerInputErrorType)
         startOptTransition(() => {
           setResult(null)
           setOptError(
-            isInputErr && err instanceof Error
-              ? err.message
-              : "Could not compute a recommendation."
+            isInputErr && err instanceof Error ? err.message : "Could not compute a recommendation."
           )
         })
       }
@@ -232,15 +216,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
     return () => {
       cancelled = true
     }
-  }, [
-    isOpen,
-    totals,
-    roster,
-    budgetTenths,
-    storeFreeTransfers,
-    whatIf,
-    props.assets,
-  ])
+  }, [isOpen, totals, roster, budgetTenths, storeFreeTransfers, whatIf, props.assets])
 
   // Applying a plan resets the local "applied" flag false→true; any later
   // recompute (new totals/roster) clears it so the button re-arms.
@@ -251,14 +227,10 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
   function handleApply(): void {
     if (!result) return
     const plan = result.best
-    applyPlan(
-      [...plan.driverIds, ...plan.constructorIds],
-      plan.budgetLeftTenths,
-      {
-        totalPoints: plan.projectedTotal,
-        preset: projection.effectivePreset,
-      }
-    )
+    applyPlan([...plan.driverIds, ...plan.constructorIds], plan.budgetLeftTenths, {
+      totalPoints: plan.projectedTotal,
+      preset: projection.effectivePreset,
+    })
     setApplied(true)
   }
 
@@ -310,9 +282,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
     }
 
     case "LOCKED": {
-      const later = props.raceWeekends.find(
-        (w) => w.raceNumber > raceState.race
-      )
+      const later = props.raceWeekends.find((w) => w.raceNumber > raceState.race)
       return (
         <LockedView
           gpName={raceState.gpName}
@@ -330,9 +300,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
         <BetweenRounds
           lastCompleted={raceState.lastCompleted}
           pointsRace={
-            props.constraints.lastCompletedRace >= 1
-              ? props.constraints.lastCompletedRace
-              : null
+            props.constraints.lastCompletedRace >= 1 ? props.constraints.lastCompletedRace : null
           }
           roster={roster ?? []}
           assetsById={assetsById}
@@ -392,9 +360,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
                 assetsById={assetsById}
                 totals={totals}
                 budgetTenths={budgetTenths}
-                freeTransfers={
-                  whatIf !== "none" ? "unlimited" : storeFreeTransfers
-                }
+                freeTransfers={whatIf !== "none" ? "unlimited" : storeFreeTransfers}
                 whatIf={whatIf}
                 unresolvedIds={unresolvedIds}
                 applied={applied}

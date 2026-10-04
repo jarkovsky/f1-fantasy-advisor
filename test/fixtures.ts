@@ -43,8 +43,7 @@ export function fixtureAssets(race: number): Asset[] {
     throw new Error(`no drivers fixture for race ${race}`)
   }
   const res = parseDriversFeed(fixture)
-  if (!res.ok)
-    throw new Error(`drivers.race${race} failed: ${res.summary.join("; ")}`)
+  if (!res.ok) throw new Error(`drivers.race${race} failed: ${res.summary.join("; ")}`)
   return res.data
 }
 

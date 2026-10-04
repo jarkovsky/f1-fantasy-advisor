@@ -3,11 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import {
-  AppSidebar,
-  MobileTopBar,
-  ModeToggle,
-} from "@/app/_components/app-sidebar"
+import { AppSidebar, MobileTopBar, ModeToggle } from "@/app/_components/app-sidebar"
 import { ThemeProvider } from "@/app/_components/theme-provider"
 import { installMatchMediaStub } from "@/test/stubs/dom"
 
@@ -58,9 +54,7 @@ describe("MobileTopBar", () => {
 
     const advisor = screen.getByRole("link", { name: "Advisor" })
     expect(advisor).toHaveAttribute("aria-current", "page")
-    expect(screen.getByRole("link", { name: "Stats" })).not.toHaveAttribute(
-      "aria-current"
-    )
+    expect(screen.getByRole("link", { name: "Stats" })).not.toHaveAttribute("aria-current")
   })
 })
 

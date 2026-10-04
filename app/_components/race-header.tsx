@@ -49,8 +49,7 @@ export function RaceHeader({
       <ul className="flex flex-col gap-0.5 font-mono text-xs text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-4">
         {sessions.map((s) => (
           <li key={`${s.session}-${s.startsAtMs}`} className="tabular-nums">
-            <span className="text-foreground">{s.session}</span>{" "}
-            {sessionFmt.format(s.startsAtMs)}
+            <span className="text-foreground">{s.session}</span> {sessionFmt.format(s.startsAtMs)}
           </li>
         ))}
       </ul>

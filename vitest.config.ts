@@ -10,9 +10,7 @@ export default defineConfig({
     tsconfigPaths: true,
     alias: {
       // The real package throws outside an RSC graph; stub it for tests.
-      "server-only": fileURLToPath(
-        new URL("./test/stubs/server-only.ts", import.meta.url)
-      ),
+      "server-only": fileURLToPath(new URL("./test/stubs/server-only.ts", import.meta.url)),
     },
   },
   test: {

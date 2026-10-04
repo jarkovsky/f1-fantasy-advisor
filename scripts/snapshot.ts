@@ -15,12 +15,7 @@
  */
 import { mkdir, writeFile } from "node:fs/promises"
 
-import {
-  F1_FEED_BASE,
-  FEED_NOT_PUBLISHED_STATUS,
-  FEED_UA,
-  feedPaths,
-} from "../lib/f1/config"
+import { F1_FEED_BASE, FEED_NOT_PUBLISHED_STATUS, FEED_UA, feedPaths } from "../lib/f1/config"
 import {
   type ParseResult,
   parseConstraints,
@@ -51,9 +46,7 @@ async function grab(
   const text = await res.text()
   const parsed = parse(JSON.parse(text))
   if (!parsed.ok) {
-    throw new Error(
-      `${path} failed schema validation:\n  ${parsed.summary.join("\n  ")}`
-    )
+    throw new Error(`${path} failed schema validation:\n  ${parsed.summary.join("\n  ")}`)
   }
 
   await writeFile(`data/${file}`, text)
@@ -70,15 +63,9 @@ await mkdir("data/drivers", { recursive: true })
 
 let race = 1
 for (;;) {
-  const published = await grab(
-    feedPaths.drivers(race),
-    `drivers/${race}.json`,
-    parseDriversFeed
-  )
+  const published = await grab(feedPaths.drivers(race), `drivers/${race}.json`, parseDriversFeed)
   if (!published) {
-    console.log(
-      `· race ${race} not yet published (403) — snapshot range is 1..${race - 1}`
-    )
+    console.log(`· race ${race} not yet published (403) — snapshot range is 1..${race - 1}`)
     break
   }
   race += 1

@@ -23,13 +23,9 @@ export default function GlobalError({
         }}
       >
         <div style={{ display: "grid", gap: 12, padding: 24 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>
-            Something went badly wrong
-          </h1>
+          <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>Something went badly wrong</h1>
           <p style={{ margin: 0, opacity: 0.7 }}>
-            {error.digest
-              ? `Error digest: ${error.digest}`
-              : "Unexpected error."}
+            {error.digest ? `Error digest: ${error.digest}` : "Unexpected error."}
           </p>
           <button
             type="button"

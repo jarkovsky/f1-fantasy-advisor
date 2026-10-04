@@ -17,8 +17,7 @@ export function installResizeObserverStub(): Uninstall {
     disconnect(): void {}
   }
   const prior = globalThis.ResizeObserver
-  globalThis.ResizeObserver =
-    ResizeObserverStub as unknown as typeof globalThis.ResizeObserver
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof globalThis.ResizeObserver
   return () => {
     globalThis.ResizeObserver = prior
   }

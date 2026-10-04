@@ -15,11 +15,7 @@ import { installMatchMediaStub } from "@/test/stubs/dom"
 // and assert the resulting snapshot.
 // ---------------------------------------------------------------------------
 
-function driver(
-  n: number,
-  priceTenths: number,
-  prevPriceTenths: number
-): AssetLite {
+function driver(n: number, priceTenths: number, prevPriceTenths: number): AssetLite {
   return {
     playerId: `d${n}`,
     kind: "driver",
@@ -37,11 +33,7 @@ function driver(
   }
 }
 
-function constructor(
-  n: number,
-  priceTenths: number,
-  prevPriceTenths: number
-): AssetLite {
+function constructor(n: number, priceTenths: number, prevPriceTenths: number): AssetLite {
   return {
     playerId: `c${n}`,
     kind: "constructor",
@@ -119,12 +111,8 @@ describe("RolloverForm", () => {
     renderForm()
 
     // Banner naming both races.
-    expect(
-      screen.getByText("New race week — confirm your team.")
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(/Race 5 is done; race 6 is open\./)
-    ).toBeInTheDocument()
+    expect(screen.getByText("New race week — confirm your team.")).toBeInTheDocument()
+    expect(screen.getByText(/Race 5 is done; race 6 is open\./)).toBeInTheDocument()
 
     // Every saved asset that resolves renders its display name at the new price.
     for (const id of SAVED_ROSTER) {
@@ -147,25 +135,17 @@ describe("RolloverForm", () => {
     renderForm({ team })
 
     expect(screen.getByText(/no longer available\./)).toBeInTheDocument()
-    expect(
-      screen.getByText(/Not in the current race feed\./)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Not in the current race feed\./)).toBeInTheDocument()
   })
 
   it("kept this exact team → confirm bumps stored raceNumber to `to` with the chosen free-transfer count", async () => {
     const user = userEvent.setup()
     renderForm()
 
-    await user.click(
-      screen.getByRole("radio", { name: /I kept this exact team/i })
-    )
+    await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
     // Bank is prefilled from the team, so step 3 is reachable immediately.
-    await user.click(
-      screen.getByRole("radio", { name: /Standard \(2 free\)/i })
-    )
-    await user.click(
-      screen.getByRole("button", { name: /confirm and continue/i })
-    )
+    await user.click(screen.getByRole("radio", { name: /Standard \(2 free\)/i }))
+    await user.click(screen.getByRole("button", { name: /confirm and continue/i }))
 
     const snap = teamStore.getSnapshot()
     expect(snap.raceNumber).toBe(6)
@@ -178,15 +158,9 @@ describe("RolloverForm", () => {
     const user = userEvent.setup()
     renderForm()
 
-    await user.click(
-      screen.getByRole("radio", { name: /I kept this exact team/i })
-    )
-    await user.click(
-      screen.getByRole("radio", { name: /I banked a transfer \(3 free\)/i })
-    )
-    await user.click(
-      screen.getByRole("button", { name: /confirm and continue/i })
-    )
+    await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
+    await user.click(screen.getByRole("radio", { name: /I banked a transfer \(3 free\)/i }))
+    await user.click(screen.getByRole("button", { name: /confirm and continue/i }))
 
     expect(teamStore.getSnapshot().freeTransfers).toBe(3)
   })
@@ -195,24 +169,16 @@ describe("RolloverForm", () => {
     const user = userEvent.setup()
     renderForm()
 
-    await user.click(
-      screen.getByRole("radio", { name: /I kept this exact team/i })
-    )
+    await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
     // The chip sub-radiogroup is hidden until "I played a chip" is selected.
-    expect(
-      screen.queryByRole("radiogroup", { name: /which chip\?/i })
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole("radiogroup", { name: /which chip\?/i })).not.toBeInTheDocument()
 
     await user.click(screen.getByRole("radio", { name: /I played a chip/i }))
     const chipGroup = screen.getByRole("radiogroup", { name: /which chip\?/i })
     expect(chipGroup).toBeInTheDocument()
 
-    await user.click(
-      within(chipGroup).getByRole("radio", { name: /Limitless/i })
-    )
-    await user.click(
-      screen.getByRole("button", { name: /confirm and continue/i })
-    )
+    await user.click(within(chipGroup).getByRole("radio", { name: /Limitless/i }))
+    await user.click(screen.getByRole("button", { name: /confirm and continue/i }))
 
     const snap = teamStore.getSnapshot()
     expect(snap.freeTransfers).toBe("unlimited")

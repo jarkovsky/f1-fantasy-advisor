@@ -11,9 +11,7 @@ export function DataAsOf({ meta }: { meta: FeedMeta }) {
   // feed's US-format FeedTime strings.
   const date = meta.asOf ? new Date(meta.asOf) : null
   const label =
-    date && !Number.isNaN(date.getTime())
-      ? date.toISOString().slice(0, 10)
-      : "an earlier capture"
+    date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 10) : "an earlier capture"
 
   return (
     <p className="rounded-md border border-border bg-muted px-3 py-2 text-xs text-muted-foreground">

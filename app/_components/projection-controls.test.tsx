@@ -13,10 +13,7 @@ import {
 } from "@/lib/projections"
 import { teamStore } from "@/lib/store"
 import { fixtureAssets, fixtureHistory } from "@/test/fixtures"
-import {
-  installMatchMediaStub,
-  installResizeObserverStub,
-} from "@/test/stubs/dom"
+import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
 // Real projection results drive the gating + confidence copy — no hand-rolled
@@ -87,37 +84,27 @@ function renderControls(props?: Partial<ControlProps>) {
 describe("ProjectionControls", () => {
   // Opening a portalled Radix Select under full-suite CPU load can exceed the
   // default 5s test timeout (it resolves in ms when unloaded) — give headroom.
-  it(
-    "renders every PRESET_REGISTRY label as an option",
-    { timeout: 20_000 },
-    async () => {
-      const user = userEvent.setup({ pointerEventsCheck: 0 })
-      renderControls()
-      await user.click(
-        screen.getByRole("combobox", { name: /projection model/i })
-      )
+  it("renders every PRESET_REGISTRY label as an option", { timeout: 20_000 }, async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 })
+    renderControls()
+    await user.click(screen.getByRole("combobox", { name: /projection model/i }))
 
-      const listbox = screen.getByRole("listbox")
-      for (const def of PRESET_REGISTRY) {
-        expect(
-          within(listbox).getByRole("option", {
-            name: new RegExp(def.label.replace(/[()]/g, "\\$&")),
-          })
-        ).toBeInTheDocument()
-      }
-      // Exactly the registry's count — no extra/missing options.
-      expect(within(listbox).getAllByRole("option")).toHaveLength(
-        PRESET_REGISTRY.length
-      )
+    const listbox = screen.getByRole("listbox")
+    for (const def of PRESET_REGISTRY) {
+      expect(
+        within(listbox).getByRole("option", {
+          name: new RegExp(def.label.replace(/[()]/g, "\\$&")),
+        })
+      ).toBeInTheDocument()
     }
-  )
+    // Exactly the registry's count — no extra/missing options.
+    expect(within(listbox).getAllByRole("option")).toHaveLength(PRESET_REGISTRY.length)
+  })
 
   it("gates history presets with the needs-≥ hint at cold start; equal-ppm stays enabled", async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 })
     renderControls({ preset: "equal-ppm", projection: COLD })
-    await user.click(
-      screen.getByRole("combobox", { name: /projection model/i })
-    )
+    await user.click(screen.getByRole("combobox", { name: /projection model/i }))
 
     const listbox = screen.getByRole("listbox")
     for (const def of PRESET_REGISTRY) {
@@ -126,9 +113,7 @@ describe("ProjectionControls", () => {
       })
       if (def.historyBased) {
         expect(option).toHaveAttribute("aria-disabled", "true")
-        expect(option).toHaveTextContent(
-          `needs ≥${def.minRaces} completed race`
-        )
+        expect(option).toHaveTextContent(`needs ≥${def.minRaces} completed race`)
       } else {
         expect(option).not.toHaveAttribute("aria-disabled", "true")
       }
@@ -174,14 +159,10 @@ describe("ProjectionControls", () => {
   it("selecting a preset fires onPresetChange with the chosen id", async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 })
     const { onPresetChange } = renderControls({ preset: "season-average" })
-    await user.click(
-      screen.getByRole("combobox", { name: /projection model/i })
-    )
+    await user.click(screen.getByRole("combobox", { name: /projection model/i }))
 
     const listbox = screen.getByRole("listbox")
-    await user.click(
-      within(listbox).getByRole("option", { name: /Equal PPM/i })
-    )
+    await user.click(within(listbox).getByRole("option", { name: /Equal PPM/i }))
     expect(onPresetChange).toHaveBeenCalledWith("equal-ppm")
   })
 
@@ -203,9 +184,7 @@ describe("ProjectionControls", () => {
   it("confidence line renders the completed-race / sprint count from props", () => {
     renderControls()
     // WARM basis: 5 completed races, 3 sprints.
-    expect(
-      screen.getByText(/Based on 5 completed races, 3 sprints\./)
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Based on 5 completed races, 3 sprints\./)).toBeInTheDocument()
     // No cold-start warning when there is history.
     expect(screen.queryByText(/no history yet/i)).not.toBeInTheDocument()
   })

@@ -105,9 +105,7 @@ export function PickerTable({
           )
     const column = COLUMNS.find((c) => c.key === sort.key)
     if (!column) return filtered
-    return [...filtered].sort((x, y) =>
-      compare(column.value(x), column.value(y), sort.dir)
-    )
+    return [...filtered].sort((x, y) => compare(column.value(x), column.value(y), sort.dir))
   }, [assets, query, sort])
 
   function cycle(key: SortKey): void {
@@ -137,10 +135,7 @@ export function PickerTable({
       </div>
 
       <h3 className="text-sm font-semibold">
-        {heading}{" "}
-        <span className="font-normal text-muted-foreground">
-          ({assets.length})
-        </span>
+        {heading} <span className="font-normal text-muted-foreground">({assets.length})</span>
       </h3>
 
       {/* The data table. The shadcn Table already wraps itself in an
@@ -151,16 +146,10 @@ export function PickerTable({
             <TableHead className="sticky top-0 z-10 w-0 bg-surface-2">
               <span className="sr-only">Selected</span>
             </TableHead>
-            <TableHead className="sticky top-0 z-10 bg-surface-2">
-              Asset
-            </TableHead>
+            <TableHead className="sticky top-0 z-10 bg-surface-2">Asset</TableHead>
             {COLUMNS.map((col) => {
               const active = sort.key === col.key
-              const ariaSort = active
-                ? sort.dir === "desc"
-                  ? "descending"
-                  : "ascending"
-                : "none"
+              const ariaSort = active ? (sort.dir === "desc" ? "descending" : "ascending") : "none"
               return (
                 <TableHead
                   key={col.key}
@@ -173,11 +162,7 @@ export function PickerTable({
                     className="inline-flex w-full items-center justify-end gap-1 font-medium tabular-nums hover:text-foreground focus-visible:outline-1 focus-visible:outline-ring"
                   >
                     {col.label}
-                    {active && (
-                      <span aria-hidden="true">
-                        {sort.dir === "desc" ? "▼" : "▲"}
-                      </span>
-                    )}
+                    {active && <span aria-hidden="true">{sort.dir === "desc" ? "▼" : "▲"}</span>}
                   </button>
                 </TableHead>
               )
@@ -263,9 +248,7 @@ function PickerRow({ asset, selected, disabled, onToggle }: PickerRowProps) {
             style={{ background: color }}
           />
           <span className="font-mono text-xs font-semibold">{asset.tla}</span>
-          <span className="truncate text-muted-foreground">
-            {asset.fullName}
-          </span>
+          <span className="truncate text-muted-foreground">{asset.fullName}</span>
         </div>
       </TableCell>
       <NumCell>{formatPriceTenths(asset.priceTenths)}</NumCell>
@@ -277,9 +260,5 @@ function PickerRow({ asset, selected, disabled, onToggle }: PickerRowProps) {
 }
 
 function NumCell({ children }: { children: React.ReactNode }) {
-  return (
-    <TableCell className="text-right font-mono tabular-nums">
-      {children}
-    </TableCell>
-  )
+  return <TableCell className="text-right font-mono tabular-nums">{children}</TableCell>
 }

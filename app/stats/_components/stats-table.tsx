@@ -88,18 +88,9 @@ function sortRows(rows: StatsRow[], sort: SortState): StatsRow[] {
   return [...rows].sort((x, y) => compare(x[sort.key], y[sort.key], sort.dir))
 }
 
-export function StatsTable({
-  rows,
-  caption,
-}: {
-  rows: StatsRow[]
-  caption: string
-}) {
+export function StatsTable({ rows, caption }: { rows: StatsRow[]; caption: string }) {
   const drivers = useMemo(() => rows.filter((r) => r.kind === "driver"), [rows])
-  const constructors = useMemo(
-    () => rows.filter((r) => r.kind === "constructor"),
-    [rows]
-  )
+  const constructors = useMemo(() => rows.filter((r) => r.kind === "constructor"), [rows])
 
   return (
     // Sorting state lives PER PANEL (each <StatsPanel> owns its own useState).
@@ -108,9 +99,7 @@ export function StatsTable({
     <Tabs defaultValue="driver" className="gap-3">
       <TabsList>
         <TabsTrigger value="driver">Drivers ({drivers.length})</TabsTrigger>
-        <TabsTrigger value="constructor">
-          Constructors ({constructors.length})
-        </TabsTrigger>
+        <TabsTrigger value="constructor">Constructors ({constructors.length})</TabsTrigger>
       </TabsList>
       <TabsContent value="driver">
         <StatsPanel rows={drivers} caption={caption} />
@@ -160,16 +149,10 @@ function StatsPanel({ rows, caption }: { rows: StatsRow[]; caption: string }) {
         <TableCaption>{caption}</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="sticky top-0 z-10 bg-surface-2">
-              Asset
-            </TableHead>
+            <TableHead className="sticky top-0 z-10 bg-surface-2">Asset</TableHead>
             {COLUMNS.map((col) => {
               const active = sort.key === col.key
-              const ariaSort = active
-                ? sort.dir === "desc"
-                  ? "descending"
-                  : "ascending"
-                : "none"
+              const ariaSort = active ? (sort.dir === "desc" ? "descending" : "ascending") : "none"
               return (
                 <TableHead
                   key={col.key}
@@ -182,18 +165,12 @@ function StatsPanel({ rows, caption }: { rows: StatsRow[]; caption: string }) {
                     className="inline-flex w-full items-center justify-end gap-1 font-medium tabular-nums hover:text-foreground focus-visible:outline-1 focus-visible:outline-ring"
                   >
                     {col.label}
-                    {active && (
-                      <span aria-hidden="true">
-                        {sort.dir === "desc" ? "▼" : "▲"}
-                      </span>
-                    )}
+                    {active && <span aria-hidden="true">{sort.dir === "desc" ? "▼" : "▲"}</span>}
                   </button>
                 </TableHead>
               )
             })}
-            <TableHead className="sticky top-0 z-10 bg-surface-2 text-right">
-              Trend
-            </TableHead>
+            <TableHead className="sticky top-0 z-10 bg-surface-2 text-right">Trend</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -242,11 +219,7 @@ function DataRow({ row }: { row: StatsRow }) {
 }
 
 function NumCell({ children }: { children: React.ReactNode }) {
-  return (
-    <TableCell className="text-right font-mono tabular-nums">
-      {children}
-    </TableCell>
-  )
+  return <TableCell className="text-right font-mono tabular-nums">{children}</TableCell>
 }
 
 /**
@@ -256,8 +229,7 @@ function NumCell({ children }: { children: React.ReactNode }) {
  * <Delta>; we don't import that one — it lives under app/_components).
  */
 function DeltaSpan({ tenths }: { tenths: number }) {
-  const tone =
-    tenths > 0 ? "text-pos" : tenths < 0 ? "text-neg" : "text-muted-foreground"
+  const tone = tenths > 0 ? "text-pos" : tenths < 0 ? "text-neg" : "text-muted-foreground"
   return <span className={cn(tone)}>{formatDeltaTenths(tenths)}</span>
 }
 

@@ -29,10 +29,7 @@ const CONCRETE_PRESETS: readonly ConcretePresetId[] = [
  * among the snapshot feeds (the staleness the user is actually exposed to).
  * Otherwise live, stamped with the current drivers feed's asOf.
  */
-function worstOfMeta(
-  feeds: readonly { meta: FeedMeta }[],
-  liveAsOf: string
-): FeedProvenance {
+function worstOfMeta(feeds: readonly { meta: FeedMeta }[], liveAsOf: string): FeedProvenance {
   const snapshots = feeds.filter((f) => f.meta.source === "snapshot")
   if (snapshots.length === 0) return { source: "live", asOf: liveAsOf }
 
@@ -68,24 +65,18 @@ export async function AdvisorData() {
   const r = constraints.data.raceNumber
   const lastCompletedRace = constraints.data.lastCompletedRace
 
-  const [
-    raceday,
-    drivers,
-    history,
-    mixapi,
-    nextRacePublished,
-    lastRaceDrivers,
-  ] = await Promise.all([
-    getRaceday(),
-    getDrivers(r, r <= lastCompletedRace),
-    getHistory(r, lastCompletedRace),
-    getMixapi(),
-    getNextRacePublished(r),
-    lastCompletedRace >= 1 ? getDrivers(lastCompletedRace, true) : null,
-  ])
+  const [raceday, drivers, history, mixapi, nextRacePublished, lastRaceDrivers] = await Promise.all(
+    [
+      getRaceday(),
+      getDrivers(r, r <= lastCompletedRace),
+      getHistory(r, lastCompletedRace),
+      getMixapi(),
+      getNextRacePublished(r),
+      lastCompletedRace >= 1 ? getDrivers(lastCompletedRace, true) : null,
+    ]
+  )
 
-  const isSprint =
-    raceday.data.find((w) => w.raceNumber === r)?.isSprint ?? false
+  const isSprint = raceday.data.find((w) => w.raceNumber === r)?.isSprint ?? false
 
   const projectionsByPreset = Object.fromEntries(
     CONCRETE_PRESETS.map((preset) => [

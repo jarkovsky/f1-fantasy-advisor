@@ -14,11 +14,7 @@ type UnavailableAssetTileProps = {
   onReplace?: () => void
 }
 
-export function UnavailableAssetTile({
-  id,
-  displayName,
-  onReplace,
-}: UnavailableAssetTileProps) {
+export function UnavailableAssetTile({ id, displayName, onReplace }: UnavailableAssetTileProps) {
   return (
     <div
       className="flex items-center justify-between gap-3 rounded-md bg-surface-2 py-2 pr-3 pl-3"
@@ -29,18 +25,12 @@ export function UnavailableAssetTile({
           {displayName ?? `Asset ${id}`} — no longer available.
         </p>
         <p className="text-xs text-muted-foreground">
-          Not in the current race feed. Replace it to continue — replacing an
-          unavailable asset still uses a transfer.
+          Not in the current race feed. Replace it to continue — replacing an unavailable asset
+          still uses a transfer.
         </p>
       </div>
       {onReplace && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onReplace}
-          className="shrink-0"
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={onReplace} className="shrink-0">
           Replace
         </Button>
       )}

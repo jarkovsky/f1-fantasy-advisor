@@ -14,9 +14,7 @@ import { StatsTable, type StatsRow } from "./stats-table"
 //  - 2 constructors (distinct kind, own counts)
 // ---------------------------------------------------------------------------
 
-function row(
-  over: Partial<StatsRow> & Pick<StatsRow, "playerId" | "tla">
-): StatsRow {
+function row(over: Partial<StatsRow> & Pick<StatsRow, "playerId" | "tla">): StatsRow {
   return {
     kind: "driver",
     displayName: over.tla,
@@ -179,9 +177,7 @@ describe("StatsTable", () => {
     const user = userEvent.setup()
     renderTable()
     expect(screen.getByRole("tab", { name: "Drivers (4)" })).toBeInTheDocument()
-    expect(
-      screen.getByRole("tab", { name: "Constructors (2)" })
-    ).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Constructors (2)" })).toBeInTheDocument()
 
     // Change sort on the drivers tab.
     await user.click(sortButton(/Price/))

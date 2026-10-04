@@ -15,10 +15,7 @@
 export function currentTimeMs(): number {
   if (process.env.NODE_ENV !== "production") {
     try {
-      const raw =
-        typeof window !== "undefined"
-          ? window.localStorage.getItem("f1:devNow")
-          : null
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem("f1:devNow") : null
       if (raw !== null) {
         const trimmed = raw.trim()
         // Pure-digit string → epoch ms.

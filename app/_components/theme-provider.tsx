@@ -9,9 +9,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes"
  * next-themes injects a blocking pre-paint script, so the PPR static shell
  * stays theme-free and there is no flash on either theme.
  */
-export function ThemeProvider({
-  children,
-}: React.ComponentProps<typeof NextThemesProvider>) {
+export function ThemeProvider({ children }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <NextThemesProvider
       attribute="class"

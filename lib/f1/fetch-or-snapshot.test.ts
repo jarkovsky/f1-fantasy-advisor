@@ -67,8 +67,7 @@ describe("fetchOrSnapshot decision table", () => {
 
   it("network failure (reject) → snapshot", async () => {
     const feed = await fetchOrSnapshot(PATH, parseDriversFeed, goodSnapshot, {
-      fetchImpl: (() =>
-        Promise.reject(new Error("ENOTFOUND"))) as unknown as typeof fetch,
+      fetchImpl: (() => Promise.reject(new Error("ENOTFOUND"))) as unknown as typeof fetch,
       empty: EMPTY,
     })
     expect(feed.meta.source).toBe("snapshot")
@@ -113,9 +112,7 @@ describe("probeFeedPublished decision table", () => {
   it("HTTP 403 (race not yet published) → false", async () => {
     await expect(
       probeFeedPublished(PATH, {
-        fetchImpl: mockFetch(
-          () => new Response("AccessDenied", { status: 403 })
-        ),
+        fetchImpl: mockFetch(() => new Response("AccessDenied", { status: 403 })),
       })
     ).resolves.toBe(false)
   })
@@ -139,8 +136,7 @@ describe("probeFeedPublished decision table", () => {
   it("network failure (reject) → false, never throws", async () => {
     await expect(
       probeFeedPublished(PATH, {
-        fetchImpl: (() =>
-          Promise.reject(new Error("ENOTFOUND"))) as unknown as typeof fetch,
+        fetchImpl: (() => Promise.reject(new Error("ENOTFOUND"))) as unknown as typeof fetch,
       })
     ).resolves.toBe(false)
   })
