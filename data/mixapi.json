@@ -1,9 +1,9 @@
 {
   "Value": {
     "infoflag": 0,
-    "ov": "20260605102432",
-    "hv": "20260605102432",
-    "lv": "20260601191331",
+    "ov": "20260627101824",
+    "hv": "20260627101824",
+    "lv": null,
     "conf": {
       "bv": "1.3",
       "ipe": true,
@@ -22,18 +22,18 @@
     "Maintenance": "0",
     "isLive": 0,
     "feedBuster": {
-      "config": "20260601191332",
-      "statistics": "20260605102422",
-      "translation": "20260520144223",
-      "staticPage": "20260520144223",
-      "fixtures": "20260601191333",
-      "announcement": "20260522100707",
-      "genericCard": "20260605102432"
+      "config": "20260624112005",
+      "statistics": "20260627101817",
+      "translation": "20260624112005",
+      "staticPage": "20260624112005",
+      "fixtures": "20260624112005",
+      "announcement": "20260624112005",
+      "genericCard": "20260627101824"
     }
   },
   "FeedTime": {
-    "UTCTime": "6/5/2026 10:24:32 AM",
-    "ISTTime": "6/5/2026 3:54:32 PM",
-    "CESTTime": "6/5/2026 12:24:32 PM"
+    "UTCTime": "6/27/2026 10:18:24 AM",
+    "ISTTime": "6/27/2026 3:48:24 PM",
+    "CESTTime": "6/27/2026 12:18:24 PM"
   }
 }

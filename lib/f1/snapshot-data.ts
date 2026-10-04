@@ -18,6 +18,8 @@ import race3 from "@/data/drivers/3.json"
 import race4 from "@/data/drivers/4.json"
 import race5 from "@/data/drivers/5.json"
 import race6 from "@/data/drivers/6.json"
+import race7 from "@/data/drivers/7.json"
+import race8 from "@/data/drivers/8.json"
 import manifest from "@/data/manifest.json"
 import mixapiRaw from "@/data/mixapi.json"
 import racedayRaw from "@/data/raceday.json"
@@ -29,6 +31,8 @@ export const DRIVERS_RAW: Record<number, unknown> = {
   4: race4,
   5: race5,
   6: race6,
+  7: race7,
+  8: race8,
 }
 
 export type Snapshot = { raw: unknown; asOf: string }
