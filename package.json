@@ -12,8 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint",
-    "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx}\"",
+    "format": "prettier --write \"**/*.{ts,tsx,mjs,css,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,mjs,css,md,json}\"",
     "typecheck": "next typegen && tsc --noEmit",
     "assets": "tsx scripts/assets.ts",
     "pattern": "tsx scripts/dot-pattern.ts"

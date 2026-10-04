@@ -5,3 +5,10 @@ node_modules/
 coverage/
 pnpm-lock.yaml
 .pnpm-store/
+
+# Machine-written JSON — must stay byte-identical to its writer scripts
+# (scripts/snapshot.ts, scripts/assets.ts) so drift checks and rename
+# detection stay clean. Do not let Prettier reflow these.
+data/
+lib/f1/__fixtures__/
+public/
