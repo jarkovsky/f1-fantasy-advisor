@@ -20,7 +20,7 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
 
-import { parseDriversFeed } from "../lib/f1/schemas"
+import { parseDriversFeed } from "@/lib/f1/schemas"
 
 const OPENF1_DRIVERS = "https://api.openf1.org/v1/drivers?session_key=latest"
 const OUT_DIR = "public/headshots"

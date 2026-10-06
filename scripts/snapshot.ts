@@ -15,14 +15,14 @@
  */
 import { mkdir, writeFile } from "node:fs/promises"
 
-import { F1_FEED_BASE, FEED_NOT_PUBLISHED_STATUS, FEED_UA, feedPaths } from "../lib/f1/config"
+import { F1_FEED_BASE, FEED_NOT_PUBLISHED_STATUS, FEED_UA, feedPaths } from "@/lib/f1/config"
 import {
   type ParseResult,
   parseConstraints,
   parseDriversFeed,
   parseMixapi,
   parseRaceday,
-} from "../lib/f1/schemas"
+} from "@/lib/f1/schemas"
 
 type ManifestEntry = {
   lastModified: string | null
