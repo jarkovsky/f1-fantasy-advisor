@@ -102,6 +102,9 @@ export async function AdvisorData() {
     headshotPath: headshotPath(a.playerId),
   }))
 
+  // Ships the whole grid (~33 numbers, <1KB) even though the client reads only
+  // the ~7 roster ids. We cannot pre-filter to the roster here: the roster is
+  // localStorage-only client state and must never leak into this cacheable RSC.
   const lastRacePoints: Record<string, number | null> = {}
   if (lastRaceDrivers) {
     for (const a of lastRaceDrivers.data) {

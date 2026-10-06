@@ -101,9 +101,16 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
   const [showEditor, setShowEditor] = useState(false)
   const [applied, setApplied] = useState(false)
 
-  // --- Projection (cheap; resolved every render) ----------------------------
+  // --- Projection -----------------------------------------------------------
+  // Memoized so the custom-blend path (which builds a fresh byPlayerId map each
+  // call) stays referentially stable across incidental re-renders — otherwise
+  // `totals` below re-materializes and the optimizer effect re-runs the full
+  // ~1.45M-combination search on every render, including the 30s clock tick.
   const deferredBlend = useDeferredValue(blendWeight)
-  const projection = resolveClientProjection(props.projectionsByPreset, preset, deferredBlend)
+  const projection = useMemo(
+    () => resolveClientProjection(props.projectionsByPreset, preset, deferredBlend),
+    [props.projectionsByPreset, preset, deferredBlend]
+  )
 
   const totals = useMemo<Record<string, number>>(() => {
     const out: Record<string, number> = {}

@@ -1,5 +1,3 @@
-"use client"
-
 import { formatDeltaTenths, formatSignedPoints } from "@/lib/format"
 import { cn } from "@/lib/utils"
 

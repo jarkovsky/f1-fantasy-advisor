@@ -26,6 +26,14 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParamsMock,
 }))
 
+// Wrap optimize() in a counting passthrough: the real implementation still runs
+// (the oracle tests depend on it), but the call count lets the H2 regression
+// assert the optimizer does not re-run on incidental re-renders.
+vi.mock("@/lib/optimizer", async (importActual) => {
+  const actual = await importActual<typeof import("@/lib/optimizer")>()
+  return { ...actual, optimize: vi.fn(actual.optimize) }
+})
+
 // ---------------------------------------------------------------------------
 // Hand-rolled deterministic grid: the real fixtures carry only 4 assets — too
 // few for the optimizer's 5-driver / 2-constructor floor. 8 drivers + 3
@@ -305,6 +313,36 @@ describe("OPEN — oracle equality", () => {
     const gainText = formatSignedPoints(exp.best.score - baseline)
     const block = screen.getByText("vs keeping your current team").parentElement as HTMLElement
     expect(within(block).getByText(gainText)).toBeInTheDocument()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// H2 REGRESSION — on custom-blend, an incidental re-render with identical props
+// (what the 30s clock tick triggers) must NOT re-run the optimizer. The
+// custom-blend projection builds a fresh map each call; a useMemo keeps it
+// referentially stable so `totals` — and the optimizer effect keyed on it —
+// stay put. Without the memo, every render re-ran the ~1.45M-combo search.
+// ---------------------------------------------------------------------------
+describe("OPEN — custom-blend optimizer stability", () => {
+  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
+
+  it("does not re-run the optimizer on a same-props re-render", async () => {
+    seedDevNow(BEFORE_LOCK)
+    seedTeam(ROSTER, 500, 3, 6)
+    searchParamsMock = new URLSearchParams("preset=custom-blend")
+    const props = makeProps()
+    const { rerender } = render(<AdvisorPanel {...props} />)
+
+    await screen.findByText("vs keeping your current team", undefined, { timeout: 15_000 })
+    const before = vi.mocked(optimize).mock.calls.length
+
+    // A same-props re-render is exactly what the 30s setNow tick triggers.
+    rerender(<AdvisorPanel {...props} />)
+    // Give the optimizer effect (dynamic import cached, transition-wrapped) ample
+    // real time to fire if it were going to.
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    expect(vi.mocked(optimize).mock.calls.length).toBe(before)
   })
 })
 
