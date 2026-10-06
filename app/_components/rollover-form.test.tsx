@@ -193,4 +193,30 @@ describe("RolloverForm", () => {
     // Incomplete on first render.
     expect(status).toHaveTextContent("Complete every step to continue.")
   })
+
+  // Focus management: choosing a squad reveals steps 2 and 3 together (bank is
+  // prefilled), so focus should land on the step-2 legend and NOT be stolen away
+  // to step 3 — nor while the user is retyping a cleared bank value.
+  describe("focus management", () => {
+    it("moves focus to the budget legend after choosing a squad option", async () => {
+      const user = userEvent.setup()
+      renderForm()
+
+      await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
+
+      expect(screen.getByText("What's your remaining budget now?")).toHaveFocus()
+    })
+
+    it("does not steal focus from the bank input while retyping a cleared value", async () => {
+      const user = userEvent.setup()
+      renderForm()
+
+      await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
+      const bank = screen.getByLabelText("Remaining budget")
+      await user.clear(bank) // step 3 hides (bank empty)
+      await user.type(bank, "3.0") // step 3 re-reveals — focus must stay put
+
+      expect(bank).toHaveFocus()
+    })
+  })
 })

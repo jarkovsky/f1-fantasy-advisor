@@ -52,15 +52,10 @@ export function RolloverForm({ from, to, assets, assetsById, team, onConfirm }: 
   // Move focus to each newly revealed step's legend.
   const step2Ref = useRef<HTMLLegendElement>(null)
   const step3Ref = useRef<HTMLLegendElement>(null)
+  const bankInputRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (squadChoice !== null) step2Ref.current?.focus()
   }, [squadChoice])
-  useEffect(() => {
-    if (bankInput.trim() !== "") step3Ref.current?.focus()
-    // Only react to the bank becoming non-empty for focus management; the
-    // legend is tabindex=-1 so this is purely an affordance.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const resolved = draftRoster
     .map((id) => assetsById[id])
@@ -71,6 +66,17 @@ export function RolloverForm({ from, to, assets, assetsById, team, onConfirm }: 
   const bankNumber = bankTrimmed === "" ? null : Number(bankTrimmed)
   const bankEntered = bankNumber !== null && Number.isFinite(bankNumber) && bankNumber >= 0
   const bankTenths = bankEntered ? Math.round(bankNumber * 10) : 0
+
+  // Reveal focus for step 3, but never steal it from the step-2 legend (just
+  // placed by the effect above) or from the bank input while the user is
+  // retyping a cleared value.
+  const step3Revealed = squadChoice !== null && bankEntered
+  useEffect(() => {
+    if (!step3Revealed) return
+    const active = document.activeElement
+    if (active === step2Ref.current || active === bankInputRef.current) return
+    step3Ref.current?.focus()
+  }, [step3Revealed])
 
   const freeTransfers: 2 | 3 | "unlimited" =
     transferChoice === "chip" ? "unlimited" : transferChoice === "banked" ? 3 : 2
@@ -207,6 +213,7 @@ export function RolloverForm({ from, to, assets, assetsById, team, onConfirm }: 
                 $
               </span>
               <input
+                ref={bankInputRef}
                 type="number"
                 inputMode="decimal"
                 min={0}
