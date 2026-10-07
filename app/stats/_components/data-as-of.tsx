@@ -1,4 +1,4 @@
-import type { FeedMeta } from "@/lib/f1/fetch-or-snapshot"
+import type { FeedMeta } from "@/lib/f1/types/feed"
 
 /**
  * Degradation notice — renders only when the data came from the committed

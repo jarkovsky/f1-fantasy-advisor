@@ -1,5 +1,5 @@
 import { getConstraints, getDrivers, getHistory } from "@/lib/f1/feed"
-import type { AssetHistory } from "@/lib/f1/history"
+import type { AssetHistory } from "@/lib/f1/types/history"
 import { assetColorKey } from "@/lib/asset-lite"
 import { DataAsOf } from "./data-as-of"
 import { StatsTable, type StatsRow } from "./stats-table"

@@ -16,13 +16,8 @@
 import { mkdir, writeFile } from "node:fs/promises"
 
 import { F1_FEED_BASE, FEED_NOT_PUBLISHED_STATUS, FEED_UA, feedPaths } from "@/lib/f1/config"
-import {
-  type ParseResult,
-  parseConstraints,
-  parseDriversFeed,
-  parseMixapi,
-  parseRaceday,
-} from "@/lib/f1/schemas"
+import { parseConstraints, parseDriversFeed, parseMixapi, parseRaceday } from "@/lib/f1/schemas"
+import type { ParseResult } from "@/lib/f1/types/feed"
 
 type ManifestEntry = {
   lastModified: string | null

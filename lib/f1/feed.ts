@@ -22,7 +22,7 @@ import "server-only"
 
 import { cacheLife, cacheTag } from "next/cache"
 
-import { fetchOrSnapshot, probeFeedPublished, type Feed } from "./fetch-or-snapshot"
+import { fetchOrSnapshot, probeFeedPublished } from "./fetch-or-snapshot"
 import { feedPaths } from "./config"
 import {
   type Asset,
@@ -40,9 +40,9 @@ import {
   snapshotMixapi,
   snapshotRaceday,
 } from "./snapshot-data"
-import { assembleHistory, type SeasonHistory } from "./history"
-
-export type { Feed } from "./fetch-or-snapshot"
+import { assembleHistory } from "./history"
+import type { Feed } from "./types/feed"
+import type { SeasonHistory } from "./types/history"
 
 /**
  * One race's assets. The caller decides `completed` (race ≤

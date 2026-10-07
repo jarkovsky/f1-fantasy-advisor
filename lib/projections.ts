@@ -24,7 +24,7 @@ import {
   HISTORY_PRESET_MIN_RACES,
   SPRINT_PRIOR_SHRINKAGE_K,
 } from "@/lib/constants"
-import type { AssetHistory, SeasonHistory } from "@/lib/f1/history"
+import type { AssetHistory, SeasonHistory } from "@/lib/f1/types/history"
 import type { SessionLabelType } from "@/lib/f1/schemas"
 
 // ---------------------------------------------------------------------------

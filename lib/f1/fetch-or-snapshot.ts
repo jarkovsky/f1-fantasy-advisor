@@ -11,19 +11,7 @@
  * feed.ts, the only production caller.
  */
 import { F1_FEED_BASE, FEED_TIMEOUT_MS, FEED_UA } from "./config"
-import type { ParseResult } from "./schemas"
-import type { Snapshot } from "./snapshot-data"
-
-export type DataSource = "live" | "snapshot"
-
-export type FeedMeta = {
-  source: DataSource
-  /** HTTP Last-Modified (RFC1123) of whichever payload was used; '' if unknown. */
-  asOf: string
-  race?: number
-}
-
-export type Feed<T> = { data: T; meta: FeedMeta }
+import type { Feed, ParseResult, Snapshot } from "./types/feed"
 
 export type FetchOrSnapshotOptions = {
   fetchImpl?: typeof fetch

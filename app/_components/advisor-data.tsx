@@ -1,5 +1,5 @@
 import type { AssetLite } from "@/lib/asset-lite"
-import type { Feed, FeedMeta } from "@/lib/f1/fetch-or-snapshot"
+import type { Feed, FeedMeta } from "@/lib/f1/types/feed"
 import {
   getConstraints,
   getDrivers,

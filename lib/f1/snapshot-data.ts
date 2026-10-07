@@ -11,6 +11,8 @@
  */
 import "server-only"
 
+import type { Snapshot } from "./types/feed"
+
 import constraintsRaw from "@/data/constraints.json"
 import race1 from "@/data/drivers/1.json"
 import race2 from "@/data/drivers/2.json"
@@ -34,8 +36,6 @@ export const DRIVERS_RAW: Record<number, unknown> = {
   7: race7,
   8: race8,
 }
-
-export type Snapshot = { raw: unknown; asOf: string }
 
 type ManifestEntry = { lastModified: string | null; fetchedAt: string }
 

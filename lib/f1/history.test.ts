@@ -6,7 +6,8 @@ import race3 from "./__fixtures__/drivers.race3.json"
 import race4 from "./__fixtures__/drivers.race4.json"
 import race5 from "./__fixtures__/drivers.race5.json"
 import race6 from "./__fixtures__/drivers.race6.json"
-import { assembleHistory, type RacePayload } from "./history"
+import { assembleHistory } from "./history"
+import type { RacePayload } from "./types/history"
 import { type Asset, parseDriversFeed } from "./schemas"
 
 // Fixtures: same 4 real assets (Gasly 18, Verstappen 131, Mercedes 28,

@@ -15,7 +15,8 @@ import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
 import constraintsFixture from "@/lib/f1/__fixtures__/constraints.json"
 import racedayFixture from "@/lib/f1/__fixtures__/raceday.excerpt.json"
 import mixapiFixture from "@/lib/f1/__fixtures__/mixapi.json"
-import { assembleHistory, type SeasonHistory } from "@/lib/f1/history"
+import { assembleHistory } from "@/lib/f1/history"
+import type { SeasonHistory } from "@/lib/f1/types/history"
 import {
   type Asset,
   type Mixapi,

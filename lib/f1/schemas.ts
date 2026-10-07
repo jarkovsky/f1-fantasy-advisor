@@ -15,10 +15,7 @@
 import * as z from "zod"
 
 import { SESSION_LABELS } from "./config"
-
-export type ParseResult<T> =
-  | { ok: true; data: T; dropped?: number }
-  | { ok: false; summary: string[] }
+import type { ParseResult } from "./types/feed"
 
 function summarize(error: z.ZodError): string[] {
   return error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.code} (${i.message})`)
