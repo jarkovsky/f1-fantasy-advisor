@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
-import { DEFAULT_STATE, teamStore, type TeamStateV1 } from "./store"
+import { DEFAULT_STATE, teamStore } from "./store"
+import type { TeamStateV1 } from "./types/team-state"
 
 const KEY = "f1:v1"
 

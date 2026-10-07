@@ -12,7 +12,7 @@ import { optimize } from "@/lib/optimizer/optimize"
 import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import { formatSignedPoints } from "@/lib/format"
 import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/projection"
-import { teamStore } from "@/lib/store"
+import { teamStore } from "@/lib/team/store"
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------

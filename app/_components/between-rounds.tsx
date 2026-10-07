@@ -4,7 +4,7 @@ import { Delta } from "@/app/_components/delta"
 import { Card } from "@/components/ui/card"
 import type { AssetLite } from "@/lib/asset-lite"
 import { formatPoints } from "@/lib/format"
-import type { TeamStateV1 } from "@/lib/store"
+import type { TeamStateV1 } from "@/lib/team/types/team-state"
 
 /**
  * BETWEEN_ROUNDS (spec §5.4): the last race is scored but the next drivers feed

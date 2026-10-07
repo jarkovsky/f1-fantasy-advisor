@@ -30,22 +30,9 @@ import { useSyncExternalStore } from "react"
 
 import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
 
-const STORAGE_KEY = "f1:v1"
+import type { TeamStateV1 } from "./types/team-state"
 
-export type TeamStateV1 = {
-  v: 1
-  /** Exactly 7 ids when set: 5 drivers + 2 constructors. null = none picked. */
-  roster: string[] | null
-  /** Remaining bank, integer tenths-of-a-million. */
-  budgetTenths: number
-  freeTransfers: 2 | 3 | "unlimited"
-  /** Race the team was entered for; null = first visit (never saved). */
-  raceNumber: number | null
-  activeChip: "none" | "wildcard" | "limitless"
-  dismissedHonestyNote: boolean
-  /** Stamped on save; powers "you scored X · we projected Y". */
-  savedProjection: { totalPoints: number; preset: string } | null
-}
+const STORAGE_KEY = "f1:v1"
 
 /**
  * The pristine first-visit state. Frozen and shared by reference: it is the

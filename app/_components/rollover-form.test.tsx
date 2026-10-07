@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { RolloverForm } from "@/app/_components/rollover-form"
 import type { AssetLite } from "@/lib/asset-lite"
-import { teamStore } from "@/lib/store"
+import { teamStore } from "@/lib/team/store"
 import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------

@@ -3,7 +3,7 @@ import { renderToString } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { DeadlineCountdown } from "@/app/_components/deadline-countdown"
-import { teamStore } from "@/lib/store"
+import { teamStore } from "@/lib/team/store"
 
 // ---------------------------------------------------------------------------
 // The component reads the wall clock via currentTimeMs(), which falls through

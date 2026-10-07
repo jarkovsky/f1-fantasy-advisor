@@ -19,7 +19,7 @@ import {
 import type { AssetLite } from "@/lib/asset-lite"
 import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
-import { useTeamStore } from "@/lib/store"
+import { useTeamStore } from "@/lib/team/store"
 
 /**
  * The team-setup flow as ONE Card (M5 redesign): two stacked kind tables on

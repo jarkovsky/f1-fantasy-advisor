@@ -8,7 +8,7 @@ import { assembleHistory } from "@/lib/f1/history"
 import { PRESET_REGISTRY, projectAssets } from "@/lib/projections/engine"
 import type { PresetId } from "@/lib/projections/types/presets"
 import type { ProjectionResult } from "@/lib/projections/types/projection"
-import { teamStore } from "@/lib/store"
+import { teamStore } from "@/lib/team/store"
 import { fixtureAssets, fixtureHistory } from "@/test/fixtures"
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
 

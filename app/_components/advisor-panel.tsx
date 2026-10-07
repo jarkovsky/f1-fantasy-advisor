@@ -35,7 +35,7 @@ import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import { resolveClientProjection } from "@/lib/advisor/projection-resolve"
 import { PRESET_IDS, type PresetId } from "@/lib/projections/types/presets"
-import { useTeamStore } from "@/lib/store"
+import { useTeamStore } from "@/lib/team/store"
 import { cn } from "@/lib/utils"
 
 // Type-only import of the optimizer module for the dynamic import contract; the

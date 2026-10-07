@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card"
 import type { AssetLite } from "@/lib/asset-lite"
 import { assetColorKey } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
-import type { TeamStateV1 } from "@/lib/store"
+import type { TeamStateV1 } from "@/lib/team/types/team-state"
 import { teamColor } from "@/lib/team-colors"
 
 /**

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { TeamPicker } from "@/app/_components/team-picker"
 import type { AssetLite } from "@/lib/asset-lite"
-import { teamStore } from "@/lib/store"
+import { teamStore } from "@/lib/team/store"
 import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
