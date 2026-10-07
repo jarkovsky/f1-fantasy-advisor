@@ -34,7 +34,7 @@ import type { OptimizerInputError as OptimizerInputErrorType } from "@/lib/optim
 import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import { resolveClientProjection } from "@/lib/projection-resolve"
-import { PRESET_IDS, type PresetId } from "@/lib/projections"
+import { PRESET_IDS, type PresetId } from "@/lib/projections/types/presets"
 import { useTeamStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
 

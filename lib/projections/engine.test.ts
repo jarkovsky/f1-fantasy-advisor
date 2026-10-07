@@ -11,7 +11,8 @@ import { assembleHistory } from "@/lib/f1/history"
 import type { RacePayload, SeasonHistory } from "@/lib/f1/types/history"
 import { parseDriversFeed } from "@/lib/f1/schemas"
 import type { SessionPoints } from "@/lib/f1/schemas"
-import { PRESET_IDS, PRESET_REGISTRY, type PresetId, ewma, projectAssets } from "@/lib/projections"
+import { PRESET_REGISTRY, ewma, projectAssets } from "./engine"
+import { PRESET_IDS, type PresetId } from "./types/presets"
 
 // Real fixtures (captured 2026-06-05): Gasly 18, Verstappen 131, Mercedes 28,
 // Red Bull 29 across races 1..6 (race 6 = Monaco, pending). Sprints: 2, 4, 5.

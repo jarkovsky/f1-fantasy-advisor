@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { LockedView } from "@/app/_components/locked-view"
 import type { AssetLite } from "@/lib/asset-lite"
-import type { ConcretePresetId } from "@/app/_components/advisor-types"
-import type { ProjectionResult } from "@/lib/projections"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------

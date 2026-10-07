@@ -6,7 +6,7 @@ import type { AssetLite } from "@/lib/asset-lite"
 import { assetColorKey } from "@/lib/asset-lite"
 import { DRS_BOOST_MULTIPLIER } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
-import type { ProjectionResult } from "@/lib/projections"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 import { teamColor } from "@/lib/team-colors"
 
 /**

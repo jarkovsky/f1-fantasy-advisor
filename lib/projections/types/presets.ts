@@ -1,0 +1,28 @@
+/**
+ * Projection preset identities. PRESET_IDS is the single source of truth — the
+ * PresetId union is derived from it, so the value and the type must travel
+ * together (a sanctioned value-in-a-types-file: it IS the type source).
+ * The label/minRaces data (PRESET_REGISTRY) and the engine live in ../engine.ts.
+ */
+
+export const PRESET_IDS = [
+  "weighted-recent",
+  "form-5",
+  "season-average",
+  "equal-ppm",
+  "custom-blend",
+] as const
+
+export type PresetId = (typeof PRESET_IDS)[number]
+
+/** Presets the server materializes; `custom-blend` is client-derived. */
+export type ConcretePresetId = Exclude<PresetId, "custom-blend">
+
+export type PresetDefinition = {
+  id: PresetId
+  label: string
+  /** History presets need ≥N completed races; equal-ppm works from race 1. */
+  minRaces: number
+  /** True for presets computed from per-race history (greyed at cold start). */
+  historyBased: boolean
+}

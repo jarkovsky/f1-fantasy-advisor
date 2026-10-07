@@ -5,7 +5,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import type { AssetLite } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
-import { PRESET_REGISTRY, type AssetProjection, type ProjectionResult } from "@/lib/projections"
+import { PRESET_REGISTRY } from "@/lib/projections/engine"
+import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/projection"
 
 /**
  * "Other transfer counts" — collapsed by default. One row per non-null bucket

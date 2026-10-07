@@ -5,12 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { ProjectionControls } from "@/app/_components/projection-controls"
 import type { WhatIfMode } from "@/app/_components/advisor-types"
 import { assembleHistory } from "@/lib/f1/history"
-import {
-  PRESET_REGISTRY,
-  type PresetId,
-  type ProjectionResult,
-  projectAssets,
-} from "@/lib/projections"
+import { PRESET_REGISTRY, projectAssets } from "@/lib/projections/engine"
+import type { PresetId } from "@/lib/projections/types/presets"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 import { teamStore } from "@/lib/store"
 import { fixtureAssets, fixtureHistory } from "@/test/fixtures"
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"

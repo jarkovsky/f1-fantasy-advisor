@@ -12,7 +12,7 @@ import { parseDriversFeed } from "@/lib/f1/schemas"
 import { optimize } from "./optimize"
 import { reconcileRoster, toOptimizerAssets } from "./adapter"
 import type { OptimizerAsset } from "./types/optimizer"
-import { projectAssets } from "@/lib/projections"
+import { projectAssets } from "@/lib/projections/engine"
 
 // ---------------------------------------------------------------------------
 // Minimal grid asset (structural subset of domain Asset the adapter consumes).

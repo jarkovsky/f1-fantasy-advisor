@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest"
 
-import type { ConcretePresetId } from "@/app/_components/advisor-types"
 import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
 import { assembleHistory } from "@/lib/f1/history"
 import { parseDriversFeed } from "@/lib/f1/schemas"
-import { type ProjectionResult, type UpcomingWeekend, projectAssets } from "@/lib/projections"
+import { projectAssets } from "@/lib/projections/engine"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
+import type { ProjectionResult, UpcomingWeekend } from "@/lib/projections/types/projection"
 import { resolveClientProjection } from "@/lib/projection-resolve"
 import { fixtureHistory } from "@/test/fixtures"
 

@@ -16,10 +16,8 @@
  */
 import type { AssetLite } from "@/lib/asset-lite"
 import type { RaceWeekConstraints, RaceWeekend } from "@/lib/f1/schemas"
-import type { PresetId, ProjectionResult } from "@/lib/projections"
-
-/** Presets the server materializes; `custom-blend` is client-derived. */
-export type ConcretePresetId = Exclude<PresetId, "custom-blend">
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 
 export type FeedProvenance = {
   source: "live" | "snapshot"

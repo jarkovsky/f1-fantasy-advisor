@@ -10,10 +10,12 @@ import {
 } from "@/lib/f1/feed"
 import type { Asset } from "@/lib/f1/schemas"
 import { headshotPath } from "@/lib/headshots"
-import { projectAssets, type ProjectionResult } from "@/lib/projections"
+import { projectAssets } from "@/lib/projections/engine"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 
 import { AdvisorPanel } from "./advisor-panel"
-import type { ConcretePresetId, FeedProvenance } from "./advisor-types"
+import type { FeedProvenance } from "./advisor-types"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
 
 /** The presets the server materializes; `custom-blend` is derived client-side. */
 const CONCRETE_PRESETS: readonly ConcretePresetId[] = [
