@@ -14,7 +14,7 @@ import type { AssetLite } from "@/lib/asset-lite"
 import { assetColorKey } from "@/lib/asset-lite"
 import { DRS_BOOST_MULTIPLIER, EXTRA_TRANSFER_PENALTY } from "@/lib/constants"
 import { formatPriceTenths, formatSignedPoints } from "@/lib/format"
-import type { OptimizerResult, TeamPlan } from "@/lib/optimizer"
+import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import { teamColor } from "@/lib/team-colors"
 import { cn } from "@/lib/utils"
 

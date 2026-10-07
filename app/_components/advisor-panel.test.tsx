@@ -7,8 +7,8 @@ import type { AdvisorServerProps, ConcretePresetId } from "@/app/_components/adv
 import type { AssetLite } from "@/lib/asset-lite"
 import { fixtureWeekends } from "@/test/fixtures"
 import type { RaceWeekConstraints } from "@/lib/f1/schemas"
-import { optimize } from "@/lib/optimizer"
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer-adapter"
+import { optimize } from "@/lib/optimizer/optimize"
+import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import { formatSignedPoints } from "@/lib/format"
 import type { AssetProjection, ProjectionResult } from "@/lib/projections"
 import { teamStore } from "@/lib/store"
@@ -29,8 +29,8 @@ vi.mock("next/navigation", () => ({
 // Wrap optimize() in a counting passthrough: the real implementation still runs
 // (the oracle tests depend on it), but the call count lets the H2 regression
 // assert the optimizer does not re-run on incidental re-renders.
-vi.mock("@/lib/optimizer", async (importActual) => {
-  const actual = await importActual<typeof import("@/lib/optimizer")>()
+vi.mock("@/lib/optimizer/optimize", async (importActual) => {
+  const actual = await importActual<typeof import("@/lib/optimizer/optimize")>()
   return { ...actual, optimize: vi.fn(actual.optimize) }
 })
 

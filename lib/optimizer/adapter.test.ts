@@ -9,8 +9,9 @@ import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
 import { assembleHistory } from "@/lib/f1/history"
 import type { RacePayload } from "@/lib/f1/types/history"
 import { parseDriversFeed } from "@/lib/f1/schemas"
-import { optimize, type OptimizerAsset } from "@/lib/optimizer"
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer-adapter"
+import { optimize } from "./optimize"
+import { reconcileRoster, toOptimizerAssets } from "./adapter"
+import type { OptimizerAsset } from "./types/optimizer"
 import { projectAssets } from "@/lib/projections"
 
 // ---------------------------------------------------------------------------

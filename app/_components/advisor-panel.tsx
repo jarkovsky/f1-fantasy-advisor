@@ -30,12 +30,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import type { AssetLite } from "@/lib/asset-lite"
 import { currentTimeMs } from "@/lib/dev-now"
 import { deriveRaceWeekState } from "@/lib/f1/raceweek"
-import type {
-  OptimizerInputError as OptimizerInputErrorType,
-  OptimizerResult,
-  TeamPlan,
-} from "@/lib/optimizer"
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer-adapter"
+import type { OptimizerInputError as OptimizerInputErrorType } from "@/lib/optimizer/optimize"
+import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
+import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import { resolveClientProjection } from "@/lib/projection-resolve"
 import { PRESET_IDS, type PresetId } from "@/lib/projections"
 import { useTeamStore } from "@/lib/store"
@@ -44,7 +41,7 @@ import { cn } from "@/lib/utils"
 // Type-only import of the optimizer module for the dynamic import contract; the
 // actual value is loaded lazily (no static value import — keeps it out of the
 // island's first-load bundle, plan D4).
-type OptimizerModule = typeof import("@/lib/optimizer")
+type OptimizerModule = typeof import("@/lib/optimizer/optimize")
 
 const POLL_MS = 30_000
 
@@ -165,7 +162,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
   useEffect(() => {
     if (!isOpen || optimizerRef.current) return
     let cancelled = false
-    void import("@/lib/optimizer").then((mod) => {
+    void import("@/lib/optimizer/optimize").then((mod) => {
       if (!cancelled) optimizerRef.current = mod
     })
     return () => {
@@ -179,7 +176,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
     setStatusMsg("Recomputing recommendation…")
 
     void (async () => {
-      const mod = optimizerRef.current ?? (await import("@/lib/optimizer"))
+      const mod = optimizerRef.current ?? (await import("@/lib/optimizer/optimize"))
       optimizerRef.current = mod
       if (cancelled) return
 

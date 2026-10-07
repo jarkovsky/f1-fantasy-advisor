@@ -4,7 +4,7 @@ import { Delta } from "@/app/_components/delta"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import type { AssetLite } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
-import type { OptimizerResult, TeamPlan } from "@/lib/optimizer"
+import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import { PRESET_REGISTRY, type AssetProjection, type ProjectionResult } from "@/lib/projections"
 
 /**

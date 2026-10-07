@@ -25,7 +25,7 @@
  *     every emitted team drops it and counts the swap.
  */
 import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
-import type { OptimizerAsset } from "@/lib/optimizer"
+import type { OptimizerAsset } from "./types/optimizer"
 
 /** Minimal asset shape the adapter needs — a structural subset of domain Asset. */
 type GridAsset = {

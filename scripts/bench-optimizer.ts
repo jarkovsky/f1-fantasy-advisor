@@ -9,7 +9,8 @@
  */
 import os from "node:os"
 
-import { optimize, type OptimizerAsset, type OptimizerInput } from "@/lib/optimizer"
+import { optimize } from "@/lib/optimizer/optimize"
+import type { OptimizerAsset, OptimizerInput } from "@/lib/optimizer/types/optimizer"
 
 const WARMUP = 50
 const MEASURED = 500
