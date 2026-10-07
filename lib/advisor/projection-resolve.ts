@@ -8,7 +8,7 @@
  * approximation: the projection engine's blend is itself linear in the two
  * endpoints, so a per-field lerp reproduces projectAssets(..., {preset:
  * "custom-blend", blendWeight}) byte-for-byte. That equivalence is pinned by
- * the wire-format test (lib/projection-resolve.test.ts).
+ * the wire-format test (lib/advisor/projection-resolve.test.ts).
  *
  * PURE: no I/O, no wall-clock — runs on every advisor render (cheap).
  */

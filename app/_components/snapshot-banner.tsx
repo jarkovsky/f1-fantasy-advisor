@@ -1,6 +1,6 @@
 "use client"
 
-import type { FeedProvenance } from "@/app/_components/advisor-types"
+import type { FeedProvenance } from "@/lib/advisor/types/contract"
 import { formatDateISO } from "@/lib/format"
 
 /**

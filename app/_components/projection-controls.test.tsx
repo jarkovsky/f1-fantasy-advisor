@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ProjectionControls } from "@/app/_components/projection-controls"
-import type { WhatIfMode } from "@/app/_components/advisor-types"
+import type { WhatIfMode } from "@/lib/advisor/types/contract"
 import { assembleHistory } from "@/lib/f1/history"
 import { PRESET_REGISTRY, projectAssets } from "@/lib/projections/engine"
 import type { PresetId } from "@/lib/projections/types/presets"

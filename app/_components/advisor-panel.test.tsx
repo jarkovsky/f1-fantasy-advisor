@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AdvisorPanel } from "@/app/_components/advisor-panel"
-import type { AdvisorServerProps } from "@/app/_components/advisor-types"
+import type { AdvisorServerProps } from "@/lib/advisor/types/contract"
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
 import type { AssetLite } from "@/lib/asset-lite"
 import { fixtureWeekends } from "@/test/fixtures"

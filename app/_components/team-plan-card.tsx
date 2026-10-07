@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import type { WhatIfMode } from "@/app/_components/advisor-types"
+import type { WhatIfMode } from "@/lib/advisor/types/contract"
 import { Delta } from "@/app/_components/delta"
 import { UnavailableAssetTile } from "@/app/_components/unavailable-asset-tile"
 import { Badge } from "@/components/ui/badge"

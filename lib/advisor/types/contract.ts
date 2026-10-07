@@ -12,7 +12,7 @@
  *   CONCRETE preset; `custom-blend` is derived client-side by linear
  *   interpolation between `season-average` and `weighted-recent` — exact,
  *   not approximate (pinned by the blend-linearity test in
- *   lib/projections.test.ts).
+ *   lib/advisor/projection-resolve.test.ts).
  */
 import type { AssetLite } from "@/lib/asset-lite"
 import type { RaceWeekConstraints, RaceWeekend } from "@/lib/f1/schemas"

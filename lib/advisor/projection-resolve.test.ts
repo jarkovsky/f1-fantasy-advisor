@@ -6,7 +6,7 @@ import { parseDriversFeed } from "@/lib/f1/schemas"
 import { projectAssets } from "@/lib/projections/engine"
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
 import type { ProjectionResult, UpcomingWeekend } from "@/lib/projections/types/projection"
-import { resolveClientProjection } from "@/lib/projection-resolve"
+import { resolveClientProjection } from "./projection-resolve"
 import { fixtureHistory } from "@/test/fixtures"
 
 // The concrete presets the server materializes (custom-blend is client-derived).

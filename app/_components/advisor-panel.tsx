@@ -13,7 +13,7 @@ import {
   useTransition,
 } from "react"
 
-import type { AdvisorServerProps, WhatIfMode } from "@/app/_components/advisor-types"
+import type { AdvisorServerProps, WhatIfMode } from "@/lib/advisor/types/contract"
 import { Alternatives } from "@/app/_components/alternatives"
 import { BetweenRounds } from "@/app/_components/between-rounds"
 import { HonestyNote } from "@/app/_components/honesty-note"
@@ -33,7 +33,7 @@ import { deriveRaceWeekState } from "@/lib/f1/raceweek"
 import type { OptimizerInputError as OptimizerInputErrorType } from "@/lib/optimizer/optimize"
 import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
-import { resolveClientProjection } from "@/lib/projection-resolve"
+import { resolveClientProjection } from "@/lib/advisor/projection-resolve"
 import { PRESET_IDS, type PresetId } from "@/lib/projections/types/presets"
 import { useTeamStore } from "@/lib/store"
 import { cn } from "@/lib/utils"

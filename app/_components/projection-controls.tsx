@@ -1,6 +1,6 @@
 "use client"
 
-import type { WhatIfMode } from "@/app/_components/advisor-types"
+import type { WhatIfMode } from "@/lib/advisor/types/contract"
 import { Card } from "@/components/ui/card"
 import {
   Select,

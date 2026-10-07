@@ -14,7 +14,7 @@ import { projectAssets } from "@/lib/projections/engine"
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 
 import { AdvisorPanel } from "./advisor-panel"
-import type { FeedProvenance } from "./advisor-types"
+import type { FeedProvenance } from "@/lib/advisor/types/contract"
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
 
 /** The presets the server materializes; `custom-blend` is derived client-side. */
