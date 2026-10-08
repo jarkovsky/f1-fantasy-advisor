@@ -239,14 +239,20 @@ function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x))
 }
 
-export function projectAssets(
+/**
+ * Project every requested preset in one pass, computing the preset-INDEPENDENT
+ * basis (completed races/sprints, class-K price coefficients, grid sprint ratio)
+ * exactly once and sharing it across presets. The advisor RSC materializes all
+ * four concrete presets per render, so this replaces four redundant full-grid
+ * scans with one.
+ */
+export function projectAssetsMany<P extends PresetId>(
   season: SeasonHistory,
   upcoming: UpcomingWeekend,
-  options: ProjectionOptions
-): ProjectionResult {
-  const notes: string[] = []
-
-  // Basis: completed races/sprints over the whole assembly.
+  presets: readonly P[],
+  options: { blendWeight?: number } = {}
+): Record<P, ProjectionResult> {
+  // --- Preset-independent basis (hoisted; shared by every preset) -----------
   const completedRaces = season.raceNumbers.filter((n) => n !== season.pendingRace).length
   let completedSprints = 0
   for (const n of season.raceNumbers) {
@@ -259,75 +265,94 @@ export function projectAssets(
     if (hasSprint) completedSprints += 1
   }
   const basis = { completedRaces, completedSprints }
-
   const coldStart = completedRaces === 0
-  const requestedPreset = options.preset
-  const effectivePreset: PresetId = coldStart ? "equal-ppm" : requestedPreset
-  if (coldStart && requestedPreset !== "equal-ppm") {
-    notes.push(
-      "no completed races yet — history presets unavailable, equal-ppm locked (price ranking)"
-    )
-  }
-
   const blendWeight = clamp01(options.blendWeight ?? 0.5)
-  const classK = computeClassK(season, completedRaces, notes)
+
+  // computeClassK appends the same notes regardless of preset; collect once and
+  // prepend the per-preset cold-start note (preserving the single-preset order).
+  const classKNotes: string[] = []
+  const classK = computeClassK(season, completedRaces, classKNotes)
   const gridRatio = upcoming.isSprint ? gridSprintRaceRatio(season) : 1
 
-  const byPlayerId: Record<string, AssetProjection> = {}
+  const out = {} as Record<P, ProjectionResult>
+  for (const requestedPreset of presets) {
+    const notes: string[] = []
+    const effectivePreset: PresetId = coldStart ? "equal-ppm" : requestedPreset
+    if (coldStart && requestedPreset !== "equal-ppm") {
+      notes.push(
+        "no completed races yet — history presets unavailable, equal-ppm locked (price ranking)"
+      )
+    }
+    notes.push(...classKNotes)
 
-  for (const history of Object.values(season.byPlayerId)) {
-    const scoredRaces = history.perRace.filter((r) => r.status === "scored")
+    const byPlayerId: Record<string, AssetProjection> = {}
+    for (const history of Object.values(season.byPlayerId)) {
+      const scoredRaces = history.perRace.filter((r) => r.status === "scored")
 
-    const equalPpm = (fallback?: AssetProjection["fallback"]): AssetProjection => ({
-      playerId: history.playerId,
-      kind: history.kind,
-      totalPoints: currentPriceTenths(history) * classK[history.kind],
-      perSession: [],
-      source: "equal-ppm",
-      basis,
-      ...(fallback ? { fallback } : {}),
-    })
+      const equalPpm = (fallback?: AssetProjection["fallback"]): AssetProjection => ({
+        playerId: history.playerId,
+        kind: history.kind,
+        totalPoints: currentPriceTenths(history) * classK[history.kind],
+        perSession: [],
+        source: "equal-ppm",
+        basis,
+        ...(fallback ? { fallback } : {}),
+      })
 
-    if (coldStart) {
-      byPlayerId[history.playerId] = equalPpm("equal-ppm-cold-start")
-      continue
+      if (coldStart) {
+        byPlayerId[history.playerId] = equalPpm("equal-ppm-cold-start")
+        continue
+      }
+
+      if (effectivePreset === "equal-ppm") {
+        byPlayerId[history.playerId] = equalPpm()
+        continue
+      }
+
+      // Per-asset no-history fallback (mid-season swap, spec §6.3).
+      if (scoredRaces.length === 0) {
+        byPlayerId[history.playerId] = equalPpm("equal-ppm-no-history")
+        continue
+      }
+
+      const perSession = composeSessions(
+        history,
+        upcoming,
+        effectivePreset,
+        blendWeight,
+        gridRatio,
+        completedSprints
+      )
+      byPlayerId[history.playerId] = {
+        playerId: history.playerId,
+        kind: history.kind,
+        totalPoints: perSession.reduce((sum, s) => sum + s.expected, 0),
+        perSession,
+        source: effectivePreset,
+        basis,
+      }
     }
 
-    if (effectivePreset === "equal-ppm") {
-      byPlayerId[history.playerId] = equalPpm()
-      continue
-    }
-
-    // Per-asset no-history fallback (mid-season swap, spec §6.3).
-    if (scoredRaces.length === 0) {
-      byPlayerId[history.playerId] = equalPpm("equal-ppm-no-history")
-      continue
-    }
-
-    const perSession = composeSessions(
-      history,
-      upcoming,
+    out[requestedPreset] = {
+      byPlayerId,
+      requestedPreset,
       effectivePreset,
-      blendWeight,
-      gridRatio,
-      completedSprints
-    )
-    byPlayerId[history.playerId] = {
-      playerId: history.playerId,
-      kind: history.kind,
-      totalPoints: perSession.reduce((sum, s) => sum + s.expected, 0),
-      perSession,
-      source: effectivePreset,
       basis,
+      coldStart,
+      notes,
     }
   }
 
-  return {
-    byPlayerId,
-    requestedPreset,
-    effectivePreset,
-    basis,
-    coldStart,
-    notes,
-  }
+  return out
+}
+
+/** Single-preset projection — a thin delegate over projectAssetsMany. */
+export function projectAssets(
+  season: SeasonHistory,
+  upcoming: UpcomingWeekend,
+  options: ProjectionOptions
+): ProjectionResult {
+  return projectAssetsMany(season, upcoming, [options.preset], {
+    blendWeight: options.blendWeight,
+  })[options.preset]
 }

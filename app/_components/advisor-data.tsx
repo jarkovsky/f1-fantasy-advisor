@@ -10,8 +10,7 @@ import {
 } from "@/lib/f1/feed"
 import type { Asset } from "@/lib/f1/schemas"
 import { headshotPath } from "@/lib/headshots"
-import { projectAssets } from "@/lib/projections/engine"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
+import { projectAssetsMany } from "@/lib/projections/engine"
 
 import { AdvisorPanel } from "./advisor-panel"
 import type { FeedProvenance } from "@/lib/advisor/types/contract"
@@ -85,12 +84,7 @@ export async function AdvisorData() {
 
   const isSprint = raceday.data.find((w) => w.raceNumber === r)?.isSprint ?? false
 
-  const projectionsByPreset = Object.fromEntries(
-    CONCRETE_PRESETS.map((preset) => [
-      preset,
-      projectAssets(history.data, { isSprint }, { preset }),
-    ])
-  ) as Record<ConcretePresetId, ProjectionResult>
+  const projectionsByPreset = projectAssetsMany(history.data, { isSprint }, CONCRETE_PRESETS)
 
   const seasonByPlayerId = history.data.byPlayerId
   const assets: AssetLite[] = drivers.data.map((a: Asset) => ({

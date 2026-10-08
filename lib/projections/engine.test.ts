@@ -11,7 +11,7 @@ import { assembleHistory } from "@/lib/f1/history"
 import type { RacePayload, SeasonHistory } from "@/lib/f1/types/history"
 import { parseDriversFeed } from "@/lib/f1/schemas"
 import type { SessionPoints } from "@/lib/f1/schemas"
-import { PRESET_REGISTRY, ewma, projectAssets } from "./engine"
+import { PRESET_REGISTRY, ewma, projectAssets, projectAssetsMany } from "./engine"
 import { PRESET_IDS, type PresetId } from "./types/presets"
 
 // Real fixtures (captured 2026-06-05): Gasly 18, Verstappen 131, Mercedes 28,
@@ -372,4 +372,29 @@ describe("form-5 windowing (synthetic 6-race history)", () => {
     expect(form.byPlayerId.x?.totalPoints).toBeCloseTo(0, 9) // race 1 dropped
     expect(avg.byPlayerId.x?.totalPoints).toBeCloseTo(10, 9) // 60/6
   })
+})
+
+// ---------------------------------------------------------------------------
+// projectAssetsMany shares the preset-independent basis (completed races/sprints,
+// class-K, grid ratio) across presets. This pins that batching produces the
+// byte-identical result of calling projectAssets once per preset — i.e. the
+// hoisting leaks no state (notes aliasing, mutation) between presets.
+// ---------------------------------------------------------------------------
+describe("projectAssetsMany — equivalence with per-preset projectAssets", () => {
+  const COLD = assembleHistory([payload(6, race6)]) // race 6 pending → 0 completed
+  const cases: [string, SeasonHistory, boolean][] = [
+    ["warm, non-sprint", SEASON, false],
+    ["warm, sprint", SEASON, true],
+    ["cold start, non-sprint", COLD, false],
+    ["cold start, sprint", COLD, true],
+  ]
+
+  for (const [label, season, isSprint] of cases) {
+    it(`matches projectAssets for every preset — ${label}`, () => {
+      const many = projectAssetsMany(season, { isSprint }, PRESET_IDS)
+      for (const preset of PRESET_IDS) {
+        expect(many[preset]).toEqual(projectAssets(season, { isSprint }, { preset }))
+      }
+    })
+  }
 })
