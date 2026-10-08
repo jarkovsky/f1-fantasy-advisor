@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
   // Type-safe <Link href> / router.push. Route types are emitted by
   // `next typegen` (wired into the typecheck script).
   typedRoutes: true,
+  experimental: {
+    // components/ui/* import primitives from the unified "radix-ui" barrel,
+    // which Next 16's default optimizePackageImports list does not cover.
+    // Rewrites those to direct sub-path imports (faster transform, reliable
+    // tree-shaking). lucide-react is already in the default list.
+    optimizePackageImports: ["radix-ui"],
+  },
   // TTLs for the F1 feed fetchers (the feeds send no Cache-Control — we own
   // freshness). All revalidate ≥ 5 min so cached feeds stay in the prerender
   // (shorter lifetimes are auto-demoted to dynamic holes).
