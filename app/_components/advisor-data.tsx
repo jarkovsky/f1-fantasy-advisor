@@ -55,6 +55,13 @@ function worstOfMeta(feeds: readonly { meta: FeedMeta }[], liveAsOf: string): Fe
  * machine itself.
  */
 export async function AdvisorData() {
+  // raceday and mixapi take no arguments and do not depend on constraints —
+  // start them immediately so all three fetches run concurrently instead of
+  // waiting for the constraints round-trip. Safe to leave floating on the
+  // early-return path: fetchOrSnapshot provably never rejects.
+  const racedayPromise = getRaceday()
+  const mixapiPromise = getMixapi()
+
   const constraints = await getConstraints()
   if (!constraints.data) {
     return (
@@ -67,16 +74,14 @@ export async function AdvisorData() {
   const r = constraints.data.raceNumber
   const lastCompletedRace = constraints.data.lastCompletedRace
 
-  const [raceday, drivers, history, mixapi, nextRacePublished, lastRaceDrivers] = await Promise.all(
-    [
-      getRaceday(),
-      getDrivers(r, r <= lastCompletedRace),
-      getHistory(r, lastCompletedRace),
-      getMixapi(),
-      getNextRacePublished(r),
-      lastCompletedRace >= 1 ? getDrivers(lastCompletedRace, true) : null,
-    ]
-  )
+  const [drivers, history, nextRacePublished, lastRaceDrivers] = await Promise.all([
+    getDrivers(r, r <= lastCompletedRace),
+    getHistory(r, lastCompletedRace),
+    getNextRacePublished(r),
+    lastCompletedRace >= 1 ? getDrivers(lastCompletedRace, true) : null,
+  ])
+  const raceday = await racedayPromise
+  const mixapi = await mixapiPromise
 
   const isSprint = raceday.data.find((w) => w.raceNumber === r)?.isSprint ?? false
 
