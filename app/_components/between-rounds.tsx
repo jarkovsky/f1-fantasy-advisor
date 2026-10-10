@@ -1,7 +1,16 @@
 "use client"
 
 import { Delta } from "@/app/_components/shared/delta"
+import { NumCell } from "@/app/_components/shared/num-cell"
 import { Card } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import type { AssetLite } from "@/lib/asset-lite"
 import { formatPoints } from "@/lib/format"
 import type { TeamStateV1 } from "@/lib/team/types/team-state"
@@ -75,24 +84,22 @@ export function BetweenRounds({
 
       <Card className="gap-3 bg-surface-1 p-4">
         <h2 className="text-sm font-semibold">Actual vs projected</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-xs text-muted-foreground">
-              <th className="py-1 text-left font-medium">Asset</th>
-              <th className="py-1 text-right font-medium">Actual</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow className="text-xs text-muted-foreground hover:bg-transparent">
+              <TableHead className="text-left font-medium">Asset</TableHead>
+              <TableHead className="text-right font-medium">Actual</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {resolved.map((a) => (
-              <tr key={a.playerId} className="border-t border-grid-line/60">
-                <td className="py-1">{a.displayName}</td>
-                <td className="py-1 text-right font-mono tabular-nums">
-                  {formatPoints(lastRacePoints[a.playerId] ?? null)}
-                </td>
-              </tr>
+              <TableRow key={a.playerId} className="border-grid-line/60 hover:bg-transparent">
+                <TableCell>{a.displayName}</TableCell>
+                <NumCell>{formatPoints(lastRacePoints[a.playerId] ?? null)}</NumCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </Card>
 
       <p className="text-xs text-muted-foreground">

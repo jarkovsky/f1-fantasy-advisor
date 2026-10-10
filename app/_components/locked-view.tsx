@@ -1,11 +1,14 @@
 "use client"
 
+import { useMemo } from "react"
+
+import { RosterRow } from "@/app/_components/shared/roster-row"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import type { AssetLite } from "@/lib/asset-lite"
-import { assetColorKey } from "@/lib/asset-lite"
+import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { DRS_BOOST_MULTIPLIER } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
+import { pickDrsCaptainId } from "@/lib/optimizer/drs-boost"
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 import { teamColor } from "@/lib/team-colors"
 
@@ -42,14 +45,21 @@ export function LockedView({
   projection,
   nextLockAtMs,
 }: LockedViewProps) {
-  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
+  const resolved = useMemo(
+    () => roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined),
+    [roster, assetsById]
+  )
   const projOf = (id: string): number => projection.byPlayerId[id]?.totalPoints ?? 0
 
-  const drivers = resolved.filter((a) => a.kind === "driver")
-  const captain = [...drivers].sort((a, b) => {
-    const d = projOf(b.playerId) - projOf(a.playerId)
-    return d !== 0 ? d : a.playerId < b.playerId ? -1 : 1
-  })[0]
+  const captainId = useMemo(
+    () =>
+      pickDrsCaptainId(
+        resolved.filter((a) => a.kind === "driver").map((d) => d.playerId),
+        (id) => projection.byPlayerId[id]?.totalPoints ?? 0
+      ),
+    [resolved, projection]
+  )
+  const captain = captainId ? assetsById[captainId] : undefined
   const projectedSum = resolved.reduce((s, a) => s + projOf(a.playerId), 0)
   const captainBonus = captain ? projOf(captain.playerId) * (DRS_BOOST_MULTIPLIER - 1) : 0
 
@@ -71,21 +81,19 @@ export function LockedView({
       <Card className="gap-3 bg-surface-1 p-4">
         <ul className="flex flex-col gap-0.5">
           {resolved.map((a) => (
-            <li key={a.playerId} className="flex items-center gap-2 py-1 text-sm">
-              <span
-                aria-hidden="true"
-                className="h-4 w-[3px] shrink-0 rounded-full"
-                style={{ background: teamColor(assetColorKey(a)) }}
-              />
-              <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">{a.tla}</span>
-              <span className="min-w-0 flex-1 truncate">{a.displayName}</span>
+            <RosterRow
+              key={a.playerId}
+              color={teamColor(assetColorKey(a))}
+              tla={a.tla}
+              name={a.displayName}
+            >
               <span className="w-16 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
                 {formatPriceTenths(a.priceTenths)}
               </span>
               <span className="w-12 shrink-0 text-right font-mono tabular-nums">
                 {projOf(a.playerId).toFixed(1)}
               </span>
-            </li>
+            </RosterRow>
           ))}
         </ul>
         <p className="border-t border-grid-line pt-2 font-mono text-sm tabular-nums">

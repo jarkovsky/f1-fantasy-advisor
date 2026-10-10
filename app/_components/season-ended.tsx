@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 
+import { RosterRow } from "@/app/_components/shared/roster-row"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import type { AssetLite } from "@/lib/asset-lite"
-import { assetColorKey } from "@/lib/asset-lite"
+import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
 import { teamColor } from "@/lib/team-colors"
 
@@ -32,21 +32,19 @@ export function SeasonEnded({ roster, assetsById }: SeasonEndedProps) {
         <h2 className="text-sm font-semibold">Your final squad</h2>
         <ul className="flex flex-col gap-0.5">
           {resolved.map((a) => (
-            <li key={a.playerId} className="flex items-center gap-2 py-1 text-sm">
-              <span
-                aria-hidden="true"
-                className="h-4 w-[3px] shrink-0 rounded-full"
-                style={{ background: teamColor(assetColorKey(a)) }}
-              />
-              <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">{a.tla}</span>
-              <span className="min-w-0 flex-1 truncate">{a.displayName}</span>
+            <RosterRow
+              key={a.playerId}
+              color={teamColor(assetColorKey(a))}
+              tla={a.tla}
+              name={a.displayName}
+            >
               <span className="w-16 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums">
                 {formatPriceTenths(a.priceTenths)}
               </span>
               <span className="w-14 shrink-0 text-right font-mono tabular-nums">
                 {a.seasonPoints}
               </span>
-            </li>
+            </RosterRow>
           ))}
         </ul>
         <p className="border-t border-grid-line pt-2 font-mono text-sm tabular-nums">
