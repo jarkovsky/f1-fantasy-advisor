@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { PickerTable } from "@/app/_components/picker-table"
+import { PickerTable } from "./picker-table"
 import type { AssetLite } from "@/lib/asset-lite"
 
 // ---------------------------------------------------------------------------

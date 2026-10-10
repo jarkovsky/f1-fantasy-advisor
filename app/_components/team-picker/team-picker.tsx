@@ -2,47 +2,34 @@
 
 import { useId, useMemo, useState } from "react"
 
-import { PickerTable } from "@/app/_components/picker-table"
+import { BankInput } from "@/app/_components/shared/bank-input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { useTeamDraft } from "@/hooks/use-team-draft"
 import type { AssetLite } from "@/lib/asset-lite"
 import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
 import { useTeamStore } from "@/lib/team/store"
+
+import { FreeTransfersField } from "./free-transfers-field"
+import { PickerTable } from "./picker-table"
+import { StartOverDialog } from "./start-over-dialog"
 
 /**
  * The team-setup flow as ONE Card (M5 redesign): two stacked kind tables on
  * the left — Drivers and Constructors, filtered by one shared search box —
  * and a narrow control column on the right (selection summary,
  * remaining-budget input, free-transfers control, status pill, the single Save
- * CTA). Selection is local DRAFT state until Save — nothing touches the store
- * until the user commits (first-run Save, edit Save, or Start over).
+ * CTA). Selection is local DRAFT state until Save (useTeamDraft) — nothing
+ * touches the store until the user commits.
  *
- * This container owns ALL selection + validation logic; <PickerTable> is dumb
- * and just renders the draft. Validation is spec §5.1: the ONLY blockers are an
+ * This container owns selection + validation logic; <PickerTable> is dumb and
+ * just renders the draft. Validation is spec §5.1: the ONLY blockers are an
  * incomplete squad shape (need exactly 5+2) and a not-yet-entered bank.
  * Over-spend vs the $100M initial cap is NOT a blocker — mid-season prices
  * drift the binding constraint to team value + bank (spec §4.1).
  */
-
-const FREE_TRANSFER_OPTIONS = [
-  { value: 2 as const, label: "2" },
-  { value: 3 as const, label: "3" },
-  { value: "unlimited" as const, label: "Unlimited" },
-]
-
-type FreeTransfers = 2 | 3 | "unlimited"
 
 type TeamPickerProps = {
   assets: AssetLite[]
@@ -52,15 +39,11 @@ type TeamPickerProps = {
 }
 
 export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps) {
-  const { state, hydrated, setTeam, reset } = useTeamStore()
+  const { setTeam, reset } = useTeamStore()
+  const { selected, setSelected, bank, freeTransfers, setFreeTransfers } = useTeamDraft(mode)
 
   const byId = useMemo(() => new Map(assets.map((a) => [a.playerId, a])), [assets])
 
-  // --- Draft state (local until Save) -------------------------------------
-  const [selected, setSelected] = useState<Set<string>>(() => new Set())
-  // budget as a raw string so the field can be empty ("" = not yet entered).
-  const [bankInput, setBankInput] = useState<string>("")
-  const [freeTransfers, setFreeTransfers] = useState<FreeTransfers>("unlimited")
   // One search box filters BOTH kind tables below.
   const [query, setQuery] = useState("")
 
@@ -68,62 +51,38 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
   const drivers = useMemo(() => assets.filter((a) => a.kind === "driver"), [assets])
   const constructors = useMemo(() => assets.filter((a) => a.kind === "constructor"), [assets])
 
-  // Edit mode seeds the draft from the store, but the store hydrates AFTER the
-  // first render (localStorage is read lazily on subscribe). Seeding during
-  // render — guarded so it runs exactly once, when hydration first lands — is
-  // React's documented escape hatch for adjusting state to an external value,
-  // and avoids the cascading re-render an effect would cause. First-run seeds
-  // nothing: empty squad, "unlimited" default (the first-race framing).
-  const [seeded, setSeeded] = useState(mode === "first-run")
-  if (!seeded && mode === "edit" && hydrated) {
-    if (state.roster) setSelected(new Set(state.roster))
-    setBankInput((state.budgetTenths / 10).toFixed(1))
-    setFreeTransfers(state.freeTransfers)
-    setSeeded(true)
-  }
-
   // --- Derived counts / spend ---------------------------------------------
   const { driverCount, constructorCount, teamValueTenths } = useMemo(() => {
-    let drivers = 0
-    let constructors = 0
+    let driversN = 0
+    let constructorsN = 0
     let value = 0
     for (const id of selected) {
       const asset = byId.get(id)
       if (!asset) continue
       value += asset.priceTenths
-      if (asset.kind === "driver") drivers += 1
-      else constructors += 1
+      if (asset.kind === "driver") driversN += 1
+      else constructorsN += 1
     }
-    return {
-      driverCount: drivers,
-      constructorCount: constructors,
-      teamValueTenths: value,
-    }
+    return { driverCount: driversN, constructorCount: constructorsN, teamValueTenths: value }
   }, [selected, byId])
 
   const driversFull = driverCount >= SQUAD_DRIVERS
   const constructorsFull = constructorCount >= SQUAD_CONSTRUCTORS
 
-  // --- Bank parsing --------------------------------------------------------
-  const bankTrimmed = bankInput.trim()
-  const bankNumber = bankTrimmed === "" ? null : Number(bankTrimmed)
-  const bankEntered = bankNumber !== null && Number.isFinite(bankNumber) && bankNumber >= 0
-  const bankTenths = bankEntered ? Math.round(bankNumber * 10) : 0
-
   // --- Validation (spec §5.1) ---------------------------------------------
   const squadComplete = driverCount === SQUAD_DRIVERS && constructorCount === SQUAD_CONSTRUCTORS
-  const blocked = !squadComplete || !bankEntered
+  const blocked = !squadComplete || !bank.entered
 
   // --- Live-region copy ----------------------------------------------------
   const liveMessage = useMemo(() => {
     if (!squadComplete) {
       return `${SQUAD_DRIVERS} drivers and ${SQUAD_CONSTRUCTORS} constructors required — you have ${driverCount} drivers and ${constructorCount} constructors.`
     }
-    if (!bankEntered) {
+    if (!bank.entered) {
       return "Squad complete — enter your remaining budget."
     }
     return "Team valid — recommendations ready."
-  }, [squadComplete, bankEntered, driverCount, constructorCount])
+  }, [squadComplete, bank.entered, driverCount, constructorCount])
 
   // --- Selection ----------------------------------------------------------
   function toggle(id: string): void {
@@ -158,7 +117,7 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
     const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
     driverIds.sort(cmp)
     constructorIds.sort(cmp)
-    setTeam([...driverIds, ...constructorIds], bankTenths, freeTransfers, raceNumber)
+    setTeam([...driverIds, ...constructorIds], bank.tenths, freeTransfers, raceNumber)
     onDone?.()
   }
 
@@ -220,58 +179,18 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
               <label htmlFor={bankId} className="text-sm font-medium">
                 Remaining budget
               </label>
-              <div className="flex items-center gap-2">
-                <span aria-hidden="true" className="font-mono text-muted-foreground">
-                  $
-                </span>
-                <input
-                  id={bankId}
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step={0.1}
-                  value={bankInput}
-                  onChange={(e) => setBankInput(e.target.value)}
-                  onBlur={(e) => {
-                    const v = Number(e.target.value)
-                    if (e.target.value.trim() !== "" && Number.isFinite(v)) {
-                      setBankInput((Math.round(v * 10) / 10).toFixed(1))
-                    }
-                  }}
-                  className="h-9 w-32 rounded-md border border-input bg-surface-1 px-2.5 font-mono text-sm tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-accent-f1"
-                />
-                <span className="font-mono text-sm text-muted-foreground">M</span>
-              </div>
+              <BankInput
+                id={bankId}
+                value={bank.value}
+                onChange={bank.setValue}
+                onBlur={bank.normalize}
+              />
               <p className="text-xs text-muted-foreground">
                 Your bank from F1 Fantasy — after any transfers you already made.
               </p>
             </div>
 
-            <fieldset className="flex flex-col gap-1.5">
-              <legend className="text-sm font-medium">Free transfers</legend>
-              <div role="radiogroup" aria-label="Free transfers" className="flex gap-1.5">
-                {FREE_TRANSFER_OPTIONS.map((opt) => {
-                  const active = freeTransfers === opt.value
-                  return (
-                    <Button
-                      key={String(opt.value)}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      variant={active ? "secondary" : "outline"}
-                      size="sm"
-                      onClick={() => setFreeTransfers(opt.value)}
-                    >
-                      {opt.label}
-                    </Button>
-                  )
-                })}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                3 only if you banked an unused transfer last week; none carry over after Wildcard or
-                Limitless. Unlimited = your first race or an active Wildcard.
-              </p>
-            </fieldset>
+            <FreeTransfersField value={freeTransfers} onChange={setFreeTransfers} />
 
             <div className="flex items-center gap-2">
               {blocked ? (
@@ -302,31 +221,7 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
                   <Button type="button" variant="ghost" onClick={onDone}>
                     Cancel
                   </Button>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button type="button" variant="ghost" className="text-muted-foreground">
-                        Start over
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Start over?</DialogTitle>
-                        <DialogDescription>
-                          This clears your saved team, budget, and transfer count.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button type="button" variant="ghost">
-                            Keep my team
-                          </Button>
-                        </DialogClose>
-                        <Button type="button" variant="destructive" onClick={handleStartOver}>
-                          Start over
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                  <StartOverDialog onConfirm={handleStartOver} />
                 </div>
               )}
             </div>

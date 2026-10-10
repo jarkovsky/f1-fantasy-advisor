@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { Delta } from "@/app/_components/shared/delta"
 import { UnavailableAssetTile } from "@/app/_components/shared/unavailable-asset-tile"
-import { TeamPicker } from "@/app/_components/team-picker"
+import { TeamPicker } from "@/app/_components/team-picker/team-picker"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { AssetLite } from "@/lib/asset-lite"

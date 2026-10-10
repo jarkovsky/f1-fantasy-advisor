@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { TeamPicker } from "@/app/_components/team-picker"
+import { TeamPicker } from "./team-picker"
 import type { AssetLite } from "@/lib/asset-lite"
 import { teamStore } from "@/lib/team/store"
 import { installMatchMediaStub } from "@/test/stubs/dom"
