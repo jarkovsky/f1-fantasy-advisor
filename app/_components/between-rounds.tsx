@@ -1,6 +1,6 @@
 "use client"
 
-import { Delta } from "@/app/_components/delta"
+import { Delta } from "@/app/_components/shared/delta"
 import { Card } from "@/components/ui/card"
 import type { AssetLite } from "@/lib/asset-lite"
 import { formatPoints } from "@/lib/format"

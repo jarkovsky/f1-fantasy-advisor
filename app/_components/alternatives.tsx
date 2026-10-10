@@ -1,6 +1,6 @@
 "use client"
 
-import { Delta } from "@/app/_components/delta"
+import { Delta } from "@/app/_components/shared/delta"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import type { AssetLite } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"

@@ -2,7 +2,8 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
-import { StatsTable, type StatsRow } from "./stats-table"
+import { StatsTable } from "./stats-table"
+import type { StatsRow } from "./stats-row"
 
 // ---------------------------------------------------------------------------
 // Hand-rolled rows with distinctive, non-monotonic values so numeric sorting,

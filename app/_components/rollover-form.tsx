@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 
-import { Delta } from "@/app/_components/delta"
-import { UnavailableAssetTile } from "@/app/_components/unavailable-asset-tile"
+import { Delta } from "@/app/_components/shared/delta"
+import { UnavailableAssetTile } from "@/app/_components/shared/unavailable-asset-tile"
 import { TeamPicker } from "@/app/_components/team-picker"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
