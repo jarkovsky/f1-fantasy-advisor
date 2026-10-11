@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { ProjectionControls } from "@/app/_components/projection-controls"
+import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
 import type { WhatIfMode } from "@/lib/advisor/types/contract"
 import { assembleHistory } from "@/lib/f1/history"
 import { PRESET_REGISTRY, projectAssets } from "@/lib/projections/engine"

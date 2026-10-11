@@ -1,6 +1,6 @@
 import type { FeedProvenance } from "@/lib/advisor/types/contract"
 
-import { StaleDataNotice } from "./shared/stale-data-notice"
+import { StaleDataNotice } from "@/app/_components/shared/stale-data-notice"
 
 /**
  * Degradation notice for the advisor island (spec §8.4: degrade visibly, never

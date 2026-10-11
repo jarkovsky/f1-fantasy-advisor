@@ -2,7 +2,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { AdvisorPanel } from "@/app/_components/advisor-panel"
+import { AdvisorPanel } from "@/app/_components/advisor/advisor-panel"
 import type { AdvisorServerProps } from "@/lib/advisor/types/contract"
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
 import type { AssetLite } from "@/lib/asset-lite"

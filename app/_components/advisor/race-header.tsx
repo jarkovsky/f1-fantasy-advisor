@@ -1,6 +1,6 @@
 "use client"
 
-import { DeadlineCountdown } from "@/app/_components/deadline-countdown"
+import { DeadlineCountdown } from "@/app/_components/advisor/deadline-countdown"
 import { Badge } from "@/components/ui/badge"
 import type { RaceSession } from "@/lib/f1/schemas"
 

@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { BetweenRounds } from "@/app/_components/between-rounds"
+import { BetweenRounds } from "@/app/_components/advisor/between-rounds"
 import type { AssetLite } from "@/lib/asset-lite"
 import { installMatchMediaStub } from "@/test/stubs/dom"
 

@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 
-import { AdvisorData } from "./_components/advisor-data"
-import { AdvisorSkeleton } from "./_components/advisor-skeleton"
+import { AdvisorData } from "./_components/advisor/advisor-data"
+import { AdvisorSkeleton } from "./_components/advisor/advisor-skeleton"
 
 // Sync shell (prerendered) + one streamed data hole (plan D3). The static
 // header renders instantly; <AdvisorData/> streams in behind the skeleton.

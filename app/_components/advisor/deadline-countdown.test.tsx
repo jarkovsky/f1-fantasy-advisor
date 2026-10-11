@@ -2,7 +2,7 @@ import { act, cleanup, render } from "@testing-library/react"
 import { renderToString } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { DeadlineCountdown } from "@/app/_components/deadline-countdown"
+import { DeadlineCountdown } from "@/app/_components/advisor/deadline-countdown"
 import { teamStore } from "@/lib/team/store"
 
 // ---------------------------------------------------------------------------
