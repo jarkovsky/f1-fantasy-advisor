@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import constraintsFixture from "./__fixtures__/constraints.json"
-import race1 from "./__fixtures__/drivers.race1.json"
-import race4 from "./__fixtures__/drivers.race4.json"
-import race6 from "./__fixtures__/drivers.race6.json"
-import mixapiFixture from "./__fixtures__/mixapi.json"
-import racedayFixture from "./__fixtures__/raceday.excerpt.json"
+import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
+
 import {
   AssetSchema,
   parseConstraints,
@@ -13,7 +9,12 @@ import {
   parseMixapi,
   parseRaceday,
 } from "./schemas"
-import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
+import constraintsFixture from "./__fixtures__/constraints.json"
+import racedayFixture from "./__fixtures__/raceday.excerpt.json"
+import mixapiFixture from "./__fixtures__/mixapi.json"
+import race1 from "./__fixtures__/drivers.race1.json"
+import race4 from "./__fixtures__/drivers.race4.json"
+import race6 from "./__fixtures__/drivers.race6.json"
 
 // Fixtures are slimmed REAL payloads captured 2026-06-05 (race 6 = Monaco,
 // pre-race). Each drivers fixture keeps the same 4 assets: Gasly (18),

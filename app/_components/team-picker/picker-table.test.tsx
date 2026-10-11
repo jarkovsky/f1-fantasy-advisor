@@ -1,9 +1,10 @@
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { cleanup, render, screen, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import userEvent from "@testing-library/user-event"
 
 import { PickerTable } from "./picker-table"
-import type { AssetLite } from "@/lib/asset-lite"
 
 // ---------------------------------------------------------------------------
 // PickerTable is dumb and per-kind: the container splits drivers from

@@ -1,6 +1,6 @@
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-
 import type { FreeTransfers } from "@/hooks/use-team-draft"
+
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 const OPTIONS: { value: string; label: string }[] = [
   { value: "2", label: "2" },

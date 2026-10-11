@@ -1,8 +1,9 @@
 "use client"
 
-import { useCountdown } from "@/hooks/use-countdown"
 import { formatRemaining } from "@/lib/countdown"
 import { cn } from "@/lib/utils"
+
+import { useCountdown } from "@/hooks/use-countdown"
 
 /**
  * Live countdown to the team lock. Mount-gated (useCountdown): server render and

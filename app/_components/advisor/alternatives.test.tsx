@@ -1,12 +1,13 @@
-import { cleanup, render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { afterEach, describe, expect, it } from "vitest"
-
-import type { AssetLite } from "@/lib/asset-lite"
-import { optimize } from "@/lib/optimizer/optimize"
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
-import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/projection"
+import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
+import type { AssetLite } from "@/lib/asset-lite"
+
+import { cleanup, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, it } from "vitest"
+import userEvent from "@testing-library/user-event"
+
+import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
+import { optimize } from "@/lib/optimizer/optimize"
 
 import { Alternatives } from "./alternatives"
 

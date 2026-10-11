@@ -1,9 +1,10 @@
+import type { Snapshot } from "./types/feed"
+
 import { describe, expect, it } from "vitest"
 
-import race1 from "./__fixtures__/drivers.race1.json"
 import { fetchOrSnapshot, probeFeedPublished } from "./fetch-or-snapshot"
 import { type Asset, parseDriversFeed } from "./schemas"
-import type { Snapshot } from "./types/feed"
+import race1 from "./__fixtures__/drivers.race1.json"
 
 // The full degradation decision table, with an injected mock fetch.
 

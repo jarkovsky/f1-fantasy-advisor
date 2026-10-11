@@ -1,9 +1,11 @@
-import { getConstraints, getDrivers, getHistory } from "@/lib/f1/feed"
 import type { AssetHistory } from "@/lib/f1/types/history"
-import { assetColorKey } from "@/lib/asset-lite"
-import { DataAsOf } from "./data-as-of"
-import { StatsTable } from "./stats-table"
 import type { StatsRow } from "./stats-row"
+
+import { getConstraints, getDrivers, getHistory } from "@/lib/f1/feed"
+import { assetColorKey } from "@/lib/asset-lite"
+
+import { StatsTable } from "./stats-table"
+import { DataAsOf } from "./data-as-of"
 
 /**
  * /stats data hole (spec §5.3): the page's one async RSC. It assembles the full

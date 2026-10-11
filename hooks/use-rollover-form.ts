@@ -1,12 +1,14 @@
 "use client"
 
+import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { useEffect, useRef, useState } from "react"
 
-import { useBankInput } from "@/hooks/use-bank-input"
-import type { AssetLite } from "@/lib/asset-lite"
-import { formatPriceTenths } from "@/lib/format"
 import { formatBankTenths } from "@/lib/team/bank"
-import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import { formatPriceTenths } from "@/lib/format"
+
+import { useBankInput } from "@/hooks/use-bank-input"
 
 export type SquadChoice = "kept" | "edit"
 export type TransferChoice = "standard" | "banked" | "chip"

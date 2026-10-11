@@ -1,10 +1,9 @@
+import type { AssetHistory } from "@/lib/f1/types/history"
 /**
  * Result types for the projection engine (per-asset expected points under a
  * preset). The engine that produces these lives in ../engine.ts.
  */
 import type { SessionLabelType } from "@/lib/f1/schemas"
-import type { AssetHistory } from "@/lib/f1/types/history"
-
 import type { PresetId } from "./presets"
 
 export type ProjectionOptions = {

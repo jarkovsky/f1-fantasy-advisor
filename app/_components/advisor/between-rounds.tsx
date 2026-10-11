@@ -1,8 +1,10 @@
 "use client"
 
-import { Delta } from "@/app/_components/shared/delta"
-import { NumCell } from "@/app/_components/shared/num-cell"
-import { Card } from "@/components/ui/card"
+import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import type { AssetLite } from "@/lib/asset-lite"
+
+import { formatPoints } from "@/lib/format"
+
 import {
   Table,
   TableBody,
@@ -11,9 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { AssetLite } from "@/lib/asset-lite"
-import { formatPoints } from "@/lib/format"
-import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import { Card } from "@/components/ui/card"
+
+import { NumCell } from "@/app/_components/shared/num-cell"
+import { Delta } from "@/app/_components/shared/delta"
 
 /**
  * BETWEEN_ROUNDS (spec §5.4): the last race is scored but the next drivers feed

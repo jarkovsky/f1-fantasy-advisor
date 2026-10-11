@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 
-import { useBankInput, type UseBankInputReturn } from "@/hooks/use-bank-input"
 import { formatBankTenths } from "@/lib/team/bank"
 import { useTeamStore } from "@/lib/team/store"
+
+import { useBankInput, type UseBankInputReturn } from "@/hooks/use-bank-input"
 
 export type FreeTransfers = 2 | 3 | "unlimited"
 

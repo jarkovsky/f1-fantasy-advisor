@@ -1,10 +1,12 @@
-import { cleanup, render, screen } from "@testing-library/react"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { cleanup, render, screen } from "@testing-library/react"
 
 import { LockedView } from "@/app/_components/advisor/locked-view"
-import type { AssetLite } from "@/lib/asset-lite"
-import type { ConcretePresetId } from "@/lib/projections/types/presets"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
+
 import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------

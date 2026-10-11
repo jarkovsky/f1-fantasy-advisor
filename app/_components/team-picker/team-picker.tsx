@@ -1,20 +1,24 @@
 "use client"
 
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { useId, useMemo, useState } from "react"
 
-import { BankInput } from "@/app/_components/shared/bank-input"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { useTeamDraft } from "@/hooks/use-team-draft"
-import type { AssetLite } from "@/lib/asset-lite"
 import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
 import { useTeamStore } from "@/lib/team/store"
 
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+
+import { useTeamDraft } from "@/hooks/use-team-draft"
+
+import { BankInput } from "@/app/_components/shared/bank-input"
+
 import { FreeTransfersField } from "./free-transfers-field"
-import { PickerTable } from "./picker-table"
 import { StartOverDialog } from "./start-over-dialog"
+import { PickerTable } from "./picker-table"
 
 /**
  * The team-setup flow as ONE Card (M5 redesign): two stacked kind tables on

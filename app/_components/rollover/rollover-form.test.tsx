@@ -1,11 +1,14 @@
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { cleanup, render, screen, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import userEvent from "@testing-library/user-event"
+
+import { teamStore } from "@/lib/team/store"
+
+import { installMatchMediaStub } from "@/test/stubs/dom"
 
 import { RolloverForm } from "./rollover-form"
-import type { AssetLite } from "@/lib/asset-lite"
-import { teamStore } from "@/lib/team/store"
-import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
 // Deterministic grid (mirrors team-picker.test.tsx): 8 drivers + 3 constructors

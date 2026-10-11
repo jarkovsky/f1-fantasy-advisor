@@ -12,7 +12,6 @@
  * headshotPath joins the file to the public URL `/headshots/{file}`.
  */
 import "server-only"
-
 import { readFileSync } from "node:fs"
 import path from "node:path"
 

@@ -1,7 +1,8 @@
-import { TableHead } from "@/components/ui/table"
+import type { SortDir } from "@/hooks/use-sortable-columns"
+
 import { cn } from "@/lib/utils"
 
-import type { SortDir } from "@/hooks/use-sortable-columns"
+import { TableHead } from "@/components/ui/table"
 
 /**
  * A sortable table-header cell: a right-aligned button that cycles the sort and

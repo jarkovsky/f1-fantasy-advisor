@@ -1,6 +1,8 @@
-import { BankInput } from "@/app/_components/shared/bank-input"
-import { Card } from "@/components/ui/card"
 import type { UseBankInputReturn } from "@/hooks/use-bank-input"
+
+import { Card } from "@/components/ui/card"
+
+import { BankInput } from "@/app/_components/shared/bank-input"
 
 /** Step 2: the new remaining bank after price changes. */
 export function BudgetStep({

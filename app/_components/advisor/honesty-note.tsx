@@ -1,7 +1,8 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
 import { useTeamStore } from "@/lib/team/store"
+
+import { Card } from "@/components/ui/card"
 
 /**
  * The standing honesty disclaimer (spec §4.4): projections are not predictions.

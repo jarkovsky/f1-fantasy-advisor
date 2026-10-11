@@ -1,16 +1,19 @@
+import type { ProjectionResult } from "@/lib/projections/types/projection"
+import type { PresetId } from "@/lib/projections/types/presets"
+import type { WhatIfMode } from "@/lib/advisor/types/contract"
+
 import { cleanup, render, screen, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import userEvent from "@testing-library/user-event"
+
+import { PRESET_REGISTRY, projectAssets } from "@/lib/projections/engine"
+import { assembleHistory } from "@/lib/f1/history"
+import { teamStore } from "@/lib/team/store"
 
 import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
-import type { WhatIfMode } from "@/lib/advisor/types/contract"
-import { assembleHistory } from "@/lib/f1/history"
-import { PRESET_REGISTRY, projectAssets } from "@/lib/projections/engine"
-import type { PresetId } from "@/lib/projections/types/presets"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
-import { teamStore } from "@/lib/team/store"
-import { fixtureAssets, fixtureHistory } from "@/test/fixtures"
+
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
+import { fixtureAssets, fixtureHistory } from "@/test/fixtures"
 
 // ---------------------------------------------------------------------------
 // Real projection results drive the gating + confidence copy — no hand-rolled

@@ -1,9 +1,11 @@
-import { Delta } from "@/app/_components/shared/delta"
-import { RosterRow } from "@/app/_components/shared/roster-row"
+import type { SlotRow } from "@/lib/team/squad-diff"
+
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
-import type { SlotRow } from "@/lib/team/squad-diff"
 import { teamColor } from "@/lib/team-colors"
+
+import { RosterRow } from "@/app/_components/shared/roster-row"
+import { Delta } from "@/app/_components/shared/delta"
 
 /**
  * One recommended-squad row. A kept slot renders the shared RosterRow (TLA,

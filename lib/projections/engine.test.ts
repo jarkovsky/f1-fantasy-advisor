@@ -1,16 +1,18 @@
+import type { RacePayload, SeasonHistory } from "@/lib/f1/types/history"
+import type { SessionPoints } from "@/lib/f1/schemas"
+
 import { describe, expect, it } from "vitest"
 
-import { EWMA_HALF_LIFE } from "@/lib/constants"
 import race1 from "@/lib/f1/__fixtures__/drivers.race1.json"
 import race2 from "@/lib/f1/__fixtures__/drivers.race2.json"
 import race3 from "@/lib/f1/__fixtures__/drivers.race3.json"
 import race4 from "@/lib/f1/__fixtures__/drivers.race4.json"
 import race5 from "@/lib/f1/__fixtures__/drivers.race5.json"
 import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
-import { assembleHistory } from "@/lib/f1/history"
-import type { RacePayload, SeasonHistory } from "@/lib/f1/types/history"
 import { parseDriversFeed } from "@/lib/f1/schemas"
-import type { SessionPoints } from "@/lib/f1/schemas"
+import { assembleHistory } from "@/lib/f1/history"
+import { EWMA_HALF_LIFE } from "@/lib/constants"
+
 import { PRESET_REGISTRY, ewma, projectAssets, projectAssetsMany } from "./engine"
 import { PRESET_IDS, type PresetId } from "./types/presets"
 

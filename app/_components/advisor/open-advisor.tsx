@@ -1,26 +1,30 @@
 "use client"
 
-import { useState } from "react"
-
-import { Alternatives } from "@/app/_components/advisor/alternatives"
-import { HonestyNote } from "@/app/_components/advisor/honesty-note"
-import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
-import { RaceHeader } from "@/app/_components/advisor/race-header"
-import { SnapshotBanner } from "@/app/_components/advisor/snapshot-banner"
-import { TeamPicker } from "@/app/_components/team-picker/team-picker"
-import { TeamPlanCard } from "@/app/_components/team-plan/team-plan-card"
-import { Card } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useOptimizer } from "@/hooks/use-optimizer"
 import type { AdvisorServerProps, WhatIfMode } from "@/lib/advisor/types/contract"
-import type { AssetLite } from "@/lib/asset-lite"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { OptimizerResult } from "@/lib/optimizer/types/optimizer"
+import type { PresetId } from "@/lib/projections/types/presets"
+import type { TeamStateV1 } from "@/lib/team/types/team-state"
 import type { RaceWeekState } from "@/lib/f1/raceweek"
 import type { RaceWeekend } from "@/lib/f1/schemas"
-import type { PresetId } from "@/lib/projections/types/presets"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
-import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import type { AssetLite } from "@/lib/asset-lite"
+
+import { useState } from "react"
+
 import { cn } from "@/lib/utils"
+
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card } from "@/components/ui/card"
+
+import { useOptimizer } from "@/hooks/use-optimizer"
+
+import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
+import { SnapshotBanner } from "@/app/_components/advisor/snapshot-banner"
+import { TeamPlanCard } from "@/app/_components/team-plan/team-plan-card"
+import { TeamPicker } from "@/app/_components/team-picker/team-picker"
+import { Alternatives } from "@/app/_components/advisor/alternatives"
+import { HonestyNote } from "@/app/_components/advisor/honesty-note"
+import { RaceHeader } from "@/app/_components/advisor/race-header"
 
 type OpenState = Extract<RaceWeekState, { kind: "OPEN" }>
 

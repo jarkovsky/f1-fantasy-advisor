@@ -1,3 +1,6 @@
+import type { ProjectionResult } from "@/lib/projections/types/projection"
+import type { RaceWeekConstraints, RaceWeekend } from "@/lib/f1/schemas"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
 /**
  * The server → advisor-island contract. Everything here crosses the RSC
  * boundary as props, so it must stay JSON-primitive: no Dates, no Maps, no
@@ -15,9 +18,6 @@
  *   lib/advisor/projection-resolve.test.ts).
  */
 import type { AssetLite } from "@/lib/asset-lite"
-import type { RaceWeekConstraints, RaceWeekend } from "@/lib/f1/schemas"
-import type { ConcretePresetId } from "@/lib/projections/types/presets"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
 
 export type FeedProvenance = {
   source: "live" | "snapshot"

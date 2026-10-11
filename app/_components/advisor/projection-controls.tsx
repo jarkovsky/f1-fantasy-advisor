@@ -1,7 +1,11 @@
 "use client"
 
+import type { ProjectionResult } from "@/lib/projections/types/projection"
+import type { PresetId } from "@/lib/projections/types/presets"
 import type { WhatIfMode } from "@/lib/advisor/types/contract"
-import { Card } from "@/components/ui/card"
+
+import { PRESET_REGISTRY } from "@/lib/projections/engine"
+
 import {
   Select,
   SelectContent,
@@ -11,9 +15,7 @@ import {
 } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { PRESET_REGISTRY } from "@/lib/projections/engine"
-import type { PresetId } from "@/lib/projections/types/presets"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
+import { Card } from "@/components/ui/card"
 
 /**
  * The "Advanced" projection controls: the model preset picker (history presets

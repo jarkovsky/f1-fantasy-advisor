@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { formatSignedPoints } from "@/lib/format"
 import { cn } from "@/lib/utils"
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 /** Collapsible list of the plan's drivers by projection desc, starring the captain. */
 export function DrsBoostRanking({

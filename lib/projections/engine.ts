@@ -1,3 +1,14 @@
+import type {
+  AssetProjection,
+  ProjectionOptions,
+  ProjectionResult,
+  SessionExpectation,
+  UpcomingWeekend,
+} from "./types/projection"
+import type { AssetHistory, SeasonHistory } from "@/lib/f1/types/history"
+import type { PresetDefinition, PresetId } from "./types/presets"
+import type { SessionLabelType } from "@/lib/f1/schemas"
+
 /**
  * Projection engine (spec §6): turns SeasonHistory into per-asset expected
  * fantasy points for the upcoming race, under five transparent presets, with
@@ -24,17 +35,6 @@ import {
   HISTORY_PRESET_MIN_RACES,
   SPRINT_PRIOR_SHRINKAGE_K,
 } from "@/lib/constants"
-import type { AssetHistory, SeasonHistory } from "@/lib/f1/types/history"
-import type { SessionLabelType } from "@/lib/f1/schemas"
-
-import type { PresetDefinition, PresetId } from "./types/presets"
-import type {
-  AssetProjection,
-  ProjectionOptions,
-  ProjectionResult,
-  SessionExpectation,
-  UpcomingWeekend,
-} from "./types/projection"
 
 // ---------------------------------------------------------------------------
 // Preset registry (the M3 dropdown consumes this)

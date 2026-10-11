@@ -2,10 +2,11 @@
 
 import { useMemo } from "react"
 
-import { NumCell } from "@/app/_components/shared/num-cell"
-import { SortableHead } from "@/app/_components/shared/sortable-head"
-import { TeamColorBar } from "@/app/_components/shared/team-color-bar"
-import { Checkbox } from "@/components/ui/checkbox"
+import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
+import { formatPriceTenths } from "@/lib/format"
+import { teamColor } from "@/lib/team-colors"
+import { cn } from "@/lib/utils"
+
 import {
   Table,
   TableBody,
@@ -14,15 +15,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
+
 import {
   type SortableColumn,
   type SortState,
   useSortableColumns,
 } from "@/hooks/use-sortable-columns"
-import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
-import { formatPriceTenths } from "@/lib/format"
-import { teamColor } from "@/lib/team-colors"
-import { cn } from "@/lib/utils"
+
+import { TeamColorBar } from "@/app/_components/shared/team-color-bar"
+import { SortableHead } from "@/app/_components/shared/sortable-head"
+import { NumCell } from "@/app/_components/shared/num-cell"
 
 /**
  * One searchable, sortable data table for ONE asset kind — the picker renders

@@ -1,5 +1,8 @@
+import type { RacePayload } from "./types/history"
+
 import { describe, expect, it } from "vitest"
 
+import { type Asset, parseDriversFeed } from "./schemas"
 import race1 from "./__fixtures__/drivers.race1.json"
 import race2 from "./__fixtures__/drivers.race2.json"
 import race3 from "./__fixtures__/drivers.race3.json"
@@ -7,8 +10,6 @@ import race4 from "./__fixtures__/drivers.race4.json"
 import race5 from "./__fixtures__/drivers.race5.json"
 import race6 from "./__fixtures__/drivers.race6.json"
 import { assembleHistory } from "./history"
-import type { RacePayload } from "./types/history"
-import { type Asset, parseDriversFeed } from "./schemas"
 
 // Fixtures: same 4 real assets (Gasly 18, Verstappen 131, Mercedes 28,
 // Red Bull 29) across all six races, captured 2026-06-05. Race 6 (Monaco)

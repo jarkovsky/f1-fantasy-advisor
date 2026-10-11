@@ -1,8 +1,10 @@
 "use client"
 
-import { DeadlineCountdown } from "@/app/_components/advisor/deadline-countdown"
-import { Badge } from "@/components/ui/badge"
 import type { RaceSession } from "@/lib/f1/schemas"
+
+import { Badge } from "@/components/ui/badge"
+
+import { DeadlineCountdown } from "@/app/_components/advisor/deadline-countdown"
 
 /**
  * The race-week header: Grand Prix name, circuit, a SPRINT marker, the compact

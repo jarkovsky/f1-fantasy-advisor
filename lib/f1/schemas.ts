@@ -1,3 +1,5 @@
+import type { ParseResult } from "./types/feed"
+
 /**
  * zod boundary for the official F1 Fantasy feeds: untrusted raw JSON in,
  * clean typed domain models out.
@@ -15,7 +17,6 @@
 import * as z from "zod"
 
 import { SESSION_LABELS } from "./config"
-import type { ParseResult } from "./types/feed"
 
 function summarize(error: z.ZodError): string[] {
   return error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.code} (${i.message})`)

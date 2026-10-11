@@ -1,7 +1,7 @@
-import { Card } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-
 import type { ChipChoice, TransferChoice } from "@/hooks/use-rollover-form"
+
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Card } from "@/components/ui/card"
 
 /** Step 3: the transfer allowance, with a chip sub-choice when "I played a chip". */
 export function TransfersStep({

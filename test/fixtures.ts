@@ -6,17 +6,8 @@
 // through the real parsers in lib/f1/schemas.ts. No hand-rolled literals: the
 // fixtures are trusted, so a parse failure THROWS loudly rather than degrading.
 
-import race1 from "@/lib/f1/__fixtures__/drivers.race1.json"
-import race2 from "@/lib/f1/__fixtures__/drivers.race2.json"
-import race3 from "@/lib/f1/__fixtures__/drivers.race3.json"
-import race4 from "@/lib/f1/__fixtures__/drivers.race4.json"
-import race5 from "@/lib/f1/__fixtures__/drivers.race5.json"
-import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
-import constraintsFixture from "@/lib/f1/__fixtures__/constraints.json"
-import racedayFixture from "@/lib/f1/__fixtures__/raceday.excerpt.json"
-import mixapiFixture from "@/lib/f1/__fixtures__/mixapi.json"
-import { assembleHistory } from "@/lib/f1/history"
 import type { SeasonHistory } from "@/lib/f1/types/history"
+
 import {
   type Asset,
   type Mixapi,
@@ -27,6 +18,16 @@ import {
   parseMixapi,
   parseRaceday,
 } from "@/lib/f1/schemas"
+import constraintsFixture from "@/lib/f1/__fixtures__/constraints.json"
+import racedayFixture from "@/lib/f1/__fixtures__/raceday.excerpt.json"
+import mixapiFixture from "@/lib/f1/__fixtures__/mixapi.json"
+import race1 from "@/lib/f1/__fixtures__/drivers.race1.json"
+import race2 from "@/lib/f1/__fixtures__/drivers.race2.json"
+import race3 from "@/lib/f1/__fixtures__/drivers.race3.json"
+import race4 from "@/lib/f1/__fixtures__/drivers.race4.json"
+import race5 from "@/lib/f1/__fixtures__/drivers.race5.json"
+import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
+import { assembleHistory } from "@/lib/f1/history"
 
 const RACE_FIXTURES: Record<number, unknown> = {
   1: race1,

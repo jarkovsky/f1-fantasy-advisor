@@ -1,5 +1,6 @@
-import { TableCell } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
+
+import { TableCell } from "@/components/ui/table"
 
 /** Right-aligned, monospaced, tabular numeric table cell. */
 export function NumCell({

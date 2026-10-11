@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest"
-
 import type { TeamPlan } from "@/lib/optimizer/types/optimizer"
+
+import { describe, expect, it } from "vitest"
 
 import { diffSquad, slotRows } from "./squad-diff"
 

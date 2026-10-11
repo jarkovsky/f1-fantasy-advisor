@@ -1,3 +1,11 @@
+import type {
+  OptimizerAsset,
+  OptimizerInput,
+  OptimizerMode,
+  OptimizerResult,
+  TeamPlan,
+} from "./types/optimizer"
+
 /**
  * Exact-search transfer optimizer (spec §7).
  *
@@ -33,14 +41,6 @@ import {
   SQUAD_CONSTRUCTORS,
   SQUAD_DRIVERS,
 } from "@/lib/constants"
-
-import type {
-  OptimizerAsset,
-  OptimizerInput,
-  OptimizerMode,
-  OptimizerResult,
-  TeamPlan,
-} from "./types/optimizer"
 
 export class OptimizerInputError extends Error {}
 

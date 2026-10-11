@@ -1,3 +1,5 @@
+import type { TeamStateV1 } from "./types/team-state"
+
 /**
  * The client preference plane: the user's team, persisted to localStorage and
  * surfaced to React islands via useSyncExternalStore.
@@ -29,8 +31,6 @@
 import { useSyncExternalStore } from "react"
 
 import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
-
-import type { TeamStateV1 } from "./types/team-state"
 
 const STORAGE_KEY = "f1:v1"
 

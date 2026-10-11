@@ -1,12 +1,14 @@
-import { cleanup, render, screen, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-
-import type { AssetLite } from "@/lib/asset-lite"
-import { formatSignedPoints } from "@/lib/format"
-import { optimize } from "@/lib/optimizer/optimize"
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
+import type { AssetLite } from "@/lib/asset-lite"
+
+import { cleanup, render, screen, within } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import userEvent from "@testing-library/user-event"
+
+import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
+import { optimize } from "@/lib/optimizer/optimize"
+import { formatSignedPoints } from "@/lib/format"
+
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
 
 import { TeamPlanCard } from "./team-plan-card"

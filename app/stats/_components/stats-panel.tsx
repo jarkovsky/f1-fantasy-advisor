@@ -1,6 +1,7 @@
 "use client"
 
-import { SortableHead } from "@/app/_components/shared/sortable-head"
+import type { StatsRow } from "./stats-row"
+
 import {
   Table,
   TableBody,
@@ -9,14 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+
 import {
   type SortableColumn,
   type SortState,
   useSortableColumns,
 } from "@/hooks/use-sortable-columns"
 
+import { SortableHead } from "@/app/_components/shared/sortable-head"
+
 import { DataRow } from "./data-row"
-import type { StatsRow } from "./stats-row"
 
 type SortKey =
   | "priceTenths"

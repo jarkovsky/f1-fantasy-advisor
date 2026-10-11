@@ -1,19 +1,22 @@
+import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/projection"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
+import type { AdvisorServerProps } from "@/lib/advisor/types/contract"
+import type { RaceWeekConstraints } from "@/lib/f1/schemas"
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { cleanup, render, screen, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import userEvent from "@testing-library/user-event"
+
+import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
+import { optimize } from "@/lib/optimizer/optimize"
+import { formatSignedPoints } from "@/lib/format"
+import { teamStore } from "@/lib/team/store"
 
 import { AdvisorPanel } from "@/app/_components/advisor/advisor-panel"
-import type { AdvisorServerProps } from "@/lib/advisor/types/contract"
-import type { ConcretePresetId } from "@/lib/projections/types/presets"
-import type { AssetLite } from "@/lib/asset-lite"
-import { fixtureWeekends } from "@/test/fixtures"
-import type { RaceWeekConstraints } from "@/lib/f1/schemas"
-import { optimize } from "@/lib/optimizer/optimize"
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
-import { formatSignedPoints } from "@/lib/format"
-import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/projection"
-import { teamStore } from "@/lib/team/store"
+
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
+import { fixtureWeekends } from "@/test/fixtures"
 
 // ---------------------------------------------------------------------------
 // next/navigation is mocked at module level. `searchParamsMock` is mutable so a

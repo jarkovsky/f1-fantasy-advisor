@@ -1,9 +1,10 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { act, cleanup, render } from "@testing-library/react"
 import { renderToString } from "react-dom/server"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { teamStore } from "@/lib/team/store"
 
 import { DeadlineCountdown } from "@/app/_components/advisor/deadline-countdown"
-import { teamStore } from "@/lib/team/store"
 
 // ---------------------------------------------------------------------------
 // The component reads the wall clock via currentTimeMs(), which falls through

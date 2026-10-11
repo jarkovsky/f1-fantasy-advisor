@@ -1,3 +1,5 @@
+import type { OptimizerAsset } from "./types/optimizer"
+
 /**
  * Adapter seam: joins the feed asset grid + a projections table into the
  * OptimizerAsset[] shape optimize() consumes (documented in optimizer.ts's
@@ -25,7 +27,6 @@
  *     every emitted team drops it and counts the swap.
  */
 import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
-import type { OptimizerAsset } from "./types/optimizer"
 
 /** Minimal asset shape the adapter needs — a structural subset of domain Asset. */
 type GridAsset = {

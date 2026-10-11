@@ -1,3 +1,5 @@
+import type { RaceWeekConstraints, RaceWeekend } from "./schemas"
+
 /**
  * The race-week lifecycle state machine (spec §5.4) — the product's backbone.
  * Without it, by week two the advisor would confidently recommend transfers
@@ -16,7 +18,6 @@
  *   `nextRacePublished`.
  */
 import { RACE_STATUS } from "./config"
-import type { RaceWeekConstraints, RaceWeekend } from "./schemas"
 
 export type RaceWeekInput = {
   now: Date

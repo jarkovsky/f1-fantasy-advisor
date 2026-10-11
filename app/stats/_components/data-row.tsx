@@ -1,11 +1,14 @@
-import { Delta } from "@/app/_components/shared/delta"
-import { NumCell } from "@/app/_components/shared/num-cell"
-import { TeamColorBar } from "@/app/_components/shared/team-color-bar"
-import { TableCell, TableRow } from "@/components/ui/table"
+import type { StatsRow } from "./stats-row"
+
 import { formatPriceTenths } from "@/lib/format"
 import { teamColor } from "@/lib/team-colors"
 
-import type { StatsRow } from "./stats-row"
+import { TableCell, TableRow } from "@/components/ui/table"
+
+import { TeamColorBar } from "@/app/_components/shared/team-color-bar"
+import { NumCell } from "@/app/_components/shared/num-cell"
+import { Delta } from "@/app/_components/shared/delta"
+
 import { Sparkline } from "./sparkline"
 
 /** One-decimal numeric, em dash for null. */

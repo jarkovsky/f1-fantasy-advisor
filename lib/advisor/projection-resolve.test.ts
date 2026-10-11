@@ -1,13 +1,16 @@
+import type { ProjectionResult, UpcomingWeekend } from "@/lib/projections/types/projection"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
+
 import { describe, expect, it } from "vitest"
 
 import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
-import { assembleHistory } from "@/lib/f1/history"
-import { parseDriversFeed } from "@/lib/f1/schemas"
 import { projectAssets } from "@/lib/projections/engine"
-import type { ConcretePresetId } from "@/lib/projections/types/presets"
-import type { ProjectionResult, UpcomingWeekend } from "@/lib/projections/types/projection"
-import { resolveClientProjection } from "./projection-resolve"
+import { parseDriversFeed } from "@/lib/f1/schemas"
+import { assembleHistory } from "@/lib/f1/history"
+
 import { fixtureHistory } from "@/test/fixtures"
+
+import { resolveClientProjection } from "./projection-resolve"
 
 // The concrete presets the server materializes (custom-blend is client-derived).
 const CONCRETE: ConcretePresetId[] = ["weighted-recent", "form-5", "season-average", "equal-ppm"]

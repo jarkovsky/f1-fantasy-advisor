@@ -1,5 +1,9 @@
-import type { AssetLite } from "@/lib/asset-lite"
+import type { ConcretePresetId } from "@/lib/projections/types/presets"
+import type { FeedProvenance } from "@/lib/advisor/types/contract"
 import type { Feed, FeedMeta } from "@/lib/f1/types/feed"
+import type { AssetLite } from "@/lib/asset-lite"
+import type { Asset } from "@/lib/f1/schemas"
+
 import {
   getConstraints,
   getDrivers,
@@ -8,13 +12,10 @@ import {
   getNextRacePublished,
   getRaceday,
 } from "@/lib/f1/feed"
-import type { Asset } from "@/lib/f1/schemas"
-import { headshotPath } from "@/lib/headshots"
 import { projectAssetsMany } from "@/lib/projections/engine"
+import { headshotPath } from "@/lib/headshots"
 
 import { AdvisorPanel } from "./advisor-panel"
-import type { FeedProvenance } from "@/lib/advisor/types/contract"
-import type { ConcretePresetId } from "@/lib/projections/types/presets"
 
 /** The presets the server materializes; `custom-blend` is derived client-side. */
 const CONCRETE_PRESETS: readonly ConcretePresetId[] = [

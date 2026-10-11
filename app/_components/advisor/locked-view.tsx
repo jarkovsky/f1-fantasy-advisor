@@ -1,16 +1,19 @@
 "use client"
 
+import type { ProjectionResult } from "@/lib/projections/types/projection"
+
 import { useMemo } from "react"
 
-import { RosterRow } from "@/app/_components/shared/roster-row"
-import { Badge } from "@/components/ui/badge"
-import { Card } from "@/components/ui/card"
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
+import { pickDrsCaptainId } from "@/lib/optimizer/drs-boost"
 import { DRS_BOOST_MULTIPLIER } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
-import { pickDrsCaptainId } from "@/lib/optimizer/drs-boost"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
 import { teamColor } from "@/lib/team-colors"
+
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+
+import { RosterRow } from "@/app/_components/shared/roster-row"
 
 /**
  * LOCKED state (spec §5.4): the team is locked for the current weekend, so the

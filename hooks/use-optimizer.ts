@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useRef, useState, useTransition } from "react"
-
-import type { WhatIfMode } from "@/lib/advisor/types/contract"
-import type { AssetLite } from "@/lib/asset-lite"
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import type { OptimizerInputError as OptimizerInputErrorType } from "@/lib/optimizer/optimize"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
+import type { WhatIfMode } from "@/lib/advisor/types/contract"
+import type { AssetLite } from "@/lib/asset-lite"
+
+import { useEffect, useRef, useState, useTransition } from "react"
+
+import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 
 // Type-only import of the optimizer module for the dynamic import contract; the
 // actual value is loaded lazily (no static value import — keeps the 1.45M-combo

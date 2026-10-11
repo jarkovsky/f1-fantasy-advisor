@@ -1,13 +1,14 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { ChartColumn, Flag, Gauge, Moon, Sun } from "lucide-react"
+import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
+import Link from "next/link"
 
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Button } from "@/components/ui/button"
 
 /**
  * App chrome (spec §10 M5): a floating icon rail on md+ — a rounded card

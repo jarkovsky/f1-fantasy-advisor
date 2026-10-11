@@ -1,8 +1,10 @@
+import type { OptimizerAsset, OptimizerInput, OptimizerResult, TeamPlan } from "./types/optimizer"
+
 import { describe, expect, it } from "vitest"
 
 import { DRS_BOOST_MULTIPLIER, EXTRA_TRANSFER_PENALTY } from "@/lib/constants"
+
 import { OptimizerInputError, optimize } from "./optimize"
-import type { OptimizerAsset, OptimizerInput, OptimizerResult, TeamPlan } from "./types/optimizer"
 
 // ---------------------------------------------------------------------------
 // Brute-force oracle: enumerate EVERYTHING, no pruning, straight from the

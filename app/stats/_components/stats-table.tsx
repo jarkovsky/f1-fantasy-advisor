@@ -1,11 +1,12 @@
 "use client"
 
+import type { StatsRow } from "./stats-row"
+
 import { useMemo } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { StatsPanel } from "./stats-panel"
-import type { StatsRow } from "./stats-row"
 
 export function StatsTable({ rows, caption }: { rows: StatsRow[]; caption: string }) {
   const drivers = useMemo(() => rows.filter((r) => r.kind === "driver"), [rows])

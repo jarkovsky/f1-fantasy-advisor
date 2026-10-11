@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest"
-
-import { optimize } from "./optimize"
 import type { OptimizerAsset } from "./types/optimizer"
 
+import { describe, expect, it } from "vitest"
+
 import { pickDrsCaptainId } from "./drs-boost"
+import { optimize } from "./optimize"
 
 describe("pickDrsCaptainId", () => {
   it("picks the highest projection", () => {

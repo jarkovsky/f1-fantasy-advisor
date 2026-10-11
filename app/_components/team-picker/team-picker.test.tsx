@@ -1,11 +1,14 @@
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { cleanup, render, screen, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import userEvent from "@testing-library/user-event"
+
+import { teamStore } from "@/lib/team/store"
+
+import { installMatchMediaStub } from "@/test/stubs/dom"
 
 import { TeamPicker } from "./team-picker"
-import type { AssetLite } from "@/lib/asset-lite"
-import { teamStore } from "@/lib/team/store"
-import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
 // Deterministic set: the shared fixtures carry only 4 assets — too few to fill

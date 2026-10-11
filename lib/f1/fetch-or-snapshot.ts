@@ -1,3 +1,5 @@
+import type { Feed, ParseResult, Snapshot } from "./types/feed"
+
 /**
  * The degradation core of the data layer: try the live feed, fall back to the
  * committed snapshot, NEVER throw.
@@ -11,7 +13,6 @@
  * feed.ts, the only production caller.
  */
 import { F1_FEED_BASE, FEED_TIMEOUT_MS, FEED_UA } from "./config"
-import type { Feed, ParseResult, Snapshot } from "./types/feed"
 
 export type FetchOrSnapshotOptions = {
   fetchImpl?: typeof fetch

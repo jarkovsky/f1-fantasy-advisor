@@ -1,3 +1,8 @@
+import type {
+  AssetProjection,
+  ProjectionResult,
+  SessionExpectation,
+} from "@/lib/projections/types/projection"
 /**
  * Client-side preset resolver (plan D1/D3).
  *
@@ -13,11 +18,6 @@
  * PURE: no I/O, no wall-clock — runs on every advisor render (cheap).
  */
 import type { ConcretePresetId, PresetId } from "@/lib/projections/types/presets"
-import type {
-  AssetProjection,
-  ProjectionResult,
-  SessionExpectation,
-} from "@/lib/projections/types/projection"
 
 function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x))

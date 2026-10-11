@@ -1,3 +1,5 @@
+import type { ParseResult } from "@/lib/f1/types/feed"
+
 /**
  * Refreshes the committed feed snapshots in data/ from the live F1 Fantasy
  * CDN. Run via `pnpm snapshot` (tsx), commit the result.
@@ -15,9 +17,8 @@
  */
 import { mkdir, writeFile } from "node:fs/promises"
 
-import { F1_FEED_BASE, FEED_NOT_PUBLISHED_STATUS, FEED_UA, feedPaths } from "@/lib/f1/config"
 import { parseConstraints, parseDriversFeed, parseMixapi, parseRaceday } from "@/lib/f1/schemas"
-import type { ParseResult } from "@/lib/f1/types/feed"
+import { F1_FEED_BASE, FEED_NOT_PUBLISHED_STATUS, FEED_UA, feedPaths } from "@/lib/f1/config"
 
 type ManifestEntry = {
   lastModified: string | null

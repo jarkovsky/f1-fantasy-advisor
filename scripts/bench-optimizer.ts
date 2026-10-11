@@ -1,3 +1,5 @@
+import type { OptimizerAsset, OptimizerInput } from "@/lib/optimizer/types/optimizer"
+
 /**
  * Optimizer benchmark — the M2 perf record. Run via `pnpm bench`.
  *
@@ -10,7 +12,6 @@
 import os from "node:os"
 
 import { optimize } from "@/lib/optimizer/optimize"
-import type { OptimizerAsset, OptimizerInput } from "@/lib/optimizer/types/optimizer"
 
 const WARMUP = 50
 const MEASURED = 500

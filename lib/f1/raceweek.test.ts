@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest"
 
-import constraintsFixture from "./__fixtures__/constraints.json"
-import racedayFixture from "./__fixtures__/raceday.excerpt.json"
-import { deriveRaceWeekState, type RaceWeekInput } from "./raceweek"
 import {
   type RaceWeekConstraints,
   type RaceWeekend,
   parseConstraints,
   parseRaceday,
 } from "./schemas"
+import { deriveRaceWeekState, type RaceWeekInput } from "./raceweek"
+import constraintsFixture from "./__fixtures__/constraints.json"
+import racedayFixture from "./__fixtures__/raceday.excerpt.json"
 
 // Real Monaco race week (captured 2026-06-05):
 //   race 6 lock  = 2026-06-06T16:00:00+02:00  (Saturday qualifying)

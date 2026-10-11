@@ -1,12 +1,15 @@
 "use client"
 
-import { Delta } from "@/app/_components/shared/delta"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import type { AssetLite } from "@/lib/asset-lite"
-import { formatPriceTenths } from "@/lib/format"
-import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
-import { PRESET_REGISTRY } from "@/lib/projections/engine"
 import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/projection"
+import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
+import type { AssetLite } from "@/lib/asset-lite"
+
+import { PRESET_REGISTRY } from "@/lib/projections/engine"
+import { formatPriceTenths } from "@/lib/format"
+
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+
+import { Delta } from "@/app/_components/shared/delta"
 
 /**
  * "Other transfer counts" — collapsed by default. One row per non-null bucket

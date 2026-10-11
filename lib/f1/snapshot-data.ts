@@ -14,6 +14,9 @@ import "server-only"
 import type { Snapshot } from "./types/feed"
 
 import constraintsRaw from "@/data/constraints.json"
+import racedayRaw from "@/data/raceday.json"
+import manifest from "@/data/manifest.json"
+import mixapiRaw from "@/data/mixapi.json"
 import race1 from "@/data/drivers/1.json"
 import race2 from "@/data/drivers/2.json"
 import race3 from "@/data/drivers/3.json"
@@ -22,9 +25,6 @@ import race5 from "@/data/drivers/5.json"
 import race6 from "@/data/drivers/6.json"
 import race7 from "@/data/drivers/7.json"
 import race8 from "@/data/drivers/8.json"
-import manifest from "@/data/manifest.json"
-import mixapiRaw from "@/data/mixapi.json"
-import racedayRaw from "@/data/raceday.json"
 
 export const DRIVERS_RAW: Record<number, unknown> = {
   1: race1,

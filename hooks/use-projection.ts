@@ -1,10 +1,11 @@
 "use client"
 
+import type { ConcretePresetId, PresetId } from "@/lib/projections/types/presets"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
+
 import { useDeferredValue, useMemo } from "react"
 
 import { resolveClientProjection } from "@/lib/advisor/projection-resolve"
-import type { ConcretePresetId, PresetId } from "@/lib/projections/types/presets"
-import type { ProjectionResult } from "@/lib/projections/types/projection"
 
 /**
  * Resolve the active projection for the current preset + blend, plus a flat

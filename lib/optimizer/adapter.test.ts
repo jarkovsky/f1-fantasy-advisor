@@ -1,3 +1,6 @@
+import type { RacePayload } from "@/lib/f1/types/history"
+import type { OptimizerAsset } from "./types/optimizer"
+
 import { describe, expect, it } from "vitest"
 
 import race1 from "@/lib/f1/__fixtures__/drivers.race1.json"
@@ -6,13 +9,12 @@ import race3 from "@/lib/f1/__fixtures__/drivers.race3.json"
 import race4 from "@/lib/f1/__fixtures__/drivers.race4.json"
 import race5 from "@/lib/f1/__fixtures__/drivers.race5.json"
 import race6 from "@/lib/f1/__fixtures__/drivers.race6.json"
-import { assembleHistory } from "@/lib/f1/history"
-import type { RacePayload } from "@/lib/f1/types/history"
-import { parseDriversFeed } from "@/lib/f1/schemas"
-import { optimize } from "./optimize"
-import { reconcileRoster, toOptimizerAssets } from "./adapter"
-import type { OptimizerAsset } from "./types/optimizer"
 import { projectAssets } from "@/lib/projections/engine"
+import { parseDriversFeed } from "@/lib/f1/schemas"
+import { assembleHistory } from "@/lib/f1/history"
+
+import { reconcileRoster, toOptimizerAssets } from "./adapter"
+import { optimize } from "./optimize"
 
 // ---------------------------------------------------------------------------
 // Minimal grid asset (structural subset of domain Asset the adapter consumes).

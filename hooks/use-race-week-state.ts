@@ -1,9 +1,10 @@
 "use client"
 
+import type { RaceWeekConstraints, RaceWeekend } from "@/lib/f1/schemas"
+
 import { useMemo } from "react"
 
 import { deriveRaceWeekState, type RaceWeekState } from "@/lib/f1/raceweek"
-import type { RaceWeekConstraints, RaceWeekend } from "@/lib/f1/schemas"
 
 /**
  * Derive the §5.4 race-week state on the client. Returns null until the clock
