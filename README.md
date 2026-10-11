@@ -91,7 +91,7 @@ Production-build record (M5 light-first redesign): Lighthouse 100/100/100 (Acces
 | `pnpm dev`          | Start the dev server                                                     |
 | `pnpm build`        | Production build                                                         |
 | `pnpm start`        | Serve the production build                                               |
-| `pnpm test`         | Run the suite (277 tests)                                                |
+| `pnpm test`         | Run the suite (321 tests)                                                |
 | `pnpm bench`        | Optimizer microbenchmark (the perf record)                               |
 | `pnpm snapshot`     | Refresh committed feed snapshots in `data/`                              |
 | `pnpm assets`       | Download OpenF1 headshots (blocked during live sessions; always exits 0) |
