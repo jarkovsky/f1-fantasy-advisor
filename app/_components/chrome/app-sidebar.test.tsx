@@ -3,8 +3,8 @@ import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { AppSidebar, MobileTopBar, ModeToggle } from "@/app/_components/app-sidebar"
-import { ThemeProvider } from "@/app/_components/theme-provider"
+import { AppSidebar, MobileTopBar, ModeToggle } from "@/app/_components/chrome/app-sidebar"
+import { ThemeProvider } from "@/app/_components/chrome/theme-provider"
 import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // next-themes reads prefers-color-scheme via matchMedia on mount.

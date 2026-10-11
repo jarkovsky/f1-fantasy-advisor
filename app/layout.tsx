@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import { Geist_Mono, Inter } from "next/font/google"
 
-import { AppSidebar, MobileTopBar } from "@/app/_components/app-sidebar"
-import { Footer } from "@/app/_components/footer"
-import { ThemeProvider } from "@/app/_components/theme-provider"
+import { AppSidebar, MobileTopBar } from "@/app/_components/chrome/app-sidebar"
+import { Footer } from "@/app/_components/chrome/footer"
+import { ThemeProvider } from "@/app/_components/chrome/theme-provider"
 
 import "./globals.css"
 
