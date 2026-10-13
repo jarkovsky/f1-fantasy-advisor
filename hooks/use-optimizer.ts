@@ -85,19 +85,21 @@ export function useOptimizer(input: {
           setBaseline(keep)
           setUnresolvedIds(missing)
           setError(null)
+          const { transfers, score } = optimized.best
           setStatusMessage(
-            `Updated — ${optimized.best.transfers} transfers, ${optimized.best.score.toFixed(1)} points.`
+            `Updated — ${transfers} transfer${transfers === 1 ? "" : "s"}, ${score.toFixed(1)} points.`
           )
         })
       } catch (err) {
         if (cancelled) return
+        const message =
+          err instanceof mod.OptimizerInputError
+            ? err.message
+            : "Could not compute a recommendation."
         startTransition(() => {
           setResult(null)
-          setError(
-            err instanceof mod.OptimizerInputError
-              ? err.message
-              : "Could not compute a recommendation."
-          )
+          setError(message)
+          setStatusMessage(message)
         })
       }
     })()

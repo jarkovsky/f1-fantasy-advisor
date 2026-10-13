@@ -13,12 +13,14 @@ export function DrsBoostRanking({
 }) {
   return (
     <Collapsible className="rounded-lg border border-grid-line bg-surface-2/40">
-      <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
-        <h3 className="text-sm font-semibold">DRS Boost ranking</h3>
-        <span aria-hidden="true" className="text-muted-foreground">
-          ⌄
-        </span>
-      </CollapsibleTrigger>
+      <h3 className="text-sm font-semibold">
+        <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
+          DRS Boost ranking
+          <span aria-hidden="true" className="font-normal text-muted-foreground">
+            ⌄
+          </span>
+        </CollapsibleTrigger>
+      </h3>
       <CollapsibleContent className="px-3 pb-3">
         <ul className="flex flex-col gap-1">
           {ranked.map((d) => {

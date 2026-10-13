@@ -430,7 +430,7 @@ describe("OPEN — DRS Boost ranking", () => {
 
     // The ranking lives in a default-collapsed Collapsible — open it first.
     const heading = screen.getByRole("heading", { name: "DRS Boost ranking" })
-    const trigger = heading.closest("button") as HTMLElement
+    const trigger = within(heading).getByRole("button")
     const user = userEvent.setup()
     await user.click(trigger)
 
