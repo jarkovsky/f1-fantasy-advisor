@@ -30,18 +30,15 @@ import { RosterPlanRow } from "./roster-plan-row"
  * never disagrees with the engine.
  */
 type TeamPlanCardProps = {
-  roster: string[]
   result: OptimizerResult
   baseline: TeamPlan | null
   assetsById: Record<string, AssetLite>
   totals: Record<string, number>
-  budgetTenths: number
   freeTransfers: number | "unlimited"
   whatIf: WhatIfMode
   unresolvedIds: string[]
   applied: boolean
   onApply: () => void
-  onKeep: () => void
   onEdit: () => void
 }
 
@@ -55,7 +52,6 @@ export function TeamPlanCard({
   unresolvedIds,
   applied,
   onApply,
-  onKeep,
   onEdit,
 }: TeamPlanCardProps) {
   const { best } = result
@@ -200,9 +196,6 @@ export function TeamPlanCard({
             Apply this plan
           </Button>
         )}
-        <Button type="button" variant="ghost" onClick={onKeep}>
-          Keep current team
-        </Button>
       </div>
 
       <DrsBoostRanking ranked={ranked} captainId={best.captainId} />

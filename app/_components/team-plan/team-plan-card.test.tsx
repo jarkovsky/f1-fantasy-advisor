@@ -90,18 +90,15 @@ function plan(bank: number, free: number): { result: OptimizerResult; baseline: 
 function renderCard(over: Partial<Parameters<typeof TeamPlanCard>[0]> = {}) {
   const { result, baseline } = plan(500, 3)
   const props = {
-    roster: ROSTER,
     result,
     baseline,
     assetsById: ASSETS_BY_ID,
     totals: TOTALS,
-    budgetTenths: 500,
     freeTransfers: 3 as number | "unlimited",
     whatIf: "none" as const,
     unresolvedIds: [] as string[],
     applied: false,
     onApply: vi.fn(),
-    onKeep: vi.fn(),
     onEdit: vi.fn(),
     ...over,
   }
@@ -173,7 +170,6 @@ describe("TeamPlanCard", () => {
       result,
       baseline: result.byTransferCount[0] ?? null,
       totals: optimalTotals,
-      budgetTenths: 0,
     })
     expect(
       screen.getByText(/No changes — your current team is already optimal/)
@@ -203,13 +199,11 @@ describe("TeamPlanCard", () => {
     expect(screen.getByText(/\(Limitless ignores budget\)/)).toBeInTheDocument()
   })
 
-  it("fires onApply and onKeep", async () => {
+  it("fires onApply", async () => {
     const user = userEvent.setup()
     const { props } = renderCard()
     await user.click(screen.getByRole("button", { name: /apply this plan/i }))
     expect(props.onApply).toHaveBeenCalled()
-    await user.click(screen.getByRole("button", { name: /keep current team/i }))
-    expect(props.onKeep).toHaveBeenCalled()
   })
 
   it("the DRS Boost ranking lists drivers by projection desc and stars the captain", async () => {

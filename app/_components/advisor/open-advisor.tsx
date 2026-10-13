@@ -140,18 +140,15 @@ export function OpenAdvisor({
           </p>
         ) : result ? (
           <TeamPlanCard
-            roster={roster ?? []}
             result={result}
             baseline={baseline}
             assetsById={assetsById}
             totals={totals}
-            budgetTenths={budgetTenths}
             freeTransfers={whatIf !== "none" ? "unlimited" : freeTransfers}
             whatIf={whatIf}
             unresolvedIds={unresolvedIds}
             applied={applied}
             onApply={handleApply}
-            onKeep={() => setShowEditor(true)}
             onEdit={() => setShowEditor(true)}
           />
         ) : (
