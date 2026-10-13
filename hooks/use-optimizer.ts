@@ -1,6 +1,5 @@
 "use client"
 
-import type { OptimizerInputError as OptimizerInputErrorType } from "@/lib/optimizer/optimize"
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import type { WhatIfMode } from "@/lib/advisor/types/contract"
 import type { AssetLite } from "@/lib/asset-lite"
@@ -9,20 +8,18 @@ import { useEffect, useRef, useState, useTransition } from "react"
 
 import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
 
-// Type-only import of the optimizer module for the dynamic import contract; the
-// actual value is loaded lazily (no static value import — keeps the 1.45M-combo
-// search out of the island's first-load bundle, plan D4).
+// Type-only: the module itself is imported dynamically so the 1.45M-combination
+// search stays out of the island's first-load bundle.
 type OptimizerModule = typeof import("@/lib/optimizer/optimize")
 
 /**
  * Runs the transfer optimizer for the current squad + projections, lazily
- * importing the module on first enable and recomputing (transition-wrapped, with
+ * importing the module on mount and recomputing (transition-wrapped, with
  * cancel guards) whenever the inputs change. Returns the plan, the keep-current
  * baseline, unresolved roster ids, an error string, the pending flag, and a
  * polite status message.
  */
 export function useOptimizer(input: {
-  enabled: boolean
   assets: AssetLite[]
   totals: Record<string, number>
   roster: string[] | null
@@ -37,19 +34,19 @@ export function useOptimizer(input: {
   isPending: boolean
   statusMessage: string
 } {
-  const { enabled, assets, totals, roster, budgetTenths, freeTransfers, whatIf } = input
+  const { assets, totals, roster, budgetTenths, freeTransfers, whatIf } = input
 
   const optimizerRef = useRef<OptimizerModule | null>(null)
   const [result, setResult] = useState<OptimizerResult | null>(null)
   const [baseline, setBaseline] = useState<TeamPlan | null>(null)
   const [unresolvedIds, setUnresolvedIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startOptTransition] = useTransition()
+  const [isPending, startTransition] = useTransition()
   const [statusMessage, setStatusMessage] = useState("")
 
-  // Kick off the dynamic import on the first enabled render.
+  // Warm the optimizer chunk on mount, even before there is a roster to optimize.
   useEffect(() => {
-    if (!enabled || optimizerRef.current) return
+    if (optimizerRef.current) return
     let cancelled = false
     void import("@/lib/optimizer/optimize").then((mod) => {
       if (!cancelled) optimizerRef.current = mod
@@ -57,12 +54,11 @@ export function useOptimizer(input: {
     return () => {
       cancelled = true
     }
-  }, [enabled])
+  }, [])
 
   useEffect(() => {
-    if (!enabled || !roster) return
+    if (!roster) return
     let cancelled = false
-    setStatusMessage("Recomputing recommendation…")
 
     void (async () => {
       const mod = optimizerRef.current ?? (await import("@/lib/optimizer/optimize"))
@@ -70,9 +66,9 @@ export function useOptimizer(input: {
       if (cancelled) return
 
       const grid = toOptimizerAssets(assets, totals)
-      const { assets: grid2, unresolvedIds: missing } = reconcileRoster(roster, grid)
+      const { assets: reconciled, unresolvedIds: missing } = reconcileRoster(roster, grid)
       const optInput = {
-        assets: grid2,
+        assets: reconciled,
         roster,
         budgetTenths,
         freeTransfers: whatIf !== "none" ? ("unlimited" as const) : freeTransfers,
@@ -84,7 +80,7 @@ export function useOptimizer(input: {
         // Baseline = keeping the current team: a 0-transfer plan if one exists.
         const keep = optimized.byTransferCount[0] ?? null
         if (cancelled) return
-        startOptTransition(() => {
+        startTransition(() => {
           setResult(optimized)
           setBaseline(keep)
           setUnresolvedIds(missing)
@@ -95,12 +91,12 @@ export function useOptimizer(input: {
         })
       } catch (err) {
         if (cancelled) return
-        const isInputErr =
-          err instanceof (mod.OptimizerInputError as typeof OptimizerInputErrorType)
-        startOptTransition(() => {
+        startTransition(() => {
           setResult(null)
           setError(
-            isInputErr && err instanceof Error ? err.message : "Could not compute a recommendation."
+            err instanceof mod.OptimizerInputError
+              ? err.message
+              : "Could not compute a recommendation."
           )
         })
       }
@@ -109,7 +105,14 @@ export function useOptimizer(input: {
     return () => {
       cancelled = true
     }
-  }, [enabled, totals, roster, budgetTenths, freeTransfers, whatIf, assets])
+  }, [totals, roster, budgetTenths, freeTransfers, whatIf, assets])
 
-  return { result, baseline, unresolvedIds, error, isPending, statusMessage }
+  return {
+    result,
+    baseline,
+    unresolvedIds,
+    error,
+    isPending,
+    statusMessage: isPending ? "Recomputing recommendation…" : statusMessage,
+  }
 }

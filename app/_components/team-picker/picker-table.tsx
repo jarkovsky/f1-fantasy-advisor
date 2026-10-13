@@ -28,16 +28,13 @@ import { SortableHead } from "@/app/_components/shared/sortable-head"
 import { NumCell } from "@/app/_components/shared/num-cell"
 
 /**
- * One searchable, sortable data table for ONE asset kind — the picker renders
- * two of these, Drivers and Constructors, stacked. This is a DUMB component: it
- * owns no state. Selection and quota validation live in the container
- * (team-picker.tsx) and arrive via props, as does the shared search query — one
- * search box in the container filters both tables.
+ * A searchable, sortable table for a single asset kind; the picker stacks one
+ * for Drivers and one for Constructors. Selection, quota, and the search query
+ * are owned by the container (team-picker.tsx) and arrive via props.
  *
- * Sorting is the shared useSortableColumns + SortableHead (desc→asc→default,
- * aria-sort, nulls last, an sr-only role=status announcement) so every table in
- * the app behaves identically. The announcement is prefixed with the table
- * heading so the two live regions stay distinguishable. Default is price desc.
+ * Sorting uses the shared useSortableColumns + SortableHead so every table in
+ * the app behaves the same. Announcements are prefixed with the table heading
+ * so the two tables' live regions stay distinguishable.
  */
 
 type SortKey = "price" | "pts" | "ppm" | "sel"
@@ -59,7 +56,7 @@ function ppmValue(a: AssetLite): number | null {
 }
 
 type PickerTableProps = {
-  /** Assets of ONE kind — the container splits drivers from constructors. */
+  /** Assets of a single kind; the container splits drivers from constructors. */
   assets: AssetLite[]
   /** Table heading ("Drivers" / "Constructors"); prefixes sort announcements. */
   heading: string
@@ -99,8 +96,8 @@ export function PickerTable({
 
   return (
     <section aria-label={heading} className="flex flex-col gap-2">
-      {/* sr-only live region — present from first render so AT registers it
-          before any sort change; updates politely on each cycle. */}
+      {/* Rendered from the first paint so assistive tech registers the region
+          before the first sort change. */}
       <div className="sr-only" role="status" aria-live="polite">
         {announcement}
       </div>
@@ -109,8 +106,8 @@ export function PickerTable({
         {heading} <span className="font-normal text-muted-foreground">({assets.length})</span>
       </h3>
 
-      {/* The data table. The shadcn Table already wraps itself in an
-          overflow-x-auto container, so it degrades gracefully on mobile. */}
+      {/* shadcn's Table wraps itself in an overflow-x-auto container, so it
+          scrolls horizontally on narrow screens without an extra wrapper. */}
       <Table>
         <TableHeader>
           <TableRow className="border-grid-line hover:bg-transparent">
@@ -165,12 +162,12 @@ type PickerRowProps = {
 }
 
 /**
- * One asset row. The leading Checkbox is the selection source of truth (its
- * onCheckedChange drives toggles, so Space on a focused checkbox just works via
- * native radix). The whole row is also a click target for Fitts'-law reach —
- * but a click that originates from the checkbox is skipped here, because radix
- * fires onCheckedChange AND bubbles a row click for the same gesture, which
- * would otherwise toggle twice. Disabled rows go muted and the checkbox blocks.
+ * One asset row. The leading Checkbox is the selection source of truth: its
+ * onCheckedChange drives toggles, so Space on a focused checkbox works natively.
+ * The whole row is also a click target for easier reach, but clicks that
+ * originate on the checkbox are skipped there, because Radix fires
+ * onCheckedChange and also bubbles a row click for the same gesture, which would
+ * otherwise toggle twice.
  */
 function PickerRow({ asset, selected, disabled, onToggle }: PickerRowProps) {
   const color = teamColor(assetColorKey(asset))
@@ -178,7 +175,6 @@ function PickerRow({ asset, selected, disabled, onToggle }: PickerRowProps) {
 
   function handleRowClick(e: React.MouseEvent<HTMLTableRowElement>): void {
     if (disabled) return
-    // The checkbox already handled its own gesture (see doc comment).
     if ((e.target as HTMLElement).closest("[data-slot=checkbox]")) return
     onToggle(asset.playerId)
   }

@@ -2,10 +2,10 @@
  * Generates the scattered-dot background SVGs into public/patterns/. Run via
  * `pnpm pattern` (tsx), commit the result.
  *
- * The page background (spec §10 M5) is a paper grey with a faint speckle
- * texture, tiled from one SVG per theme. Dots are placed by a SEEDED PRNG
- * (mulberry32) so re-runs are byte-identical — the assets are deterministic
- * build inputs, not random output. Never part of `next build`.
+ * The page background is a paper grey with a faint speckle texture, tiled
+ * from one SVG per theme. Dots are placed by a seeded PRNG (mulberry32) so
+ * re-runs are byte-identical — the assets are deterministic build inputs, not
+ * random output. Never part of `next build`.
  */
 import { mkdir, writeFile } from "node:fs/promises"
 

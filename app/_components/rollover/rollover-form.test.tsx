@@ -14,7 +14,7 @@ import { RolloverForm } from "./rollover-form"
 // Deterministic grid (mirrors team-picker.test.tsx): 8 drivers + 3 constructors
 // with realistic tenths and a current/prev price split so the per-asset price
 // Delta in step 1 is exact. The rollover form is prop-driven, but its Confirm
-// path writes through confirmRollover, so we wire onConfirm to the REAL store
+// path writes through confirmRollover, so we wire onConfirm to the real store
 // and assert the resulting snapshot.
 // ---------------------------------------------------------------------------
 
@@ -198,8 +198,8 @@ describe("RolloverForm", () => {
   })
 
   // Focus management: choosing a squad reveals steps 2 and 3 together (bank is
-  // prefilled), so focus should land on the step-2 legend and NOT be stolen away
-  // to step 3 — nor while the user is retyping a cleared bank value.
+  // prefilled), so focus should land on the step-2 legend and not be stolen by
+  // step 3, including while the user is retyping a cleared bank value.
   describe("focus management", () => {
     it("moves focus to the budget legend after choosing a squad option", async () => {
       const user = userEvent.setup()

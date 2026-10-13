@@ -13,9 +13,9 @@ export function StatsTable({ rows, caption }: { rows: StatsRow[]; caption: strin
   const constructors = useMemo(() => rows.filter((r) => r.kind === "constructor"), [rows])
 
   return (
-    // Sorting state lives PER PANEL (each <StatsPanel> owns its own hook state).
-    // Radix remounts the inactive panel's content, so switching tabs resets
-    // sort to the default — the simplest correct behavior (noted in spec).
+    // Sort state lives per panel (each <StatsPanel> owns its own hook state).
+    // Radix unmounts the inactive panel's content, so switching tabs resets
+    // sort to the default — the simplest correct behavior.
     <Tabs defaultValue="driver" className="gap-3">
       <TabsList>
         <TabsTrigger value="driver">Drivers ({drivers.length})</TabsTrigger>

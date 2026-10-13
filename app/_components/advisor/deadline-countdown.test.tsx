@@ -2,8 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { act, cleanup, render } from "@testing-library/react"
 import { renderToString } from "react-dom/server"
 
-import { teamStore } from "@/lib/team/store"
-
 import { DeadlineCountdown } from "@/app/_components/advisor/deadline-countdown"
 
 // ---------------------------------------------------------------------------
@@ -18,7 +16,6 @@ const NOW = Date.parse("2026-06-06T12:00:00.000Z")
 
 beforeEach(() => {
   localStorage.clear()
-  teamStore.__resetForTests()
   vi.useFakeTimers()
   vi.setSystemTime(NOW)
 })
@@ -27,7 +24,6 @@ afterEach(() => {
   cleanup()
   vi.useRealTimers()
   localStorage.clear()
-  teamStore.__resetForTests()
 })
 
 describe("DeadlineCountdown", () => {
@@ -46,14 +42,12 @@ describe("DeadlineCountdown", () => {
     )
     // Effects have flushed → the live delta replaced the placeholder.
     expect(container.textContent).not.toContain("Locks at —")
-    expect(container.textContent).toMatch(/Locks in \d+d \d+h \d+m|\d+h \d+m/)
     expect(container.textContent).toContain("Locks in 2d 5h 0m")
   })
 
   it("advancing fake timers by 1s updates the seconds branch when under 1h", () => {
     const { container } = render(<DeadlineCountdown lockAtMs={NOW + 30 * 60_000} />)
-    // First tick: 30m exactly → "29m 59s" once we are one second past mount? No:
-    // remaining is exactly 30 * 60_000 at mount → "30m 0s".
+    // Remaining is exactly 30 minutes at mount.
     expect(container.textContent).toContain("Locks in 30m 0s")
     act(() => {
       vi.advanceTimersByTime(1000)

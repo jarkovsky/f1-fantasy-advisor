@@ -164,13 +164,13 @@ describe("StatsTable", () => {
     expect(tlaOrder()).toEqual(["ALF", "BRA", "CHA", "DEL"])
   })
 
-  it("nulls sort last in BOTH directions (Form-5: BRA is null)", async () => {
+  it("nulls sort last in both directions (Form-5: BRA is null)", async () => {
     const user = userEvent.setup()
     renderTable()
     // form5: ALF 40, CHA 20, DEL 5, BRA null. Desc → null last.
     await user.click(sortButton(/Form-5/))
     expect(tlaOrder()).toEqual(["ALF", "CHA", "DEL", "BRA"])
-    // Asc → 5,20,40 then null STILL last (not first).
+    // Asc → 5,20,40 then null still last (not first).
     await user.click(sortButton(/Form-5/))
     expect(tlaOrder()).toEqual(["DEL", "CHA", "ALF", "BRA"])
   })

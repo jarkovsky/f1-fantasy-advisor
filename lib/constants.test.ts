@@ -40,7 +40,7 @@ describe("2026 rule constants", () => {
     expect(DRS_BOOST_MULTIPLIER).toBe(2)
   })
 
-  it("encodes the projection tuning (spec §6.2-§6.3)", () => {
+  it("encodes the projection tuning", () => {
     expect(EWMA_HALF_LIFE).toBe(3)
     expect(FORM_WINDOW).toBe(5)
     expect(SPRINT_PRIOR_SHRINKAGE_K).toBe(2)

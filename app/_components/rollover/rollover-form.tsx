@@ -12,12 +12,12 @@ import { BudgetStep } from "./budget-step"
 import { SquadStep } from "./squad-step"
 
 /**
- * ROLLOVER (spec §5.4): the server pointer advanced past the saved team's race,
- * so the user must reconcile before the new week opens. A stepped form — confirm
- * the squad (at new prices), confirm the bank, choose the transfer allowance /
- * chip — then commit via confirmRollover (which bumps the stored raceNumber and
- * flips the machine to OPEN). All state lives in useRolloverForm; this shell is
- * the banner + the three step cards + the confirm control.
+ * The ROLLOVER race-week state: the server's current race has moved past the
+ * saved team's race, so the user reconciles before the new week opens. A
+ * stepped form (confirm the squad at new prices, confirm the bank, choose the
+ * transfer allowance or chip) that commits via confirmRollover, which bumps the
+ * stored raceNumber and moves the race-week state to OPEN. All state lives in
+ * useRolloverForm; this component lays out the banner, steps, and confirm.
  */
 type RolloverFormProps = {
   from: number
@@ -29,7 +29,7 @@ type RolloverFormProps = {
 }
 
 export function RolloverForm({ from, to, assets, assetsById, team, onConfirm }: RolloverFormProps) {
-  const f = useRolloverForm({ team, to, assetsById, onConfirm })
+  const form = useRolloverForm({ team, to, assetsById, onConfirm })
 
   return (
     <div className="flex flex-col gap-5">
@@ -41,41 +41,40 @@ export function RolloverForm({ from, to, assets, assetsById, team, onConfirm }: 
       </div>
 
       <SquadStep
-        resolved={f.resolved}
-        unresolvedIds={f.unresolvedIds}
-        squadChoice={f.squadChoice}
-        onKeep={f.keepSquad}
-        onEdit={f.editSquad}
-        editing={f.editing}
+        resolved={form.resolved}
+        unresolvedIds={form.unresolvedIds}
+        squadChoice={form.squadChoice}
+        onKeep={form.keepSquad}
+        onEdit={form.editSquad}
+        editing={form.editing}
         assets={assets}
-        to={to}
-        closeEditor={f.closeEditor}
+        raceNumber={to}
+        onEditorDone={form.closeEditor}
       />
 
-      {f.squadChoice !== null && (
-        <BudgetStep bank={f.bank} bankInputRef={f.bankInputRef} legendRef={f.step2Ref} />
+      {form.squadChoice !== null && (
+        <BudgetStep bank={form.bank} bankInputRef={form.bankInputRef} legendRef={form.step2Ref} />
       )}
 
-      {f.step3Revealed && (
+      {form.step3Revealed && (
         <TransfersStep
-          transferChoice={f.transferChoice}
-          setTransferChoice={f.setTransferChoice}
-          chipChoice={f.chipChoice}
-          setChipChoice={f.setChipChoice}
-          legendRef={f.step3Ref}
+          transferChoice={form.transferChoice}
+          setTransferChoice={form.setTransferChoice}
+          chipChoice={form.chipChoice}
+          setChipChoice={form.setChipChoice}
+          legendRef={form.step3Ref}
         />
       )}
 
       <p role="status" aria-live="polite" className="sr-only">
-        {f.summary}
+        {form.summary}
       </p>
 
       <Button
         type="button"
         variant="primary-f1"
-        disabled={!f.canConfirm}
-        aria-disabled={!f.canConfirm || undefined}
-        onClick={f.handleConfirm}
+        disabled={!form.canConfirm}
+        onClick={form.handleConfirm}
         className="self-start"
       >
         Confirm and continue

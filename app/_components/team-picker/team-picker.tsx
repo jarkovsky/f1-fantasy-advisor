@@ -21,18 +21,16 @@ import { StartOverDialog } from "./start-over-dialog"
 import { PickerTable } from "./picker-table"
 
 /**
- * The team-setup flow as ONE Card (M5 redesign): two stacked kind tables on
- * the left — Drivers and Constructors, filtered by one shared search box —
- * and a narrow control column on the right (selection summary,
- * remaining-budget input, free-transfers control, status pill, the single Save
- * CTA). Selection is local DRAFT state until Save (useTeamDraft) — nothing
- * touches the store until the user commits.
+ * The team-setup flow as one Card: Drivers and Constructors tables on the left,
+ * filtered by a shared search box, and a control column on the right (selection
+ * summary, remaining budget, free transfers, status, Save). Selection is a local
+ * draft (useTeamDraft); nothing touches the store until Save.
  *
- * This container owns selection + validation logic; <PickerTable> is dumb and
- * just renders the draft. Validation is spec §5.1: the ONLY blockers are an
- * incomplete squad shape (need exactly 5+2) and a not-yet-entered bank.
- * Over-spend vs the $100M initial cap is NOT a blocker — mid-season prices
- * drift the binding constraint to team value + bank (spec §4.1).
+ * This container owns selection and validation; <PickerTable> only renders.
+ * The only blockers are an incomplete squad (exactly 5 drivers + 2
+ * constructors) and a bank that hasn't been entered. Spending over the $100M
+ * starting cap is deliberately not blocked: mid-season price changes make the
+ * real limit team value + bank, not the starting cap.
  */
 
 type TeamPickerProps = {
@@ -45,50 +43,43 @@ type TeamPickerProps = {
 export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps) {
   const { setTeam, reset } = useTeamStore()
   const { selected, setSelected, bank, freeTransfers, setFreeTransfers } = useTeamDraft(mode)
+  const bankId = useId()
 
   const byId = useMemo(() => new Map(assets.map((a) => [a.playerId, a])), [assets])
 
-  // One search box filters BOTH kind tables below.
   const [query, setQuery] = useState("")
-
-  // The two kind tables (user feedback: separate tables, not one filtered list).
   const drivers = useMemo(() => assets.filter((a) => a.kind === "driver"), [assets])
   const constructors = useMemo(() => assets.filter((a) => a.kind === "constructor"), [assets])
 
-  // --- Derived counts / spend ---------------------------------------------
-  const { driverCount, constructorCount, teamValueTenths } = useMemo(() => {
-    let driversN = 0
-    let constructorsN = 0
+  // Ids are sorted so the saved roster order is deterministic: drivers then
+  // constructors, each ascending by id.
+  const { driverIds, constructorIds, teamValueTenths } = useMemo(() => {
+    const pickedDrivers: string[] = []
+    const pickedConstructors: string[] = []
     let value = 0
     for (const id of selected) {
       const asset = byId.get(id)
       if (!asset) continue
       value += asset.priceTenths
-      if (asset.kind === "driver") driversN += 1
-      else constructorsN += 1
+      if (asset.kind === "driver") pickedDrivers.push(id)
+      else pickedConstructors.push(id)
     }
-    return { driverCount: driversN, constructorCount: constructorsN, teamValueTenths: value }
+    return {
+      driverIds: pickedDrivers.sort(),
+      constructorIds: pickedConstructors.sort(),
+      teamValueTenths: value,
+    }
   }, [selected, byId])
 
+  const driverCount = driverIds.length
+  const constructorCount = constructorIds.length
   const driversFull = driverCount >= SQUAD_DRIVERS
   const constructorsFull = constructorCount >= SQUAD_CONSTRUCTORS
 
-  // --- Validation (spec §5.1) ---------------------------------------------
   const squadComplete = driverCount === SQUAD_DRIVERS && constructorCount === SQUAD_CONSTRUCTORS
   const blocked = !squadComplete || !bank.entered
+  const liveMessage = statusMessage(squadComplete, bank.entered, driverCount, constructorCount)
 
-  // --- Live-region copy ----------------------------------------------------
-  const liveMessage = useMemo(() => {
-    if (!squadComplete) {
-      return `${SQUAD_DRIVERS} drivers and ${SQUAD_CONSTRUCTORS} constructors required — you have ${driverCount} drivers and ${constructorCount} constructors.`
-    }
-    if (!bank.entered) {
-      return "Squad complete — enter your remaining budget."
-    }
-    return "Team valid — recommendations ready."
-  }, [squadComplete, bank.entered, driverCount, constructorCount])
-
-  // --- Selection ----------------------------------------------------------
   function toggle(id: string): void {
     setSelected((prev) => {
       const next = new Set(prev)
@@ -98,7 +89,8 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
       }
       const asset = byId.get(id)
       if (!asset) return next
-      // Guard at the data layer too: never exceed a kind quota.
+      // The table already disables rows at quota; this keeps the invariant
+      // regardless of how a toggle arrives.
       if (asset.kind === "driver" && driversFull) return next
       if (asset.kind === "constructor" && constructorsFull) return next
       next.add(id)
@@ -106,21 +98,8 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
     })
   }
 
-  // --- Save / cancel / reset ----------------------------------------------
   function handleSave(): void {
     if (blocked) return
-    // Deterministic roster: drivers then constructors, each ascending by id.
-    const driverIds: string[] = []
-    const constructorIds: string[] = []
-    for (const id of selected) {
-      const asset = byId.get(id)
-      if (!asset) continue
-      if (asset.kind === "driver") driverIds.push(id)
-      else constructorIds.push(id)
-    }
-    const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
-    driverIds.sort(cmp)
-    constructorIds.sort(cmp)
     setTeam([...driverIds, ...constructorIds], bank.tenths, freeTransfers, raceNumber)
     onDone?.()
   }
@@ -130,23 +109,17 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
     onDone?.()
   }
 
-  const liveId = useId()
-  const bankId = useId()
-  const searchId = useId()
-
   return (
     <Card>
       <CardContent className="flex flex-col gap-4">
         {/* Live region: present from first render so changes are announced. */}
-        <div id={liveId} role="status" aria-live="polite" className="sr-only">
+        <div role="status" aria-live="polite" className="sr-only">
           {liveMessage}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-          {/* LEFT: one shared search box over the two kind tables. */}
           <div className="flex flex-col gap-4">
             <Input
-              id={searchId}
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -172,7 +145,6 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
             />
           </div>
 
-          {/* RIGHT: summary, budget, transfers, status, CTA. */}
           <div className="flex flex-col gap-5 lg:border-l lg:border-grid-line lg:pl-6">
             <p className="font-mono text-sm tabular-nums">
               Drivers {driverCount}/{SQUAD_DRIVERS} · Constructors {constructorCount}/
@@ -208,15 +180,8 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
               )}
             </div>
 
-            {/* Exactly ONE save button. Cancel + Start over only in edit mode. */}
             <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="primary-f1"
-                disabled={blocked}
-                aria-disabled={blocked || undefined}
-                onClick={handleSave}
-              >
+              <Button type="button" variant="primary-f1" disabled={blocked} onClick={handleSave}>
                 {mode === "edit" ? "Save changes" : "Save team & get advice"}
               </Button>
 
@@ -234,4 +199,18 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
       </CardContent>
     </Card>
   )
+}
+
+/** The polite live-region copy: what still blocks Save, or that the team is ready. */
+function statusMessage(
+  squadComplete: boolean,
+  bankEntered: boolean,
+  driverCount: number,
+  constructorCount: number
+): string {
+  if (!squadComplete) {
+    return `${SQUAD_DRIVERS} drivers and ${SQUAD_CONSTRUCTORS} constructors required — you have ${driverCount} drivers and ${constructorCount} constructors.`
+  }
+  if (!bankEntered) return "Squad complete — enter your remaining budget."
+  return "Team valid — recommendations ready."
 }

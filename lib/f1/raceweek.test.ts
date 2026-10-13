@@ -1,14 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  type RaceWeekConstraints,
-  type RaceWeekend,
-  parseConstraints,
-  parseRaceday,
-} from "./schemas"
+import { fixtureConstraints, fixtureWeekends } from "@/test/fixtures"
+
 import { deriveRaceWeekState, type RaceWeekInput } from "./raceweek"
-import constraintsFixture from "./__fixtures__/constraints.json"
-import racedayFixture from "./__fixtures__/raceday.excerpt.json"
 
 // Real Monaco race week (captured 2026-06-05):
 //   race 6 lock  = 2026-06-06T16:00:00+02:00  (Saturday qualifying)
@@ -19,23 +13,11 @@ const LOCK = Date.parse("2026-06-06T16:00:00+02:00")
 const RACE_END = Date.parse("2026-06-07T17:00:00+02:00")
 const RACE7_LOCK = Date.parse("2026-06-13T16:00:00+02:00")
 
-function constraints(): RaceWeekConstraints {
-  const res = parseConstraints(constraintsFixture)
-  if (!res.ok) throw new Error("constraints fixture failed to parse")
-  return res.data
-}
-
-function weekends(): RaceWeekend[] {
-  const res = parseRaceday(racedayFixture)
-  if (!res.ok) throw new Error("raceday fixture failed to parse")
-  return res.data
-}
-
 function input(overrides: Partial<RaceWeekInput>): RaceWeekInput {
   return {
     now: new Date(LOCK - 60_000),
-    constraints: constraints(),
-    raceWeekends: weekends(),
+    constraints: fixtureConstraints(),
+    raceWeekends: fixtureWeekends(),
     nextRacePublished: false,
     storedRaceNumber: 6,
     ...overrides,
@@ -63,7 +45,7 @@ describe("deriveRaceWeekState — happy path through the Monaco weekend", () => 
     expect(deriveRaceWeekState(input({ now: new Date(LOCK) })).kind).toBe("LOCKED")
   })
 
-  it("OPEN one second before, LOCKED one second after", () => {
+  it("OPEN one millisecond before, LOCKED one millisecond after", () => {
     expect(deriveRaceWeekState(input({ now: new Date(LOCK - 1) })).kind).toBe("OPEN")
     expect(deriveRaceWeekState(input({ now: new Date(LOCK + 1) })).kind).toBe("LOCKED")
   })
@@ -113,14 +95,14 @@ describe("deriveRaceWeekState — ROLLOVER precedence", () => {
 
 describe("deriveRaceWeekState — season boundaries & fallbacks", () => {
   it("SEASON_ENDED when the last race is completed", () => {
-    const done = { ...constraints(), raceNumber: 22, lastCompletedRace: 22 }
+    const done = { ...fixtureConstraints(), raceNumber: 22, lastCompletedRace: 22 }
     const state = deriveRaceWeekState(input({ constraints: done, storedRaceNumber: 22 }))
     expect(state).toEqual({ kind: "SEASON_ENDED", lastRace: 22 })
   })
 
   it("BETWEEN_ROUNDS when the pointer still sits on a completed race", () => {
     // Simulate post-Canada (race 5 completed, pointer not yet advanced):
-    const c = { ...constraints(), raceNumber: 5, lastCompletedRace: 5 }
+    const c = { ...fixtureConstraints(), raceNumber: 5, lastCompletedRace: 5 }
     const monday = Date.parse("2026-05-25T10:00:00Z")
     const state = deriveRaceWeekState(
       input({ constraints: c, storedRaceNumber: 5, now: new Date(monday) })
@@ -134,7 +116,7 @@ describe("deriveRaceWeekState — season boundaries & fallbacks", () => {
   })
 
   it("fallback: constraints point at a race the schedule doesn't know", () => {
-    const c = { ...constraints(), raceNumber: 99 }
+    const c = { ...fixtureConstraints(), raceNumber: 99 }
     const state = deriveRaceWeekState(input({ constraints: c, storedRaceNumber: 99 }))
     expect(state).toEqual({
       kind: "BETWEEN_ROUNDS",

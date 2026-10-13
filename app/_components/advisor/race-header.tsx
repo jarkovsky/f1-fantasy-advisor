@@ -6,16 +6,6 @@ import { Badge } from "@/components/ui/badge"
 
 import { DeadlineCountdown } from "@/app/_components/advisor/deadline-countdown"
 
-/**
- * The race-week header: Grand Prix name, circuit, a SPRINT marker, the compact
- * session timetable, and the live countdown slot.
- *
- * HYDRATION NOTE: the session times are formatted with Intl.DateTimeFormat in
- * the user's local zone (NO explicit timeZone). That is only safe because this
- * component renders POST-MOUNT inside the advisor island (the panel gates it
- * behind raceState !== null, which is itself mount-gated), so the server never
- * produces this markup and there is nothing to mismatch.
- */
 type RaceHeaderProps = {
   gpName: string
   circuitLocation: string
@@ -32,6 +22,16 @@ const sessionFmt = new Intl.DateTimeFormat(undefined, {
   minute: "2-digit",
 })
 
+/**
+ * The race-week header: Grand Prix name, circuit, a sprint marker, the compact
+ * session timetable, and the live countdown.
+ *
+ * Hydration: session times are formatted in the user's local zone (no explicit
+ * timeZone). That is only safe because this component renders post-mount
+ * inside the advisor island (the panel gates it behind raceState !== null,
+ * which is itself mount-gated), so the server never produces this markup and
+ * there is nothing to mismatch.
+ */
 export function RaceHeader({
   gpName,
   circuitLocation,
@@ -42,7 +42,7 @@ export function RaceHeader({
   return (
     <header className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        {/* h2: the page hero owns the h1 (M5 single-column redesign). */}
+        {/* h2: the page hero owns the h1. */}
         <h2 className="text-2xl font-semibold">{gpName}</h2>
         {isSprint && <Badge variant="sprint">SPRINT</Badge>}
       </div>

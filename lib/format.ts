@@ -1,12 +1,9 @@
 /**
- * Display formatting for money / points / dates (spec §10).
+ * Display formatting for money / points / dates, shared by the advisor and the
+ * /stats explorer. No wall-clock reads and no locale dependence, so server and
+ * client render identical strings.
  *
- * Extracted verbatim from the /stats asset table (the M1 exit surface) so the
- * advisor's <Delta> and the stats explorer share one source of truth. PURE:
- * no wall-clock reads, no locale dependence — every helper is unit-testable
- * and produces byte-identical output to the original inline code.
- *
- * Conventions, preserved exactly:
+ * Conventions:
  *  - Money lives in integer tenths-of-a-million; price prints as `$X.XM`.
  *  - Signed deltas use U+2212 MINUS (−), not the hyphen-minus, and render a
  *    bare middle dot `·` for an exact zero (no value churn).
@@ -35,7 +32,7 @@ export function formatPoints(p: number | null): string {
 /**
  * Signed points (advisor <Delta>) → `+11` / `−8` / `+18.4` / `·` (zero).
  * Projections are floats — round to one decimal first (the timing-screen
- * precision), THEN test for zero so `+0.04` collapses to `·`, not `+0.0`.
+ * precision), then test for zero so `+0.04` collapses to `·`, not `+0.0`.
  * Integer magnitudes stay bare (`+11`, never `+11.0`).
  */
 export function formatSignedPoints(p: number): string {

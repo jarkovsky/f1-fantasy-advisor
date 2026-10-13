@@ -6,7 +6,7 @@
  * bundled with the deploy (no fs tracing config) and available even when the
  * build machine has zero network.
  *
- * When `pnpm snapshot` captures a NEW race, add its import here —
+ * When `pnpm snapshot` captures a new race, add its import here —
  * snapshot-data.test.ts fails loudly if data/ and this map drift apart.
  */
 import "server-only"

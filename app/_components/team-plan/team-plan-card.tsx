@@ -23,11 +23,11 @@ import { DrsBoostRanking } from "./drs-boost-ranking"
 import { RosterPlanRow } from "./roster-plan-row"
 
 /**
- * The single merged "Your team" card (spec §10 M5): the recommended squad
- * rendered in place — kept slots look like the old your-team rows; swapped slots
- * show out→in inline with the per-swap delta (RosterPlanRow). The DRS chip and
- * DRS-Boost summary follow the optimizer's captain (result.best.captainId), not
- * a locally-derived one, so the card never disagrees with the engine.
+ * The "Your team" card: the recommended squad rendered in place, where kept slots
+ * are plain roster rows and swapped slots show out→in with the per-swap delta
+ * (RosterPlanRow). The DRS chip and DRS Boost summary follow the optimizer's
+ * captain (result.best.captainId) rather than a locally derived one, so the card
+ * never disagrees with the engine.
  */
 type TeamPlanCardProps = {
   roster: string[]
@@ -74,7 +74,7 @@ export function TeamPlanCard({
   )
 
   const free = freeTransfers === "unlimited" ? best.transfers : freeTransfers
-  const extra = Math.max(0, best.transfers - (free || 0))
+  const extra = Math.max(0, best.transfers - free)
   const penaltyPts = extra * Math.abs(EXTRA_TRANSFER_PENALTY)
 
   const captainName = assetsById[best.captainId]?.displayName ?? "—"
@@ -84,17 +84,16 @@ export function TeamPlanCard({
   const isWhatIf = whatIf !== "none"
   const budgetNegative = best.budgetLeftTenths < 0
 
-  // Budget bar: the recommended squad's value as a share of its own purse
-  // (squad cost + the leftover bank the plan reports — identical to the user's
-  // total purse, since a transfer never changes the total money on the table).
+  // Budget bar: the recommended squad's value as a share of its purse (squad
+  // cost + the plan's leftover bank). That equals the user's total purse, since
+  // transfers never change the total money available.
   const squadValueTenths = best.costTenths
   const purseTenths = squadValueTenths + best.budgetLeftTenths
   const spentPct = purseTenths > 0 ? Math.min(100, (squadValueTenths / purseTenths) * 100) : 0
 
-  // DRS Boost ranking — the plan's five drivers by projection desc.
   const ranked = useMemo(
     () =>
-      [...best.driverIds]
+      best.driverIds
         .map((id) => ({
           id,
           name: assetsById[id]?.displayName ?? `Asset ${id}`,
@@ -124,16 +123,7 @@ export function TeamPlanCard({
       </div>
 
       <ul className="flex flex-col gap-0.5">
-        {driverRows.map((row) => (
-          <RosterPlanRow
-            key={row.inId}
-            row={row}
-            captainId={best.captainId}
-            assetsById={assetsById}
-            totals={totals}
-          />
-        ))}
-        {constructorRows.map((row) => (
+        {[...driverRows, ...constructorRows].map((row) => (
           <RosterPlanRow
             key={row.inId}
             row={row}
@@ -186,8 +176,8 @@ export function TeamPlanCard({
       <div className="rounded-md bg-surface-2 p-3">
         <p className="text-sm font-medium">
           DRS Boost → {captainName}{" "}
-          {/* warn, not red: small text on the raised surface — red fails AA
-              there, and §10 reserves red for the primary action + deltas. */}
+          {/* Warn, not red: red small text fails AA contrast on the raised
+              surface, and red is reserved for the primary action and deltas. */}
           <span className="text-warn">(×{DRS_BOOST_MULTIPLIER})</span>
         </p>
         <p className="text-xs text-muted-foreground">

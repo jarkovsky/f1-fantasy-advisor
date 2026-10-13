@@ -4,6 +4,7 @@ import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
 import { teamColor } from "@/lib/team-colors"
 
+import { TeamColorBar } from "@/app/_components/shared/team-color-bar"
 import { RosterRow } from "@/app/_components/shared/roster-row"
 import { Delta } from "@/app/_components/shared/delta"
 
@@ -44,7 +45,6 @@ export function RosterPlanRow({
   )
 
   if (row.outId === null) {
-    // Kept row — the shared RosterRow with price + projection cells.
     return (
       <RosterRow
         color={colorFor(row.inId)}
@@ -66,30 +66,21 @@ export function RosterPlanRow({
     )
   }
 
-  // Swapped row: out → in, inline per-swap delta.
   const swapDelta = projOf(row.inId) - projOf(row.outId)
   return (
     <li className="flex items-center gap-2 py-1 text-sm">
-      {/* Muted color + strikethrough mark the outgoing asset; NO opacity on the
-          text wrapper — stacking it under muted-foreground fails WCAG AA
-          contrast (caught by the M4 Lighthouse pass). */}
+      {/* Muted color + strikethrough mark the outgoing asset. Opacity goes on
+          the color bar only: stacking it on muted-foreground text fails WCAG AA
+          contrast. */}
       <span className="flex min-w-0 items-center gap-1.5">
-        <span
-          aria-hidden="true"
-          className="h-3 w-[3px] shrink-0 rounded-full opacity-60"
-          style={{ background: colorFor(row.outId) }}
-        />
+        <TeamColorBar color={colorFor(row.outId)} className="h-3 opacity-60" />
         <span className="truncate text-muted-foreground line-through">{nameOf(row.outId)}</span>
       </span>
       <span aria-hidden="true" className="text-muted-foreground">
         →
       </span>
       <span className="flex min-w-0 flex-1 items-center gap-1.5">
-        <span
-          aria-hidden="true"
-          className="h-3 w-[3px] shrink-0 rounded-full"
-          style={{ background: colorFor(row.inId) }}
-        />
+        <TeamColorBar color={colorFor(row.inId)} className="h-3" />
         <span className="truncate font-medium">
           {nameOf(row.inId)}
           {captainChip}

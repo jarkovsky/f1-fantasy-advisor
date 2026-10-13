@@ -1,8 +1,7 @@
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
 import type { FeedProvenance } from "@/lib/advisor/types/contract"
-import type { Feed, FeedMeta } from "@/lib/f1/types/feed"
+import type { FeedMeta } from "@/lib/f1/types/feed"
 import type { AssetLite } from "@/lib/asset-lite"
-import type { Asset } from "@/lib/f1/schemas"
 
 import {
   getConstraints,
@@ -26,8 +25,8 @@ const CONCRETE_PRESETS: readonly ConcretePresetId[] = [
 ]
 
 /**
- * Worst-of provenance across the feeds this page consumed. If ANY feed served
- * a snapshot, the page is degraded → report "snapshot" with the EARLIEST asOf
+ * Worst-of provenance across the feeds this page consumed. If any feed served
+ * a snapshot, the page is degraded: report "snapshot" with the earliest asOf
  * among the snapshot feeds (the staleness the user is actually exposed to).
  * Otherwise live, stamped with the current drivers feed's asOf.
  */
@@ -48,11 +47,11 @@ function worstOfMeta(feeds: readonly { meta: FeedMeta }[], liveAsOf: string): Fe
 }
 
 /**
- * The advisor's single streamed data hole (plan D3): a fully cacheable async
- * RSC — NO searchParams, NO wall-clock. It fetches every feed, pre-computes the
+ * The advisor's single streamed data hole: a fully cacheable async RSC — no
+ * searchParams, no wall clock. It fetches every feed, pre-computes the
  * concrete-preset projections, trims the grid to AssetLite, and ships the
- * serializable ingredients to the client island, which runs the §5.4 state
- * machine itself.
+ * serializable ingredients to the client island, which runs the race-week
+ * state machine itself.
  */
 export async function AdvisorData() {
   // raceday and mixapi take no arguments and do not depend on constraints —
@@ -88,7 +87,7 @@ export async function AdvisorData() {
   const projectionsByPreset = projectAssetsMany(history.data, { isSprint }, CONCRETE_PRESETS)
 
   const seasonByPlayerId = history.data.byPlayerId
-  const assets: AssetLite[] = drivers.data.map((a: Asset) => ({
+  const assets: AssetLite[] = drivers.data.map((a) => ({
     playerId: a.playerId,
     kind: a.kind,
     displayName: a.displayName,
@@ -114,15 +113,7 @@ export async function AdvisorData() {
     }
   }
 
-  // Worst-of provenance across every consumed feed. lastRaceDrivers is
-  // included only when present.
-  const consumed: { meta: FeedMeta }[] = [
-    constraints as Feed<unknown>,
-    raceday,
-    drivers,
-    history,
-    mixapi,
-  ]
+  const consumed: { meta: FeedMeta }[] = [constraints, raceday, drivers, history, mixapi]
   if (lastRaceDrivers) consumed.push(lastRaceDrivers)
   const meta = worstOfMeta(consumed, drivers.meta.asOf)
 

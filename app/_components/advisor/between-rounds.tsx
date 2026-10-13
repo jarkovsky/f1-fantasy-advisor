@@ -18,20 +18,6 @@ import { Card } from "@/components/ui/card"
 import { NumCell } from "@/app/_components/shared/num-cell"
 import { Delta } from "@/app/_components/shared/delta"
 
-/**
- * BETWEEN_ROUNDS (spec §5.4): the last race is scored but the next drivers feed
- * is unpublished, so there is nothing to recommend yet (once it publishes the
- * machine flips to ROLLOVER automatically). We show honest results: what the
- * user scored versus what we projected, plus a per-asset actual-vs-projected
- * table. No roll-over CTA here — that belongs to ROLLOVER.
- *
- * Transient-window honesty: the state machine derives `lastCompleted` from the
- * wall clock (race end crossed), but the server's points map belongs to
- * `pointsRace` (constraints.lastCompletedRace), which lags until the feed
- * rescores. In the hours after a race ends those disagree — showing the OLD
- * race's numbers under the NEW race's headline would be a lie, so the
- * comparison renders only when the races match.
- */
 type BetweenRoundsProps = {
   lastCompleted: number
   /** Which race the lastRacePoints map belongs to (server-side pointer). */
@@ -42,6 +28,20 @@ type BetweenRoundsProps = {
   savedProjection: TeamStateV1["savedProjection"]
 }
 
+/**
+ * BETWEEN_ROUNDS: the last race is scored but the next drivers feed is
+ * unpublished, so there is nothing to recommend yet (once it publishes the
+ * state machine flips to ROLLOVER automatically). We show honest results: what
+ * the user scored versus what we projected, plus a per-asset actual-points
+ * table. No roll-over CTA here — that belongs to ROLLOVER.
+ *
+ * Transient-window honesty: the state machine derives `lastCompleted` from the
+ * wall clock (race end crossed), but the server's points map belongs to
+ * `pointsRace` (constraints.lastCompletedRace), which lags until the feed
+ * rescores. In the hours after a race ends those disagree — showing the old
+ * race's numbers under the new race's headline would be a lie, so the
+ * comparison renders only when the races match.
+ */
 export function BetweenRounds({
   lastCompleted,
   pointsRace,

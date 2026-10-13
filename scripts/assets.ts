@@ -4,17 +4,17 @@
  *
  * Headshots are bundled as local static assets (no runtime fetch, no CORS,
  * no hotlinking). OpenF1 data is CC BY-NC-SA — the footer credit in
- * app/layout.tsx is a license obligation, not cosmetics.
+ * app/_components/chrome/footer.tsx is a license obligation, not cosmetics.
  *
  * Properties:
- * - NEVER blocks the milestone: every failure (OpenF1 restricts global API
- *   access while a live F1 session is running, network down, unmatched
- *   driver) logs and continues; the UI falls back to monogram avatars for
- *   any missing file. Always exits 0.
+ * - Never fails the run: every failure (OpenF1 restricts global API access
+ *   while a live F1 session is running, network down, unmatched driver) logs
+ *   and continues; the UI falls back to monogram avatars for any missing
+ *   file. Always exits 0.
  * - Join key is the driver TLA: OpenF1 `name_acronym` ↔ our feed's
  *   `Asset.tla`, resolved to `playerId` via the committed snapshot so files
  *   are named by the stable id the UI already has.
- * - This script is the ONLY writer of public/headshots/. Never part of
+ * - This script is the only writer of public/headshots/. Never part of
  *   `next build`. Idempotent: existing files are kept unless --force.
  */
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises"

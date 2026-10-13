@@ -1,4 +1,5 @@
 import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/projection"
+import type { OptimizerInput, OptimizerResult } from "@/lib/optimizer/types/optimizer"
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
 import type { AdvisorServerProps } from "@/lib/advisor/types/contract"
 import type { RaceWeekConstraints } from "@/lib/f1/schemas"
@@ -20,8 +21,8 @@ import { fixtureWeekends } from "@/test/fixtures"
 
 // ---------------------------------------------------------------------------
 // next/navigation is mocked at module level. `searchParamsMock` is mutable so a
-// test can drive the URL-derived preset (test 12) before rendering; `replaceSpy`
-// captures router.replace for URL-sync assertions.
+// test can drive the URL-derived preset before rendering; `replaceSpy` captures
+// router.replace for URL-sync assertions.
 // ---------------------------------------------------------------------------
 let searchParamsMock = new URLSearchParams()
 const replaceSpy = vi.fn()
@@ -31,7 +32,7 @@ vi.mock("next/navigation", () => ({
 }))
 
 // Wrap optimize() in a counting passthrough: the real implementation still runs
-// (the oracle tests depend on it), but the call count lets the H2 regression
+// (the oracle tests depend on it), but the call count lets the stability test
 // assert the optimizer does not re-run on incidental re-renders.
 vi.mock("@/lib/optimizer/optimize", async (importActual) => {
   const actual = await importActual<typeof import("@/lib/optimizer/optimize")>()
@@ -215,6 +216,25 @@ function seedTeam(
   teamStore.setTeam(roster, budgetTenths, freeTransfers, raceNumber)
 }
 
+/** The squad most tests seed: d4–d8 + c2/c3, so the optimizer has upgrades to find. */
+const DEFAULT_ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
+
+const PLAN_HEADLINE = "vs keeping your current team"
+
+/** Waits for the optimizer to settle and the recommendation card to render. */
+function findPlanHeadline(): Promise<HTMLElement> {
+  return screen.findByText(PLAN_HEADLINE, undefined, { timeout: 15_000 })
+}
+
+/** The oracle: optimize() run inline on the same grid and totals the panel receives. */
+function expectedPlan({
+  totals,
+  ...input
+}: Omit<OptimizerInput, "assets"> & { totals: Record<string, number> }): OptimizerResult {
+  const { assets } = reconcileRoster(input.roster, toOptimizerAssets(GRID, totals))
+  return optimize({ ...input, assets })
+}
+
 let uninstallMatchMedia: () => void
 let uninstallResizeObserver: () => void
 
@@ -236,7 +256,7 @@ afterEach(() => {
 })
 
 // ---------------------------------------------------------------------------
-// 1. FIRST_VISIT — empty store → the team picker, no recommendation.
+// FIRST_VISIT — empty store → the team picker, no recommendation.
 // ---------------------------------------------------------------------------
 describe("FIRST_VISIT", () => {
   it("renders the team picker and no recommendation card", async () => {
@@ -244,60 +264,44 @@ describe("FIRST_VISIT", () => {
     render(<AdvisorPanel {...makeProps()} />)
 
     expect(await screen.findByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
-    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
+    expect(screen.queryByText(PLAN_HEADLINE)).not.toBeInTheDocument()
   })
 })
 
 // ---------------------------------------------------------------------------
-// 2. OPEN — the command center renders.
+// OPEN — the race header and recommendation render.
 // ---------------------------------------------------------------------------
 describe("OPEN", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("renders the race header and the recommended plan card", async () => {
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
     expect(await screen.findByRole("heading", { name: "Monaco Grand Prix" })).toBeInTheDocument()
-    expect(
-      await screen.findByText("vs keeping your current team", undefined, {
-        timeout: 15_000,
-      })
-    ).toBeInTheDocument()
+    expect(await findPlanHeadline()).toBeInTheDocument()
   })
 })
 
 // ---------------------------------------------------------------------------
-// 3. ORACLE EQUALITY — the rendered plan agrees with optimize() run inline on
-//    the same (weighted-recent default preset) inputs.
+// Oracle equality — the rendered plan agrees with optimize() run inline on the
+// same (weighted-recent default preset) inputs.
 // ---------------------------------------------------------------------------
 describe("OPEN — oracle equality", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
   const BANK = 500
   const FREE = 3
 
-  function expected() {
-    const grid = toOptimizerAssets(GRID, WEIGHTED)
-    const { assets } = reconcileRoster(ROSTER, grid)
-    return optimize({
-      assets,
-      roster: ROSTER,
-      budgetTenths: BANK,
-      freeTransfers: FREE,
-      mode: "normal",
-    })
-  }
-
   it("plan transfers, DRS pick, and headline gain match the optimizer", async () => {
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, BANK, FREE, 6)
+    seedTeam(DEFAULT_ROSTER, BANK, FREE, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
+    await findPlanHeadline()
+    const exp = expectedPlan({
+      roster: DEFAULT_ROSTER,
+      totals: WEIGHTED,
+      budgetTenths: BANK,
+      freeTransfers: FREE,
     })
-    const exp = expected()
 
     // Transfer chip.
     const tLabel = `${exp.best.transfers} transfer${exp.best.transfers === 1 ? "" : "s"}`
@@ -315,29 +319,27 @@ describe("OPEN — oracle equality", () => {
     // formatSignedPoints. Scope to the "vs keeping your current team" block.
     const baseline = exp.byTransferCount[0]?.projectedTotal ?? 0
     const gainText = formatSignedPoints(exp.best.score - baseline)
-    const block = screen.getByText("vs keeping your current team").parentElement as HTMLElement
+    const block = screen.getByText(PLAN_HEADLINE).parentElement as HTMLElement
     expect(within(block).getByText(gainText)).toBeInTheDocument()
   })
 })
 
 // ---------------------------------------------------------------------------
-// H2 REGRESSION — on custom-blend, an incidental re-render with identical props
-// (what the 30s clock tick triggers) must NOT re-run the optimizer. The
+// Regression — on custom-blend, an incidental re-render with identical props
+// (what the 30s clock tick triggers) must not re-run the optimizer. The
 // custom-blend projection builds a fresh map each call; a useMemo keeps it
 // referentially stable so `totals` — and the optimizer effect keyed on it —
 // stay put. Without the memo, every render re-ran the ~1.45M-combo search.
 // ---------------------------------------------------------------------------
 describe("OPEN — custom-blend optimizer stability", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("does not re-run the optimizer on a same-props re-render", async () => {
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     searchParamsMock = new URLSearchParams("preset=custom-blend")
     const props = makeProps()
     const { rerender } = render(<AdvisorPanel {...props} />)
 
-    await screen.findByText("vs keeping your current team", undefined, { timeout: 15_000 })
+    await findPlanHeadline()
     const before = vi.mocked(optimize).mock.calls.length
 
     // A same-props re-render is exactly what the 30s setNow tick triggers.
@@ -351,8 +353,8 @@ describe("OPEN — custom-blend optimizer stability", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 4. Penalty accounting — three big non-roster drivers make a 3-transfer plan
-//    optimal at 2 free transfers → a −10 penalty surfaces in both views.
+// Penalty accounting — three big non-roster drivers make a 3-transfer plan
+// optimal at 2 free transfers → a −10 penalty surfaces in both views.
 // ---------------------------------------------------------------------------
 describe("OPEN — transfer penalty", () => {
   const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c1", "c2"]
@@ -385,19 +387,14 @@ describe("OPEN — transfer penalty", () => {
       />
     )
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
-    })
+    await findPlanHeadline()
 
     // Confirm the optimizer truly chose 3 transfers (guards the fixture).
-    const grid = toOptimizerAssets(GRID, TOTALS)
-    const { assets } = reconcileRoster(ROSTER, grid)
-    const exp = optimize({
-      assets,
+    const exp = expectedPlan({
       roster: ROSTER,
+      totals: TOTALS,
       budgetTenths: 600,
       freeTransfers: 2,
-      mode: "normal",
     })
     expect(exp.best.transfers).toBe(3)
 
@@ -413,29 +410,22 @@ describe("OPEN — transfer penalty", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 5. DRS Boost ranking — collapsed by default; expanding shows five driver rows
-//    sorted by projection desc, with the optimizer captain starred on top.
+// DRS Boost ranking — collapsed by default; expanding shows five driver rows
+// sorted by projection desc, with the optimizer captain starred on top.
 // ---------------------------------------------------------------------------
 describe("OPEN — DRS Boost ranking", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("orders drivers by projection and stars the optimizer captain on top", async () => {
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
-    })
+    await findPlanHeadline()
 
-    const grid = toOptimizerAssets(GRID, WEIGHTED)
-    const { assets } = reconcileRoster(ROSTER, grid)
-    const exp = optimize({
-      assets,
-      roster: ROSTER,
+    const exp = expectedPlan({
+      roster: DEFAULT_ROSTER,
+      totals: WEIGHTED,
       budgetTenths: 500,
       freeTransfers: 3,
-      mode: "normal",
     })
 
     // The ranking lives in a default-collapsed Collapsible — open it first.
@@ -463,8 +453,8 @@ describe("OPEN — DRS Boost ranking", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 6. What-if wildcard — toggling it removes the penalty, marks it hypothetical,
-//    and removes the Apply CTA.
+// What-if wildcard — toggling it removes the penalty, marks it hypothetical,
+// and removes the Apply CTA.
 // ---------------------------------------------------------------------------
 describe("OPEN — wildcard what-if", () => {
   const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c1", "c2"]
@@ -474,9 +464,7 @@ describe("OPEN — wildcard what-if", () => {
     seedTeam(ROSTER, 600, 2, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
-    })
+    await findPlanHeadline()
     // Pre-toggle: an Apply button exists.
     expect(screen.getByRole("button", { name: /apply this plan/i })).toBeInTheDocument()
 
@@ -490,8 +478,8 @@ describe("OPEN — wildcard what-if", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 7. What-if limitless — budget ignored; the explicit copy appears and the
-//    post-transfer bank can go negative.
+// What-if limitless — budget ignored; the explicit copy appears and the
+// post-transfer bank can go negative.
 // ---------------------------------------------------------------------------
 describe("OPEN — limitless what-if", () => {
   // Cheap roster, tiny bank: the raw-max squad (priciest, best-projected drivers)
@@ -503,9 +491,7 @@ describe("OPEN — limitless what-if", () => {
     seedTeam(ROSTER, 20, 2, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
-    })
+    await findPlanHeadline()
 
     const user = userEvent.setup()
     await user.click(screen.getByRole("switch", { name: "Limitless (what-if)" }))
@@ -514,11 +500,9 @@ describe("OPEN — limitless what-if", () => {
 
     // The optimizer ignores budget → the best squad is the priciest drivers, so
     // the post-transfer bank is negative (rendered with a leading minus).
-    const grid = toOptimizerAssets(GRID, WEIGHTED)
-    const { assets } = reconcileRoster(ROSTER, grid)
-    const exp = optimize({
-      assets,
+    const exp = expectedPlan({
       roster: ROSTER,
+      totals: WEIGHTED,
       budgetTenths: 20,
       freeTransfers: "unlimited",
       mode: "limitless",
@@ -528,44 +512,36 @@ describe("OPEN — limitless what-if", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 8. ROLLOVER beats OPEN — seeded raceNumber 5 → reconciliation banner, no plan;
-//    completing the form opens the command center.
+// ROLLOVER beats OPEN — seeded raceNumber 5 → reconciliation banner, no plan;
+// completing the form opens the recommendation.
 // ---------------------------------------------------------------------------
 describe("ROLLOVER", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("renders the reconcile banner instead of the plan, then opens on confirm", async () => {
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 5) // entered for race 5; pointer is on 6
+    seedTeam(DEFAULT_ROSTER, 500, 3, 5) // entered for race 5; pointer is on 6
     render(<AdvisorPanel {...makeProps()} />)
 
     expect(await screen.findByText("New race week — confirm your team.")).toBeInTheDocument()
-    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
+    expect(screen.queryByText(PLAN_HEADLINE)).not.toBeInTheDocument()
 
     const user = userEvent.setup()
     await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
     await user.click(screen.getByRole("radio", { name: /Standard \(2 free\)/i }))
     await user.click(screen.getByRole("button", { name: /confirm and continue/i }))
 
-    // raceNumber bumped to 6 → OPEN → the command center appears.
-    expect(
-      await screen.findByText("vs keeping your current team", undefined, {
-        timeout: 15_000,
-      })
-    ).toBeInTheDocument()
+    // raceNumber bumped to 6 → OPEN → the recommendation appears.
+    expect(await findPlanHeadline()).toBeInTheDocument()
     expect(teamStore.getSnapshot().raceNumber).toBe(6)
   })
 })
 
 // ---------------------------------------------------------------------------
-// 9. LOCKED — inside the lock window: read-only, no Apply / transfer CTA.
+// LOCKED — inside the lock window: read-only, no Apply / transfer CTA.
 // ---------------------------------------------------------------------------
 describe("LOCKED", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("renders the locked read-only view with no apply action", async () => {
     seedDevNow(INSIDE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
     expect(await screen.findByText(/Team locked for the Monaco Grand Prix\./)).toBeInTheDocument()
@@ -573,19 +549,17 @@ describe("LOCKED", () => {
     expect(screen.getByText("Driver 4")).toBeInTheDocument()
     // … but there is no apply / recommendation CTA.
     expect(screen.queryByRole("button", { name: /apply this plan/i })).not.toBeInTheDocument()
-    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
+    expect(screen.queryByText(PLAN_HEADLINE)).not.toBeInTheDocument()
   })
 })
 
 // ---------------------------------------------------------------------------
-// 10. SEASON_ENDED — final round scored, no next race.
+// SEASON_ENDED — final round scored, no next race.
 // ---------------------------------------------------------------------------
 describe("SEASON_ENDED", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("renders the season wrap copy", async () => {
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     render(
       <AdvisorPanel
         {...makeProps({
@@ -598,13 +572,13 @@ describe("SEASON_ENDED", () => {
     )
 
     expect(await screen.findByText("That's a wrap on the 2026 season.")).toBeInTheDocument()
-    expect(screen.queryByText("vs keeping your current team")).not.toBeInTheDocument()
+    expect(screen.queryByText(PLAN_HEADLINE)).not.toBeInTheDocument()
   })
 })
 
 // ---------------------------------------------------------------------------
-// 11. Unresolvable saved id — a roster id absent from the grid still optimizes
-//     (placeholder), surfacing both the "no longer available" tile and a plan.
+// Unresolvable saved id — a roster id absent from the grid still optimizes
+// (placeholder), surfacing both the "no longer available" tile and a plan.
 // ---------------------------------------------------------------------------
 describe("OPEN — unresolvable saved id", () => {
   const ROSTER = ["ghost1", "d5", "d6", "d7", "d8", "c2", "c3"]
@@ -614,32 +588,24 @@ describe("OPEN — unresolvable saved id", () => {
     seedTeam(ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    expect(
-      await screen.findByText("vs keeping your current team", undefined, {
-        timeout: 15_000,
-      })
-    ).toBeInTheDocument()
+    expect(await findPlanHeadline()).toBeInTheDocument()
     expect(screen.getAllByText(/no longer available\./).length).toBeGreaterThanOrEqual(1)
   })
 })
 
 // ---------------------------------------------------------------------------
-// 12. Preset switch re-projects — ?preset=season-average drives the merged
-//     card's roster rows to the season-average numbers. d4 stays in the
-//     recommended squad under season-average, so it renders as a kept row.
+// Preset switch re-projects — ?preset=season-average drives the merged card's
+// roster rows to the season-average numbers. d4 stays in the recommended squad
+// under season-average, so it renders as a kept row.
 // ---------------------------------------------------------------------------
 describe("OPEN — preset switch", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("uses the season-average projection when the URL selects it", async () => {
     searchParamsMock = new URLSearchParams("preset=season-average")
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
-    })
+    await findPlanHeadline()
 
     // The merged "Your team" card renders each kept asset's projected total.
     // d4's season-average total (65.0) differs from its weighted-recent (70.0).
@@ -652,12 +618,10 @@ describe("OPEN — preset switch", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 13. Cold start — every concrete preset is coldStart with effective equal-ppm:
-//     the controls show the cold-start note and grey the history presets.
+// Cold start — every concrete preset is coldStart with effective equal-ppm: the
+// controls show the cold-start note and grey the history presets.
 // ---------------------------------------------------------------------------
 describe("OPEN — cold start", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   function coldStartPresets(): Record<ConcretePresetId, ProjectionResult> {
     const cold = (id: ConcretePresetId): ProjectionResult =>
       makeProjection(EQUAL_PPM, id, {
@@ -680,12 +644,10 @@ describe("OPEN — cold start", () => {
     Element.prototype.releasePointerCapture = vi.fn()
 
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps({ projectionsByPreset: coldStartPresets() })} />)
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
-    })
+    await findPlanHeadline()
 
     // Cold-start note (always rendered when coldStart).
     expect(screen.getByText(/Race 1 — no history yet/)).toBeInTheDocument()
@@ -704,30 +666,23 @@ describe("OPEN — cold start", () => {
 })
 
 // ---------------------------------------------------------------------------
-// 14. Merged card rows — kept slots render plain (no strikethrough); swapped
-//     slots strike the out-asset and bold the in-asset; the DRS chip lands on
-//     the recommended captain's row.
+// Merged card rows — kept slots render plain (no strikethrough); swapped slots
+// strike the out-asset and bold the in-asset; the DRS chip lands on the
+// recommended captain's row.
 // ---------------------------------------------------------------------------
 describe("OPEN — merged card rows", () => {
-  const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
-
   it("distinguishes kept vs swapped rows and chips the captain", async () => {
     seedDevNow(BEFORE_LOCK)
-    seedTeam(ROSTER, 500, 3, 6)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
 
-    await screen.findByText("vs keeping your current team", undefined, {
-      timeout: 15_000,
-    })
+    await findPlanHeadline()
 
-    const grid = toOptimizerAssets(GRID, WEIGHTED)
-    const { assets } = reconcileRoster(ROSTER, grid)
-    const exp = optimize({
-      assets,
-      roster: ROSTER,
+    const exp = expectedPlan({
+      roster: DEFAULT_ROSTER,
+      totals: WEIGHTED,
       budgetTenths: 500,
       freeTransfers: 3,
-      mode: "normal",
     })
 
     const heading = screen.getByRole("heading", { name: "Your team" })
@@ -737,15 +692,21 @@ describe("OPEN — merged card rows", () => {
 
     // A kept driver (in both the roster and the recommended plan) renders
     // without a strikethrough. d4 and d5 survive under weighted-recent.
-    const keptId = exp.best.driverIds.find((id) => ROSTER.includes(id) && id !== exp.best.captainId)
+    const keptId = exp.best.driverIds.find(
+      (id) => DEFAULT_ROSTER.includes(id) && id !== exp.best.captainId
+    )
     expect(keptId).toBeDefined()
     const keptName = within(card).getByText(nameOf(keptId as string))
     expect(keptName.className).not.toContain("line-through")
 
     // A swapped slot: the out-asset is struck through, the in-asset is bold.
     // Pick a non-captain in-asset so its name span carries no nested DRS chip.
-    const inId = exp.best.driverIds.find((id) => !ROSTER.includes(id) && id !== exp.best.captainId)
-    const outId = ROSTER.filter((id) => id.startsWith("d") && !exp.best.driverIds.includes(id))[0]
+    const inId = exp.best.driverIds.find(
+      (id) => !DEFAULT_ROSTER.includes(id) && id !== exp.best.captainId
+    )
+    const outId = DEFAULT_ROSTER.filter(
+      (id) => id.startsWith("d") && !exp.best.driverIds.includes(id)
+    )[0]
     expect(inId).toBeDefined()
     expect(outId).toBeDefined()
     const outName = within(card).getByText(nameOf(outId as string))

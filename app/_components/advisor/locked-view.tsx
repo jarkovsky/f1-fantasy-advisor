@@ -2,8 +2,6 @@
 
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 
-import { useMemo } from "react"
-
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { pickDrsCaptainId } from "@/lib/optimizer/drs-boost"
 import { DRS_BOOST_MULTIPLIER } from "@/lib/constants"
@@ -15,13 +13,6 @@ import { Card } from "@/components/ui/card"
 
 import { RosterRow } from "@/app/_components/shared/roster-row"
 
-/**
- * LOCKED state (spec §5.4): the team is locked for the current weekend, so the
- * advisor is read-only. Projected points and the DRS Boost pick are computed
- * directly from the STORED roster's projections (a plain sum plus the
- * best-driver bonus — no optimizer search; nothing can change). When a later
- * weekend exists, the next lock time is shown.
- */
 type LockedViewProps = {
   gpName: string
   live: boolean
@@ -40,6 +31,13 @@ const lockFmt = new Intl.DateTimeFormat(undefined, {
   timeZoneName: "short",
 })
 
+/**
+ * LOCKED: the team is locked for the current weekend, so the advisor is
+ * read-only. Projected points and the DRS Boost pick come straight from the
+ * stored roster's projections (a plain sum plus the best-driver bonus — no
+ * optimizer search, since nothing can change). When a later weekend exists,
+ * the next lock time is shown.
+ */
 export function LockedView({
   gpName,
   live,
@@ -48,19 +46,12 @@ export function LockedView({
   projection,
   nextLockAtMs,
 }: LockedViewProps) {
-  const resolved = useMemo(
-    () => roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined),
-    [roster, assetsById]
-  )
+  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
   const projOf = (id: string): number => projection.byPlayerId[id]?.totalPoints ?? 0
 
-  const captainId = useMemo(
-    () =>
-      pickDrsCaptainId(
-        resolved.filter((a) => a.kind === "driver").map((d) => d.playerId),
-        (id) => projection.byPlayerId[id]?.totalPoints ?? 0
-      ),
-    [resolved, projection]
+  const captainId = pickDrsCaptainId(
+    resolved.filter((a) => a.kind === "driver").map((d) => d.playerId),
+    projOf
   )
   const captain = captainId ? assetsById[captainId] : undefined
   const projectedSum = resolved.reduce((s, a) => s + projOf(a.playerId), 0)

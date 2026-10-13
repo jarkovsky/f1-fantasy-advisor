@@ -5,8 +5,8 @@ import { useTeamStore } from "@/lib/team/store"
 import { Card } from "@/components/ui/card"
 
 /**
- * The standing honesty disclaimer (spec §4.4): projections are not predictions.
- * Dismissible; once dismissed it stays hidden (persisted in the team store).
+ * The standing disclaimer that projections are not predictions. Dismissible;
+ * once dismissed it stays hidden (persisted in the team store).
  */
 export function HonestyNote() {
   const { state, dismissHonestyNote } = useTeamStore()

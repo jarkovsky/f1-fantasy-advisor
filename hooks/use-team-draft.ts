@@ -1,5 +1,7 @@
 "use client"
 
+import type { TeamStateV1 } from "@/lib/team/types/team-state"
+
 import { useState } from "react"
 
 import { formatBankTenths } from "@/lib/team/bank"
@@ -7,16 +9,16 @@ import { useTeamStore } from "@/lib/team/store"
 
 import { useBankInput, type UseBankInputReturn } from "@/hooks/use-bank-input"
 
-export type FreeTransfers = 2 | 3 | "unlimited"
+export type FreeTransfers = TeamStateV1["freeTransfers"]
 
 /**
- * The team-picker's local DRAFT state (roster selection, bank, free transfers),
- * held until Save. In edit mode it seeds from the store — but the store hydrates
- * AFTER the first render (localStorage is read lazily on subscribe), so the seed
- * runs during render, guarded to fire exactly once when hydration first lands.
- * That is React's documented escape hatch for adjusting state to an external
- * value and avoids the cascading re-render an effect would cause. First-run
- * seeds nothing: empty squad, "unlimited" default (the first-race framing).
+ * The team picker's local draft (roster selection, bank, free transfers), held
+ * until Save. Edit mode seeds it from the store, but the store hydrates after
+ * the first render (localStorage is read lazily on subscribe), so the seed runs
+ * during render, guarded to fire once when hydration lands. That is React's
+ * documented pattern for adjusting state to an external value, and it avoids
+ * the extra render an effect would cause. First-run seeds nothing: an empty
+ * squad and "unlimited" free transfers, as for a first race.
  */
 export function useTeamDraft(mode: "first-run" | "edit"): {
   selected: Set<string>

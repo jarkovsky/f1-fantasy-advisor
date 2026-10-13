@@ -8,15 +8,15 @@ import { StatsTable } from "./stats-table"
 import { DataAsOf } from "./data-as-of"
 
 /**
- * /stats data hole (spec §5.3): the page's one async RSC. It assembles the full
+ * The /stats data hole: the page's one async RSC. It assembles the full
  * per-asset dataset on the server and ships a plain serializable StatsRow[] to
- * the <StatsTable> client island for instant in-browser sorting. The dataset is
- * deliberately client-shipped — 33 assets × ≤22 races of numbers is well under
- * 100KB (README documents the tradeoff). Keeps the DataAsOf provenance banner.
+ * the <StatsTable> client island for instant in-browser sorting. Shipping the
+ * whole dataset is deliberate — 33 assets × ≤22 races of numbers is well under
+ * 100KB.
  */
 export async function AssetTable() {
   const constraints = await getConstraints()
-  // Resolve the race number BEFORE the cached calls: primitive args only.
+  // The cached fetchers key on primitive args, so resolve the race numbers first.
   const race = constraints.data?.raceNumber ?? 1
   const lastCompleted = constraints.data?.lastCompletedRace ?? 0
   const [feed, history] = await Promise.all([
@@ -70,7 +70,7 @@ export async function AssetTable() {
   )
 }
 
-/** Mean of the last ≤5 SCORED per-race points; null when the asset has none. */
+/** Mean of the last ≤5 scored per-race points; null when the asset has none. */
 function form5(hist: AssetHistory | undefined): number | null {
   if (!hist) return null
   const scored = hist.perRace
@@ -82,7 +82,7 @@ function form5(hist: AssetHistory | undefined): number | null {
 }
 
 /**
- * Mean of one session's points over the SCORED races where that session ran;
+ * Mean of one session's points over the scored races where that session ran;
  * null when the session never occurred (e.g. Sprint Qualifying on a non-sprint
  * calendar, or pre-first-scored-race). A session present but null-pointed (pre-
  * race) is excluded by the scored filter.

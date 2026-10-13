@@ -17,13 +17,6 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Card } from "@/components/ui/card"
 
-/**
- * The "Advanced" projection controls: the model preset picker (history presets
- * greyed at cold start / below their minimum race count), the custom-blend
- * weight slider, and the two mutually-exclusive what-if chips (Wildcard /
- * Limitless — hypotheticals only, never saved). A confidence line states the
- * sample size and warns at cold start.
- */
 type ProjectionControlsProps = {
   preset: PresetId
   onPresetChange: (id: PresetId) => void
@@ -34,6 +27,13 @@ type ProjectionControlsProps = {
   projection: ProjectionResult
 }
 
+/**
+ * The "Advanced" projection controls: the model preset picker (history presets
+ * greyed at cold start / below their minimum race count), the custom-blend
+ * weight slider, and the two mutually-exclusive what-if chips (Wildcard /
+ * Limitless — hypotheticals only, never saved). A confidence line states the
+ * sample size and warns at cold start.
+ */
 export function ProjectionControls({
   preset,
   onPresetChange,

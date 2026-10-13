@@ -7,9 +7,9 @@ import { useMemo } from "react"
 import { deriveRaceWeekState, type RaceWeekState } from "@/lib/f1/raceweek"
 
 /**
- * Derive the §5.4 race-week state on the client. Returns null until the clock
- * has mounted and the store has hydrated — the two illegal-to-prerender inputs
- * (`now` and `storedRaceNumber`) never reach the server.
+ * Derive the race-week state on the client. Returns null until the clock has
+ * mounted and the store has hydrated, so the two inputs that must never be
+ * prerendered (`now` and `storedRaceNumber`) never reach the server.
  */
 export function useRaceWeekState(args: {
   now: number | null

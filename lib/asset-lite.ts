@@ -7,8 +7,8 @@
  * own totals are contaminated; history.ts recomputes them) and a resolved
  * headshot path (null → the card renders a monogram avatar instead).
  *
- * PURE shape + one pure join helper. No I/O, no wall-clock — safe to import
- * from a server RSC or a "use client" island alike.
+ * A type plus one pure helper, with no I/O — safe to import from a server RSC
+ * or a "use client" island alike.
  */
 
 export type AssetLite = {
@@ -24,17 +24,17 @@ export type AssetLite = {
   /** Driver's team id (= the constructor's playerId); null for constructors. */
   constructorId: string | null
   teamName: string | null
-  /** Recomputed cumulative season points (history.ts), NOT the feed total. */
+  /** Recomputed cumulative season points (history.ts), not the feed total. */
   seasonPoints: number
-  /** `/headshots/{playerId}.png` when bundled, else null → monogram fallback. */
+  /** `/headshots/{playerId}.{ext}` when bundled, else null → monogram fallback. */
   headshotPath: string | null
 }
 
 /**
  * The team-color join key (lib/team-colors.ts is keyed by constructor playerId):
- * a constructor joins on its OWN playerId, a driver on its constructorId. Either
- * can be missing (a brand-new driver before the team link lands) → null, which
- * teamColor() resolves to the neutral grid line.
+ * a constructor joins on its own playerId, a driver on its constructorId. A
+ * driver's constructorId can be null (a brand-new driver before the team link
+ * lands), which teamColor() resolves to the neutral grid line.
  */
 export function assetColorKey(
   a: Pick<AssetLite, "kind" | "playerId" | "constructorId">

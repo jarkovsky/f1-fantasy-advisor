@@ -11,7 +11,6 @@ export function RosterRow({
   tla,
   name,
   children,
-  barClassName,
 }: {
   color: string
   /** Renders the w-10 mono TLA column when present. */
@@ -19,11 +18,10 @@ export function RosterRow({
   name: React.ReactNode
   /** Right-aligned metric cells (widths owned by the caller). */
   children?: React.ReactNode
-  barClassName?: string
 }) {
   return (
     <li className="flex items-center gap-2 py-1 text-sm">
-      <TeamColorBar color={color} className={barClassName} />
+      <TeamColorBar color={color} />
       {tla !== undefined && (
         <span className="w-10 shrink-0 font-mono text-xs text-muted-foreground">{tla}</span>
       )}

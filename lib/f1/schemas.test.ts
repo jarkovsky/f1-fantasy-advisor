@@ -16,7 +16,7 @@ import race1 from "./__fixtures__/drivers.race1.json"
 import race4 from "./__fixtures__/drivers.race4.json"
 import race6 from "./__fixtures__/drivers.race6.json"
 
-// Fixtures are slimmed REAL payloads captured 2026-06-05 (race 6 = Monaco,
+// Fixtures are slimmed real payloads captured 2026-06-05 (race 6 = Monaco,
 // pre-race). Each drivers fixture keeps the same 4 assets: Gasly (18),
 // Verstappen (131), Mercedes (28), Red Bull (29).
 
@@ -170,10 +170,10 @@ describe("parseRaceday — session rows → RaceWeekend[]", () => {
     expect(w.map((x) => x.raceNumber)).toEqual([5, 6, 7])
   })
 
-  it("derives the REAL lock from the first session's ISO8601 start", () => {
+  it("derives the real lock from the first session's ISO8601 start", () => {
     const monaco = weekends().find((w) => w.raceNumber === 6)
     if (!monaco) throw new Error("no race 6")
-    // Monaco quali 2026-06-06 16:00 +02:00 — NOT constraints.DeadlineDate
+    // Monaco quali 2026-06-06 16:00 +02:00 — not constraints.DeadlineDate
     expect(monaco.lockAtMs).toBe(Date.parse("2026-06-06T16:00:00+02:00"))
     expect(monaco.raceEndsApproxMs).toBe(Date.parse("2026-06-07T17:00:00+02:00"))
     expect(monaco.gpName).toBe("Monaco Grand Prix")

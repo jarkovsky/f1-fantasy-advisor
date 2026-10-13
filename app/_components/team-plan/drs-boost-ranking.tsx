@@ -1,7 +1,3 @@
-"use client"
-
-import { useState } from "react"
-
 import { formatSignedPoints } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -15,17 +11,9 @@ export function DrsBoostRanking({
   ranked: { id: string; name: string; projected: number }[]
   captainId: string
 }) {
-  const [rankOpen, setRankOpen] = useState(false)
-
   return (
-    <Collapsible
-      open={rankOpen}
-      onOpenChange={setRankOpen}
-      className="rounded-lg border border-grid-line bg-surface-2/40"
-    >
+    <Collapsible className="rounded-lg border border-grid-line bg-surface-2/40">
       <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
-        {/* Heading semantics live INSIDE the trigger so tests find the ranking
-            either by role=heading or by the button's name. */}
         <h3 className="text-sm font-semibold">DRS Boost ranking</h3>
         <span aria-hidden="true" className="text-muted-foreground">
           ⌄

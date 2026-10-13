@@ -22,7 +22,7 @@ function TableSkeleton() {
 export default function StatsPage() {
   return (
     <main className="mx-auto flex min-h-svh max-w-6xl flex-col gap-8 px-6 py-8 md:py-14">
-      {/* Reference-style hero, matching the advisor page (spec §10 M5). */}
+      {/* Same hero treatment as the advisor page (app/page.tsx). */}
       <header className="flex flex-col items-center gap-4 text-center">
         <h1 className="text-5xl font-bold tracking-tight text-balance md:text-7xl">
           Stats explorer

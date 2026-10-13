@@ -64,7 +64,7 @@
 }
 
 :root {
-  /* Light-first (spec §10 M5): grey paper page, white cards — modeled on the
+  /* Light-first: grey paper page, white cards — modeled on the
        timing-sheet-on-paper look. The page grey matches --surface-0. */
   --background: oklch(0.975 0.002 247);
   --foreground: oklch(0.145 0 0);
@@ -102,9 +102,9 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
-  /* F1 red — reserved for the primary action and deltas ONLY (spec §10).
-       Darker than the dark-theme red: small red text must clear AA on the
-       white card AND the grey page. */
+  /* F1 red — reserved for the primary action and deltas.
+       Darker than the dark-theme red: small red text must clear AA on both
+       the white card and the grey page. */
   --accent-f1: oklch(0.505 0.215 26);
   --accent-f1-foreground: oklch(0.985 0 0);
   --accent-f1-hover: oklch(0.46 0.21 26);
@@ -131,7 +131,7 @@
 }
 
 .dark {
-  /* Carbon telemetry surfaces — near-black with a faint cool cast (spec §10). */
+  /* Carbon telemetry surfaces — near-black with a faint cool cast. */
   --background: oklch(0.135 0.004 265);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.175 0.004 265);
@@ -164,7 +164,7 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 
-  /* F1 red — reserved for the primary action and deltas ONLY (spec §10).
+  /* F1 red — reserved for the primary action and deltas.
        Not a --primary remap; --destructive stays for errors. AA on --background. */
   --accent-f1: oklch(0.62 0.233 26);
   --accent-f1-foreground: oklch(0.985 0 0);

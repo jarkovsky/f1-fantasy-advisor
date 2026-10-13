@@ -11,7 +11,7 @@ import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
 // Deterministic grid (mirrors team-picker.test.tsx). LockedView is read-only:
-// it sums the STORED roster's projections directly (no optimizer). We feed a
+// it sums the stored roster's projections directly (no optimizer). We feed a
 // hand-rolled ProjectionResult so the projected total and DRS Boost pick are
 // exact, and assert no transfer/apply CTA exists.
 // ---------------------------------------------------------------------------

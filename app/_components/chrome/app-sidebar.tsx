@@ -10,12 +10,11 @@ import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
 
-/**
- * App chrome (spec §10 M5): a floating icon rail on md+ — a rounded card
- * sticky beside the content, reference-styled — and a slim top bar below md.
- * Pure client chrome: active state needs usePathname, the mode toggle needs
- * next-themes; both are cheap and outside the PPR data hole.
- */
+// App chrome: a floating icon rail on md+ (a rounded card, sticky beside the
+// content) and a slim top bar below md. Client components because the active
+// state needs usePathname and the mode toggle needs next-themes; both are cheap
+// and render outside the streamed data holes.
+
 const NAV_ITEMS = [
   { href: "/", label: "Advisor", icon: Gauge },
   { href: "/stats", label: "Stats", icon: ChartColumn },

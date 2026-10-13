@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-// @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
@@ -60,7 +59,7 @@ describe("MobileTopBar", () => {
 })
 
 describe("ModeToggle", () => {
-  it("flips the html class dark→light→dark and persists the choice", async () => {
+  it("flips the html class light→dark→light and persists the choice", async () => {
     const user = userEvent.setup()
     render(
       <ThemeProvider>

@@ -1,8 +1,8 @@
 /**
- * 2026 F1 Fantasy rule constants (spec §4.1, §7).
+ * 2026 F1 Fantasy rule constants.
  *
  * All money values are integer tenths-of-a-million dollars: float sums of
- * 0.1s break exact budget-boundary comparisons in the optimizer (spec §7).
+ * 0.1s break exact budget-boundary comparisons in the optimizer.
  */
 
 /** Squad shape: 5 drivers + 2 constructors (2nd constructor new for 2026). */
@@ -21,15 +21,15 @@ export const FREE_TRANSFERS = { min: 2, max: 3 } as const
 /** Points penalty per transfer beyond the free allowance. */
 export const EXTRA_TRANSFER_PENALTY = -10
 
-/** Initial cost cap, in tenths of a million ($100.0M). Affordability is bank-based after race 1 (spec §7). */
+/** Initial cost cap, in tenths of a million ($100.0M). Affordability is bank-based after race 1. */
 export const INITIAL_BUDGET_TENTHS = 1000
 
 /** DRS Boost: doubles one driver's race-weekend score, free every week. */
 export const DRS_BOOST_MULTIPLIER = 2
 
 // ---------------------------------------------------------------------------
-// Projection model tuning (spec §6.2–§6.3). These live here (model axis), not
-// in lib/f1/config.ts (vendor-feed axis).
+// Projection model tuning. These live here (model axis), not in
+// lib/f1/config.ts (vendor-feed axis).
 // ---------------------------------------------------------------------------
 
 /** "Weighted recent": weight halves every N races (effective window ≈ 5). */

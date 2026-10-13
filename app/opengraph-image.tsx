@@ -2,23 +2,18 @@ import { ImageResponse } from "next/og"
 
 import { TEAM_COLORS } from "@/lib/team-colors"
 
-// Dynamic OG card (spec §9.3 "Dynamic OG image"), telemetry-styled.
+// Generated OG card, styled like an F1 timing screen.
 //
-// NETWORK-FREE BY CONTRACT: this route renders at build under PPR and must stay
-// offline-deterministic. No font fetching (we lean on satori's bundled default
-// font), no Google Fonts, no fs reads, no feed/network access. Palette values
-// below are inlined as hex/oklch to mirror app/globals.css since satori cannot
-// resolve CSS custom properties.
+// Network-free by design: no font fetching (satori's bundled default font is
+// used), no Google Fonts, no fs reads, no feed access. The route is served on
+// demand (ƒ in the build output), so keeping the render offline and
+// deterministic means every request produces the same card.
 
 export const alt = "Fantasy F1 Race-Weekend Advisor"
 
 export const size = { width: 1200, height: 630 }
 
 export const contentType = "image/png"
-
-// Note: metadata-image routes register as dynamic (ƒ) by framework convention;
-// the render itself is deterministic and network-free, so on-demand serving
-// never violates the offline guarantee.
 
 // Mirrors of the .dark carbon/accent palette from app/globals.css. Inlined as
 // concrete colors because satori has no access to CSS variables or @theme.
@@ -29,8 +24,7 @@ const WHITE = "#fafafa" // --foreground
 const MUTED = "#a1a1aa" // --muted-foreground
 const GRID_LINE = "rgba(255,255,255,0.06)" // --grid-line hairline
 
-// 11 constructor chips for the timing-screen strip (Object.values of the pure,
-// importable TEAM_COLORS map).
+// One chip per constructor for the timing-screen strip.
 const CHIPS = Object.values(TEAM_COLORS)
 
 export default async function OpengraphImage() {

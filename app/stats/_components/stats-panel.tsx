@@ -58,7 +58,7 @@ export function StatsPanel({ rows, caption }: { rows: StatsRow[]; caption: strin
   return (
     <>
       {/* sr-only live region — present from first render so AT registers it
-          before any sort change; updates politely on each cycle. Lives OUTSIDE
+          before any sort change; updates politely on each cycle. Lives outside
           the table (a table allows only one <caption>). */}
       <div className="sr-only" role="status" aria-live="polite">
         {announcement}

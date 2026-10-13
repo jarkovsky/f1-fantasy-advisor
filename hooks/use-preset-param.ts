@@ -9,9 +9,10 @@ import { PRESET_IDS, type PresetId } from "@/lib/projections/types/presets"
 
 /**
  * The active projection preset, read from and written to the `?preset=` URL
- * (shareable, deep-linkable). MUST be called from inside a Suspense boundary —
- * useSearchParams bails the whole route to CSR otherwise (the advisor island is
- * already wrapped). An unknown/absent param falls back to "weighted-recent".
+ * (shareable, deep-linkable). Call it under a Suspense boundary: during
+ * prerendering, useSearchParams client-renders everything up to the nearest
+ * one (the advisor island provides it). An unknown or absent param falls back
+ * to "weighted-recent".
  */
 export function usePresetParam(): { preset: PresetId; onPresetChange: (id: PresetId) => void } {
   const router = useRouter()

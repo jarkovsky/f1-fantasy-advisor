@@ -21,8 +21,8 @@ export function SquadStep({
   onEdit,
   editing,
   assets,
-  to,
-  closeEditor,
+  raceNumber,
+  onEditorDone,
 }: {
   resolved: AssetLite[]
   unresolvedIds: string[]
@@ -31,8 +31,8 @@ export function SquadStep({
   onEdit: () => void
   editing: boolean
   assets: AssetLite[]
-  to: number
-  closeEditor: () => void
+  raceNumber: number
+  onEditorDone: () => void
 }) {
   return (
     <>
@@ -79,9 +79,11 @@ export function SquadStep({
         </fieldset>
       </Card>
 
-      {/* The picker renders its own Card (M5), so it sits BETWEEN the step
-          cards rather than nested inside step 1. */}
-      {editing && <TeamPicker assets={assets} raceNumber={to} mode="edit" onDone={closeEditor} />}
+      {/* The picker renders its own Card, so it sits between the step cards
+          rather than nested inside step 1. */}
+      {editing && (
+        <TeamPicker assets={assets} raceNumber={raceNumber} mode="edit" onDone={onEditorDone} />
+      )}
     </>
   )
 }

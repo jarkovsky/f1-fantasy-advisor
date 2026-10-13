@@ -1,15 +1,15 @@
 /**
- * Hand-curated decorative team palette (spec §10).
+ * Hand-curated decorative team palette.
  *
- * Keyed by CONSTRUCTOR `playerId` — the stable join key. Drivers carry no own
+ * Keyed by constructor `playerId` — the stable join key. Drivers carry no own
  * color: they join via their `constructorId` field (= the constructor's
  * `playerId`), so one map serves both kinds.
  *
- * DECORATIVE ACCENTS ONLY: 3px left-border bars / dots applied via inline
- * style. NEVER use these as text color and NEVER as the sole information
- * carrier — several hexes (e.g. Mercedes #27F4D2, Audi #52E252) would fail
- * WCAG AA as text on the dark surface. Hex ids verified against the 2026 grid;
- * Cadillac (#E80020) is provisional.
+ * Decorative accents only (3px left-border bars / dots applied via inline
+ * style). Never use these as text color or as the sole information carrier —
+ * several hexes (e.g. Mercedes #27F4D2, Audi #52E252) would fail WCAG AA as
+ * text on the dark surface. Ids verified against the 2026 grid; Cadillac's
+ * color (#E80020) is provisional.
  */
 
 export const TEAM_COLORS: Record<string, string> = {
@@ -26,11 +26,13 @@ export const TEAM_COLORS: Record<string, string> = {
   "2641": "#E80020", // Cadillac (provisional)
 }
 
+const NEUTRAL_ACCENT = "var(--grid-line-strong)"
+
 /**
  * Resolve a constructor's decorative accent. Falls back to a neutral grid line
  * for unmapped / unknown ids so a new team never renders an empty accent.
  */
 export function teamColor(constructorId: string | null | undefined): string {
-  if (constructorId == null) return "var(--grid-line-strong)"
-  return TEAM_COLORS[constructorId] ?? "var(--grid-line-strong)"
+  if (constructorId == null) return NEUTRAL_ACCENT
+  return TEAM_COLORS[constructorId] ?? NEUTRAL_ACCENT
 }

@@ -11,16 +11,16 @@ import { Card } from "@/components/ui/card"
 
 import { RosterRow } from "@/app/_components/shared/roster-row"
 
-/**
- * SEASON_ENDED (spec §5.4): the final round is scored and there is no next
- * race. Read-only final squad, season points summary, and a link into the stats
- * explorer for the full review.
- */
 type SeasonEndedProps = {
   roster: string[]
   assetsById: Record<string, AssetLite>
 }
 
+/**
+ * SEASON_ENDED: the final round is scored and there is no next race. Read-only
+ * final squad, season points summary, and a link into the stats explorer for
+ * the full review.
+ */
 export function SeasonEnded({ roster, assetsById }: SeasonEndedProps) {
   const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
 

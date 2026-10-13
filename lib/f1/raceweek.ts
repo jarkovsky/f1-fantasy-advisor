@@ -1,29 +1,30 @@
-import type { RaceWeekConstraints, RaceWeekend } from "./schemas"
-
 /**
- * The race-week lifecycle state machine (spec §5.4) — the product's backbone.
- * Without it, by week two the advisor would confidently recommend transfers
- * from a roster, budget, and transfer count the user no longer has.
+ * The race-week lifecycle state machine — the product's backbone. Without it,
+ * by week two the advisor would confidently recommend transfers from a
+ * roster, budget, and transfer count the user no longer has.
  *
- * PURE: no Date.now(), no I/O. `now` is injected; fully unit-testable at
- * exact boundary instants.
+ * Pure: no Date.now(), no I/O. `now` is injected, so every boundary instant
+ * is unit-testable.
  *
  * Derivation facts (verified live 2026-06-05):
- * - The REAL team lock is the current weekend's first-session start
+ * - The real team lock is the current weekend's first-session start
  *   (RaceWeekend.lockAtMs from the raceday feed's ISO8601 fields).
  *   constraints.DeadlineDate is stale/advisory — never used here.
  * - constraints.raceNumber is the authoritative "which race" pointer;
  *   lastCompletedRace is the last scored round.
- * - The next race's drivers feed returns 403 until published →
- *   `nextRacePublished`.
  */
+import type { RaceWeekConstraints, RaceWeekend } from "./schemas"
+
 import { RACE_STATUS } from "./config"
 
 export type RaceWeekInput = {
   now: Date
   constraints: RaceWeekConstraints
   raceWeekends: RaceWeekend[]
-  /** drivers feed for race (raceNumber + 1) returned 200 (not 403). */
+  /**
+   * The drivers feed for raceNumber + 1 is published (200; it is 403 until
+   * then). Not consulted by any branch of deriveRaceWeekState.
+   */
   nextRacePublished: boolean
   /** The race the user's saved team was entered for; null = first visit. */
   storedRaceNumber: number | null

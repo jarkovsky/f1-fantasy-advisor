@@ -1,11 +1,11 @@
 /**
  * Server-only headshot path resolver.
  *
- * Headshots are OPTIONAL by design (spec: a missing/corrupt manifest must
- * degrade to monogram avatars, never crash a render). The manifest is read
- * ONCE at module scope — it is a static build artifact under public/, so a
- * single synchronous read at first import is correct and cheap; any failure
- * (missing file, bad JSON, unexpected shape) collapses to an empty map.
+ * Headshots are optional by design: a missing/corrupt manifest must degrade to
+ * monogram avatars, never crash a render. The manifest is read once at module
+ * scope — it is a static build artifact under public/, so a single synchronous
+ * read at first import is correct and cheap; any failure (missing file, bad
+ * JSON, unexpected shape) collapses to an empty map.
  *
  * Shape (written by scripts/assets.ts — the only writer):
  *   { "attribution": "…", "byPlayerId": { "131": { "file": "131.png", "tla": "VER" } } }

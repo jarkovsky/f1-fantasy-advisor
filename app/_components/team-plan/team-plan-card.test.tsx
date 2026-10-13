@@ -15,8 +15,8 @@ import { TeamPlanCard } from "./team-plan-card"
 
 // ---------------------------------------------------------------------------
 // Deterministic grid (mirrors advisor-panel.test): 8 drivers + 3 constructors,
-// prices descending. The card is fed a REAL optimize() result so assertions
-// track the engine (oracle), never hand-rolled plans.
+// prices descending. The card is fed a real optimize() result so assertions use
+// the engine as the oracle rather than hand-rolled plans.
 // ---------------------------------------------------------------------------
 function driver(n: number, priceTenths: number): AssetLite {
   return {

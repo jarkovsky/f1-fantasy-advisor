@@ -1,10 +1,9 @@
-// Shared parse path for component tests. The M3 component tests need the same
-// real-feed domain models that lib/f1/raceweek.test.ts and history.test.ts
-// build inline — but recreating those loaders per file would drift. This module
-// centralizes them, running the slimmed __fixtures__ JSON (4 real assets ×
-// 6 races + constraints/raceday/mixapi, captured 2026-06-05, race 6 pending)
-// through the real parsers in lib/f1/schemas.ts. No hand-rolled literals: the
-// fixtures are trusted, so a parse failure THROWS loudly rather than degrading.
+// Shared fixture loaders, so every test that needs real-feed domain models
+// builds them the same way instead of re-implementing (and drifting) a loader
+// per file. Runs the slimmed __fixtures__ JSON (4 real assets × 6 races +
+// constraints/raceday/mixapi, captured 2026-06-05, race 6 pending) through the
+// real parsers in lib/f1/schemas.ts. No hand-rolled literals: the fixtures are
+// trusted, so a parse failure throws loudly rather than degrading.
 
 import type { SeasonHistory } from "@/lib/f1/types/history"
 

@@ -12,11 +12,11 @@
  * - current race / constraints → 5 min ('driversCurrent' / 'orchestration')
  * - raceday schedule → hourly; mixapi → 'mixapi' (minutes-like)
  *
- * M1 simplifications (deliberate): no client polling; no mixapi version-stamp
+ * Deliberate simplifications: no client polling; no mixapi version-stamp
  * diffing (nothing to gate without polling); no conditional requests (ETag/304
- * pays off only with a persistent store — pair with 'use cache: remote' when
- * personalization arrives); serverless cold-lambda refetch is accepted
- * (~160KB total from a CDN, and the snapshot fallback makes failure harmless).
+ * pays off only with a persistent store such as 'use cache: remote');
+ * serverless cold-lambda refetch is accepted (~160KB total from a CDN, and the
+ * snapshot fallback makes failure harmless).
  */
 import "server-only"
 
@@ -101,14 +101,12 @@ export async function getMixapi(): Promise<Feed<Mixapi | null>> {
 }
 
 /**
- * Has the race AFTER currentRace been published yet?
+ * Has the race after currentRace been published yet?
  *
  * Status-only probe (probeFeedPublished) — getDrivers can't tell, it degrades
  * the unpublished-race 403 to the snapshot. Cheap to keep slightly stale:
  * publication flips at most twice a fortnight, so 5-min 'orchestration'
- * staleness is fine. Like the other wrappers, this is verified by
- * typecheck + the online/offline builds, not Vitest ('use cache' needs the
- * Next runtime).
+ * staleness is fine.
  */
 export async function getNextRacePublished(currentRace: number): Promise<boolean> {
   "use cache"
@@ -119,10 +117,10 @@ export async function getNextRacePublished(currentRace: number): Promise<boolean
 
 /**
  * Full season history: fan-out over races 1..upToRace, assembled into
- * per-asset series with RECOMPUTED cumulative points (the feed's own season
+ * per-asset series with recomputed cumulative points (the feed's own season
  * totals are contaminated by regeneration — see history.ts).
  *
- * The fan-out promises are created and awaited INSIDE this cache scope —
+ * The fan-out promises are created and awaited inside this cache scope —
  * passing promises into a 'use cache' fn is the documented build-hang trap.
  * Two-level caching: each race is its own cache entry (completed ones at
  * 'max'), this aggregate refreshes with its freshest member.

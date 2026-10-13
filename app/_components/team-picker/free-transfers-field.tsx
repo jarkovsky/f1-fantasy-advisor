@@ -9,10 +9,9 @@ const OPTIONS: { value: string; label: string }[] = [
 ]
 
 /**
- * Free-transfers selector — a single-select ToggleGroup (Radix renders it as a
- * role=radiogroup of role=radio items with arrow-key roving, an upgrade over the
- * former hand-rolled buttons). One value is always selected: an empty
- * onValueChange (deselect click) is ignored to preserve radio semantics.
+ * Free-transfers selector: a single-select ToggleGroup, which Radix exposes as a
+ * radiogroup with arrow-key navigation. A value is always selected, so the empty
+ * onValueChange from clicking the active item is ignored to keep radio semantics.
  */
 export function FreeTransfersField({
   value,

@@ -29,6 +29,17 @@ function compare(a: number | null, b: number | null, dir: SortDir): number {
   return dir === "desc" ? b - a : a - b
 }
 
+/** desc → asc → default on the active column; a fresh column starts at desc. */
+function nextSort<K extends string>(
+  prev: SortState<K>,
+  key: K,
+  defaultSort: SortState<K>
+): SortState<K> {
+  if (prev.key !== key) return { key, dir: "desc" }
+  if (prev.dir === "desc") return { key, dir: "asc" }
+  return defaultSort
+}
+
 export function useSortableColumns<K extends string, Row>(options: {
   rows: readonly Row[]
   columns: readonly SortableColumn<K, Row>[]
@@ -53,25 +64,15 @@ export function useSortableColumns<K extends string, Row>(options: {
   }, [rows, columns, sort])
 
   function cycle(key: K): void {
-    setSort((prev) => {
-      // desc → asc → default. A fresh column starts at desc.
-      let next: SortState<K>
-      if (prev.key !== key) {
-        next = { key, dir: "desc" }
-      } else if (prev.dir === "desc") {
-        next = { key, dir: "asc" }
-      } else {
-        next = defaultSort
-      }
-      const label = columns.find((c) => c.key === next.key)?.label ?? next.key
-      const dirWord = next.dir === "desc" ? "descending" : "ascending"
-      setAnnouncement(
-        announceHeading
-          ? `${announceHeading} sorted by ${label}, ${dirWord}.`
-          : `Sorted by ${label}, ${dirWord}.`
-      )
-      return next
-    })
+    const next = nextSort(sort, key, defaultSort)
+    const label = columns.find((c) => c.key === next.key)?.label ?? next.key
+    const dirWord = next.dir === "desc" ? "descending" : "ascending"
+    setSort(next)
+    setAnnouncement(
+      announceHeading
+        ? `${announceHeading} sorted by ${label}, ${dirWord}.`
+        : `Sorted by ${label}, ${dirWord}.`
+    )
   }
 
   return { sorted, sort, cycle, announcement }

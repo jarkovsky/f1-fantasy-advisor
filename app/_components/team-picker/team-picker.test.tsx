@@ -76,7 +76,7 @@ function renderPicker(props?: Partial<Parameters<typeof TeamPicker>[0]>) {
   return render(<TeamPicker assets={ASSETS} raceNumber={6} mode="first-run" {...props} />)
 }
 
-/** All data rows (excludes the header row). */
+/** Every row after the first table's header row. */
 function bodyRows(): HTMLElement[] {
   return screen.getAllByRole("row").slice(1)
 }
@@ -88,8 +88,8 @@ function checkboxFor(fullName: string | RegExp): HTMLElement {
   })
 }
 
-/** Click the leading checkbox of the first n body rows (price-desc order). */
-async function pickFirst(user: ReturnType<typeof userEvent.setup>, ids: string[]): Promise<void> {
+/** Click the checkbox of each fixture id, in order. */
+async function pick(user: ReturnType<typeof userEvent.setup>, ids: string[]): Promise<void> {
   for (const id of ids) {
     const cb = screen.getByRole("checkbox", { name: new RegExp(idToName(id)) })
     await user.click(cb)
@@ -117,7 +117,7 @@ describe("TeamPicker", () => {
   it("selecting 5 drivers disables the remaining drivers' checkboxes", async () => {
     const user = userEvent.setup()
     renderPicker()
-    await pickFirst(user, ["d1", "d2", "d3", "d4", "d5"])
+    await pick(user, ["d1", "d2", "d3", "d4", "d5"])
 
     // The 6th..8th drivers are disabled once the driver quota is full.
     expect(checkboxFor("Firstname Lastname6")).toBeDisabled()
@@ -168,7 +168,7 @@ describe("TeamPicker", () => {
     const cta = screen.getByRole("button", { name: /save team & get advice/i })
     expect(cta).toBeDisabled()
 
-    await pickFirst(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
+    await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
     // Squad complete but no bank yet → still blocked.
     expect(cta).toBeDisabled()
 
@@ -182,12 +182,12 @@ describe("TeamPicker", () => {
     const user = userEvent.setup()
     renderPicker()
     // 5 priciest drivers (1300) + 2 ctors (450) = 1750 tenths; bank 5 → 1800.
-    await pickFirst(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
+    await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
     const bank = screen.getByLabelText(/remaining budget/i)
     await user.type(bank, "5")
 
     expect(screen.getByRole("button", { name: /save team & get advice/i })).toBeEnabled()
-    // The killed sanity warning never appears.
+    // No over-budget warning is shown.
     expect(screen.queryByText(/Heads up/)).not.toBeInTheDocument()
   })
 
@@ -235,7 +235,7 @@ describe("TeamPicker", () => {
     const onDone = vi.fn()
     renderPicker({ onDone })
 
-    await pickFirst(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
+    await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
 
     const bank = screen.getByLabelText(/remaining budget/i)
     await user.clear(bank)
@@ -271,7 +271,7 @@ describe("TeamPicker", () => {
     expect(teamStore.getSnapshot().budgetTenths).toBe(25) // unchanged
   })
 
-  it("Start over dialog resets the store to DEFAULT and calls onDone", async () => {
+  it("Start over dialog resets the store to its default state and calls onDone", async () => {
     const user = userEvent.setup()
     teamStore.subscribe(() => {})
     teamStore.setTeam(["d1", "d2", "d3", "d4", "d5", "c1", "c2"], 25, 3, 6)
@@ -291,7 +291,7 @@ describe("TeamPicker", () => {
   it("Unlimited segmented option sets freeTransfers 'unlimited' on save", async () => {
     const user = userEvent.setup()
     renderPicker()
-    await pickFirst(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
+    await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
 
     const bank = screen.getByLabelText(/remaining budget/i)
     await user.clear(bank)

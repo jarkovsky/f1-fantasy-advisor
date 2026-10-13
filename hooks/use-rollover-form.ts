@@ -5,6 +5,7 @@ import type { AssetLite } from "@/lib/asset-lite"
 
 import { useEffect, useRef, useState } from "react"
 
+import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
 import { formatBankTenths } from "@/lib/team/bank"
 import { formatPriceTenths } from "@/lib/format"
 
@@ -14,18 +15,21 @@ export type SquadChoice = "kept" | "edit"
 export type TransferChoice = "standard" | "banked" | "chip"
 export type ChipChoice = "wildcard" | "limitless"
 
+type FreeTransfers = TeamStateV1["freeTransfers"]
+type ActiveChip = TeamStateV1["activeChip"]
+
 export type RolloverConfirm = (args: {
   roster: string[]
   budgetTenths: number
-  freeTransfers: 2 | 3 | "unlimited"
+  freeTransfers: FreeTransfers
   raceNumber: number
-  activeChip: "none" | "wildcard" | "limitless"
+  activeChip: ActiveChip
 }) => void
 
 /**
- * All of the rollover form's state and derivation: the stepped squad/bank/
- * transfer choices, the reveal-focus management (fixed so it fires when step 3
- * actually reveals without stealing focus), and the confirm summary/handler.
+ * The rollover form's state and derivation: the stepped squad, bank, and
+ * transfer choices, focus management as each step reveals, and the confirm
+ * summary and handler.
  */
 export function useRolloverForm(args: {
   team: TeamStateV1
@@ -37,7 +41,6 @@ export function useRolloverForm(args: {
   const savedRoster = team.roster ?? []
 
   const [squadChoice, setSquadChoice] = useState<SquadChoice | null>(null)
-  const [draftRoster, setDraftRoster] = useState<string[]>(savedRoster)
   const [editing, setEditing] = useState(false)
   const bank = useBankInput(formatBankTenths(team.budgetTenths))
   const [transferChoice, setTransferChoice] = useState<TransferChoice | null>(null)
@@ -51,10 +54,10 @@ export function useRolloverForm(args: {
     if (squadChoice !== null) step2Ref.current?.focus()
   }, [squadChoice])
 
-  const resolved = draftRoster
+  const resolved = savedRoster
     .map((id) => assetsById[id])
     .filter((a): a is AssetLite => a !== undefined)
-  const unresolvedIds = draftRoster.filter((id) => assetsById[id] === undefined)
+  const unresolvedIds = savedRoster.filter((id) => assetsById[id] === undefined)
 
   // Reveal focus for step 3, but never steal it from the step-2 legend (just
   // placed by the effect above) or from the bank input while the user is
@@ -67,33 +70,28 @@ export function useRolloverForm(args: {
     step3Ref.current?.focus()
   }, [step3Revealed])
 
-  const freeTransfers: 2 | 3 | "unlimited" =
+  const freeTransfers: FreeTransfers =
     transferChoice === "chip" ? "unlimited" : transferChoice === "banked" ? 3 : 2
-  const activeChip: "none" | "wildcard" | "limitless" =
-    transferChoice === "chip" ? (chipChoice ?? "none") : "none"
+  const activeChip: ActiveChip = transferChoice === "chip" ? (chipChoice ?? "none") : "none"
 
   const transfersResolved =
     transferChoice === "chip" ? chipChoice !== null : transferChoice !== null
 
   const canConfirm =
-    squadChoice !== null && draftRoster.length === 7 && bank.entered && transfersResolved
+    squadChoice !== null &&
+    savedRoster.length === SQUAD_DRIVERS + SQUAD_CONSTRUCTORS &&
+    bank.entered &&
+    transfersResolved
 
+  const squadLabel = squadChoice === "kept" ? "your kept squad" : "your edited squad"
+  const allowance = allowanceLabel(freeTransfers, activeChip)
   const summary = canConfirm
-    ? `Confirming ${
-        squadChoice === "kept" ? "your kept squad" : "your edited squad"
-      } with ${formatPriceTenths(bank.tenths)} bank and ${
-        freeTransfers === "unlimited"
-          ? activeChip === "limitless"
-            ? "Limitless"
-            : "Wildcard"
-          : `${freeTransfers} free transfers`
-      }.`
+    ? `Confirming ${squadLabel} with ${formatPriceTenths(bank.tenths)} bank and ${allowance}.`
     : "Complete every step to continue."
 
   function keepSquad(): void {
     setSquadChoice("kept")
     setEditing(false)
-    setDraftRoster(savedRoster)
   }
 
   function editSquad(): void {
@@ -108,7 +106,7 @@ export function useRolloverForm(args: {
   function handleConfirm(): void {
     if (!canConfirm) return
     onConfirm({
-      roster: draftRoster,
+      roster: savedRoster,
       budgetTenths: bank.tenths,
       freeTransfers,
       raceNumber: to,
@@ -137,4 +135,9 @@ export function useRolloverForm(args: {
     step3Ref,
     handleConfirm,
   }
+}
+
+function allowanceLabel(freeTransfers: FreeTransfers, activeChip: ActiveChip): string {
+  if (freeTransfers !== "unlimited") return `${freeTransfers} free transfers`
+  return activeChip === "limitless" ? "Limitless" : "Wildcard"
 }

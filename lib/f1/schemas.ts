@@ -1,5 +1,3 @@
-import type { ParseResult } from "./types/feed"
-
 /**
  * zod boundary for the official F1 Fantasy feeds: untrusted raw JSON in,
  * clean typed domain models out.
@@ -7,16 +5,18 @@ import type { ParseResult } from "./types/feed"
  * The raw schemas preserve the feed's verbatim quirks (typo'd field names like
  * `FUllName`, "gameday" vocabulary like `GamedayId`/`GamedayPoints`, mixed
  * string/number typing, `''`-as-null, `'0'` vs `'11.00'` points formats) and
- * normalize them in one place — domain models use OUR race terminology.
+ * normalize them in one place — domain models use our race terminology.
  * Domain types are inferred with `z.infer` — single source of truth.
  *
- * Every public `parseX` function returns a Result and NEVER throws: a
+ * Every public `parseX` function returns a Result and never throws: a
  * malformed payload must degrade (to a snapshot) rather than crash a page or
  * abort the build.
  */
+import type { ParseResult } from "./types/feed"
+
 import * as z from "zod"
 
-import { SESSION_LABELS } from "./config"
+import { SESSION_LABELS, SPRINT_LABEL } from "./config"
 
 function summarize(error: z.ZodError): string[] {
   return error.issues.map((i) => `${i.path.join(".") || "<root>"}: ${i.code} (${i.message})`)
@@ -86,7 +86,7 @@ const isoToEpochMs = z.string().transform((s, ctx) => {
 // Feed envelope
 // ---------------------------------------------------------------------------
 
-const FeedMeta = z.object({
+const EnvelopeMeta = z.object({
   Success: z.boolean(),
   StatusCode: z.number().int(),
 })
@@ -95,12 +95,8 @@ const FeedMeta = z.object({
 // Drivers feed: sessions, stats, assets
 // ---------------------------------------------------------------------------
 
-/**
- * The complete label set. `.catch("Race")` degrades an unknown future label
- * instead of rejecting the asset. Note: there is no distinct "Sprint" label —
- * sprint weekends add a third "Sprint Qualifying" session.
- */
-export const SessionLabel = z.enum(SESSION_LABELS).catch("Race")
+/** `.catch("Race")` degrades an unknown future label instead of rejecting the asset. */
+const SessionLabel = z.enum(SESSION_LABELS).catch("Race")
 export type SessionLabelType = z.infer<typeof SessionLabel>
 
 const RawSessionPoints = z
@@ -121,7 +117,7 @@ const RawSessionPoints = z
 export type SessionPoints = z.infer<typeof RawSessionPoints>
 
 /**
- * Season-to-date stat breakdown. CAUTION: like the feed's season totals,
+ * Season-to-date stat breakdown. Caution: like the feed's season totals,
  * these values are cumulative *as of feed generation time* — old race files
  * get regenerated, so this is a "latest snapshot", never a per-race series.
  */
@@ -156,12 +152,12 @@ export type AssetAdditionalStats = z.infer<typeof AdditionalStats>
 /**
  * One asset row, verbatim raw names (typos included) → clean discriminated
  * union on `kind`. Lean: we model the ~15 fields we consume; `z.object`
- * default-strips the rest (`OverallPpints` is deliberately NOT modeled — it is
+ * default-strips the rest (`OverallPpints` is deliberately not modeled — it is
  * contaminated; cumulative points are recomputed in history.ts).
  */
 export const AssetSchema = z
   .object({
-    PlayerId: z.string().min(1), // THE unique key (F1PlayerId is NOT unique)
+    PlayerId: z.string().min(1), // the unique key (F1PlayerId is not unique)
     Skill: z.number().int(), // 1 = driver, 2 = constructor
     PositionName: z.string(), // 'DRIVER' | 'CONSTRUCTOR' (cross-check)
     Value: moneyTenths, // price as of this race
@@ -231,7 +227,7 @@ export type Constructor = Extract<Asset, { kind: "constructor" }>
 
 const DriversFeedEnvelope = z.object({
   Data: z.object({ Value: z.array(z.unknown()) }),
-  Meta: FeedMeta,
+  Meta: EnvelopeMeta,
 })
 
 /**
@@ -264,14 +260,14 @@ export function parseDriversFeed(raw: unknown): ParseResult<Asset[]> {
 
 const RawConstraints = z
   .object({
-    GamedayId: z.number().int(), // feed name for the CURRENT race pointer
-    LPTourGamedayId: z.number().int(), // last COMPLETED race
+    GamedayId: z.number().int(), // feed name for the current race pointer
+    LPTourGamedayId: z.number().int(), // last completed race
     TREndGamedayId: z.number().int(), // season end (22)
     MaxTeamValue: z.number(),
     ARRGamedayId: z.array(z.number().int()),
     GMCSubScenario: z.string(),
     // Verified stale/wrong (read "06/05/2026 00:00:00" while the real Monaco
-    // lock was June 6). Carried for debugging only — NEVER drive LOCKED off
+    // lock was June 6). Carried for debugging only — never drive LOCKED off
     // this; the lock comes from raceday's first-session ISO8601 (raceweek.ts).
     DeadlineDate: z.string(),
   })
@@ -289,7 +285,7 @@ export type RaceWeekConstraints = z.infer<typeof RawConstraints>
 
 const ConstraintsEnvelope = z.object({
   Data: z.object({ Value: RawConstraints }),
-  Meta: FeedMeta,
+  Meta: EnvelopeMeta,
 })
 
 export function parseConstraints(raw: unknown): ParseResult<RaceWeekConstraints> {
@@ -307,7 +303,7 @@ const RawSessionRow = z
     GamedayId: z.number().int(), // feed name for the race number
     GDStatus: z.number().int(), // 0 upcoming | 1 current | 4 completed
     SessionType: SessionLabel,
-    // ONLY the ISO8601 fields are reliable (offset-aware). The naive
+    // Only the ISO8601 fields are reliable (offset-aware). The naive
     // SessionStartDate is UTC MM/DD/YYYY and GMTOffset is always ''.
     SessionStartDateISO8601: isoToEpochMs,
     SessionEndDateISO8601: isoToEpochMs,
@@ -338,7 +334,7 @@ export type RaceWeekend = {
   circuitLocation: string
   isSprint: boolean
   sessions: RaceSession[]
-  /** First session start = the team lock (the REAL deadline). */
+  /** First session start = the team lock (the real deadline, not DeadlineDate). */
   lockAtMs: number
   /** Last session end ≈ when the race weekend is over. */
   raceEndsApproxMs: number
@@ -346,7 +342,7 @@ export type RaceWeekend = {
 
 const RacedayEnvelope = z.object({
   Data: z.object({ Value: z.array(RawSessionRow) }),
-  Meta: FeedMeta,
+  Meta: EnvelopeMeta,
 })
 
 export function parseRaceday(raw: unknown): ParseResult<RaceWeekend[]> {
@@ -372,13 +368,13 @@ export function parseRaceday(raw: unknown): ParseResult<RaceWeekend[]> {
     const first = sessions[0]
     const last = sessions[sessions.length - 1]
     const meta = rows[0]
-    if (!first || !last || !meta) continue // defensive: empty race group
+    if (!first || !last || !meta) continue // unreachable: every group has a row
     weekends.push({
       raceNumber,
       status: meta.status,
       gpName: meta.gpName,
       circuitLocation: meta.circuitLocation,
-      isSprint: sessions.some((s) => s.session === "Sprint Qualifying"),
+      isSprint: sessions.some((s) => s.session === SPRINT_LABEL),
       sessions,
       lockAtMs: first.startsAtMs,
       raceEndsApproxMs: last.endsAtMs,

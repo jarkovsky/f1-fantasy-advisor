@@ -75,7 +75,7 @@ describe("fetchOrSnapshot decision table", () => {
     expect(feed.data).toHaveLength(4)
   })
 
-  it("live fails AND no snapshot → typed empty value, never throws", async () => {
+  it("live fails and no snapshot → typed empty value, never throws", async () => {
     const feed = await fetchOrSnapshot(PATH, parseDriversFeed, () => null, {
       fetchImpl: mockFetch(() => new Response("", { status: 500 })),
       empty: EMPTY,
@@ -85,7 +85,7 @@ describe("fetchOrSnapshot decision table", () => {
     expect(feed.data).toEqual([])
   })
 
-  it("live fails AND snapshot is corrupt → typed empty value", async () => {
+  it("live fails and snapshot is corrupt → typed empty value", async () => {
     const feed = await fetchOrSnapshot(
       PATH,
       parseDriversFeed,
@@ -99,7 +99,7 @@ describe("fetchOrSnapshot decision table", () => {
   })
 })
 
-// Publication probe: status-only, NEVER throws. ok ⇒ true, everything else ⇒ false.
+// Publication probe: status-only, never throws. ok ⇒ true, everything else ⇒ false.
 
 describe("probeFeedPublished decision table", () => {
   it("HTTP 200 → true", async () => {

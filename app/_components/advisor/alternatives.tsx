@@ -5,18 +5,13 @@ import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { PRESET_REGISTRY } from "@/lib/projections/engine"
+import { diffSquad } from "@/lib/team/squad-diff"
 import { formatPriceTenths } from "@/lib/format"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 import { Delta } from "@/app/_components/shared/delta"
 
-/**
- * "Other transfer counts" — collapsed by default. One row per non-null bucket
- * in byTransferCount, each expandable to show the swap diff and the per-IN-asset
- * projection math (preset label, total, session split, price, equal-PPM note).
- * The footer states the model and sample size.
- */
 type AlternativesProps = {
   result: OptimizerResult
   baseline: TeamPlan | null
@@ -28,7 +23,7 @@ function presetLabel(id: string): string {
   return PRESET_REGISTRY.find((p) => p.id === id)?.label ?? id
 }
 
-/** The in-asset projection math block. */
+/** Projection math for one incoming asset. */
 function AssetMath({
   proj,
   asset,
@@ -57,6 +52,12 @@ function AssetMath({
   )
 }
 
+/**
+ * "Other transfer counts" — collapsed by default. One row per non-null bucket
+ * in byTransferCount, each expandable to show the swap diff and the projection
+ * math for every incoming asset (preset label, total, session split, price,
+ * equal-PPM note). The footer states the model and sample size.
+ */
 export function Alternatives({ result, baseline, assetsById, projection }: AlternativesProps) {
   const baselineTotal = baseline?.projectedTotal ?? 0
   const rows = result.byTransferCount
@@ -78,16 +79,7 @@ export function Alternatives({ result, baseline, assetsById, projection }: Alter
       <CollapsibleContent className="flex flex-col gap-2 px-4 pb-4">
         {rows.map(({ plan, t }) => {
           const gain = plan.projectedTotal - baselineTotal
-          const ins = baseline
-            ? [...plan.driverIds, ...plan.constructorIds].filter(
-                (id) => ![...baseline.driverIds, ...baseline.constructorIds].includes(id)
-              )
-            : [...plan.driverIds, ...plan.constructorIds]
-          const outs = baseline
-            ? [...baseline.driverIds, ...baseline.constructorIds].filter(
-                (id) => ![...plan.driverIds, ...plan.constructorIds].includes(id)
-              )
-            : []
+          const { drivers, constructors } = diffSquad(baseline, plan)
 
           return (
             <Collapsible key={t} className="rounded-md border border-grid-line/60">
@@ -108,9 +100,8 @@ export function Alternatives({ result, baseline, assetsById, projection }: Alter
                 </span>
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-col gap-2 px-3 pb-3">
-                {ins.map((inId, i) => {
-                  const outId = outs[i]
-                  return (
+                {[...drivers, ...constructors].map(({ outId, inId }) =>
+                  inId === null ? null : (
                     <div key={inId} className="flex flex-col gap-1">
                       <p className="text-xs">
                         {outId && (
@@ -124,7 +115,7 @@ export function Alternatives({ result, baseline, assetsById, projection }: Alter
                       <AssetMath proj={projection.byPlayerId[inId]} asset={assetsById[inId]} />
                     </div>
                   )
-                })}
+                )}
               </CollapsibleContent>
             </Collapsible>
           )

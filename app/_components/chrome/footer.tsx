@@ -1,7 +1,7 @@
 /**
- * Global footer: the unofficial-app disclaimer and data credits (spec §8.4).
- * The OpenF1 credit is a CC BY-NC-SA license obligation for the bundled
- * driver headshots — it must stay as long as public/headshots/ ships.
+ * Global footer: the unofficial-app disclaimer and data credits. The OpenF1
+ * credit is a CC BY-NC-SA license obligation for the bundled driver headshots —
+ * it must stay as long as public/headshots/ ships.
  */
 export function Footer() {
   return (

@@ -1,5 +1,3 @@
-import type { ParseResult } from "@/lib/f1/types/feed"
-
 /**
  * Refreshes the committed feed snapshots in data/ from the live F1 Fantasy
  * CDN. Run via `pnpm snapshot` (tsx), commit the result.
@@ -9,12 +7,14 @@ import type { ParseResult } from "@/lib/f1/types/feed"
  * network — it falls back to these files.
  *
  * Properties:
- * - Every payload is validated through the REAL parse functions before being
+ * - Every payload is validated through the real parse functions before being
  *   written — a malformed live feed can never become a committed fallback.
  * - Drivers feeds are fetched race 1..N until the first 403 (403 = not yet
  *   published, expected for future races — not an error).
- * - This script is the ONLY writer of data/. It is never part of `next build`.
+ * - This script is the only writer of data/. It is never part of `next build`.
  */
+import type { ParseResult } from "@/lib/f1/types/feed"
+
 import { mkdir, writeFile } from "node:fs/promises"
 
 import { parseConstraints, parseDriversFeed, parseMixapi, parseRaceday } from "@/lib/f1/schemas"

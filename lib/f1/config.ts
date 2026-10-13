@@ -1,11 +1,11 @@
 /**
  * Feed plumbing for the official F1 Fantasy CDN feeds.
  *
- * Kept separate from lib/constants.ts (game rules): the vendor changes their
+ * Kept separate from lib/constants.ts (fantasy rules): the vendor changes their
  * feed; the rules change with FIA regs — different change-axes.
  *
  * Terminology note: the feed numbers each race week with a "GamedayId"
- * (1..22). In OUR domain that number is always called a race / raceNumber;
+ * (1..22). In our domain that number is always called a race / raceNumber;
  * the feed's own field names appear only inside the raw zod schemas.
  *
  * All facts verified live 2026-06-05: unauthenticated CloudFront/S3 JSON,
@@ -38,8 +38,5 @@ export const RACE_STATUS = { UPCOMING: 0, CURRENT: 1, COMPLETED: 4 } as const
 export const SESSION_LABELS = ["Qualifying", "Race", "Sprint Qualifying"] as const
 export const SPRINT_LABEL = "Sprint Qualifying" as const
 
-/** Unpublished races return 403 (S3 deny-on-missing-key), NOT 404. */
+/** Unpublished races return 403 (S3 deny-on-missing-key), not 404. */
 export const FEED_NOT_PUBLISHED_STATUS = 403
-
-/** TREndGamedayId from the constraints feed — the 2026 season has 22 races. */
-export const SEASON_END_RACE = 22

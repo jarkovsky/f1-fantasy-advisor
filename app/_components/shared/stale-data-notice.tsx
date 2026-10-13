@@ -1,8 +1,8 @@
 import { formatDateISO } from "@/lib/format"
 
 /**
- * The shared "showing snapshot data" degradation notice (spec §8.4: degrade
- * visibly, never crash). Server-safe — no directive, no hooks — so both the
+ * The shared "showing snapshot data" notice, so a live-feed outage degrades
+ * visibly instead of failing. Server-safe (no directive, no hooks), so both the
  * server /stats banner and the client advisor banner wrap it. Renders the as-of
  * date as a <time> when parseable, else "an earlier capture"; optional children
  * append a context-specific sentence.

@@ -1,6 +1,6 @@
 "use client"
 
-import type { AdvisorServerProps, WhatIfMode } from "@/lib/advisor/types/contract"
+import type { FeedProvenance, WhatIfMode } from "@/lib/advisor/types/contract"
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { OptimizerResult } from "@/lib/optimizer/types/optimizer"
 import type { PresetId } from "@/lib/projections/types/presets"
@@ -28,63 +28,66 @@ import { RaceHeader } from "@/app/_components/advisor/race-header"
 
 type OpenState = Extract<RaceWeekState, { kind: "OPEN" }>
 
-/**
- * The OPEN-state screen (spec §10 M5): single centered column — Grand Prix card
- * → merged team/plan card → alternatives → controls → honesty note. Owns the
- * editor toggle, the optimizer (via useOptimizer, which keeps the search a lazy
- * chunk), the apply flow, and the sr-only status region.
- */
-export function OpenAdvisor({
-  props,
-  raceState,
-  currentWeekend,
-  assetsById,
-  projection,
-  totals,
-  preset,
-  onPresetChange,
-  blendWeight,
-  setBlendWeight,
-  whatIf,
-  setWhatIf,
-  team,
-  applyPlan,
-}: {
-  props: AdvisorServerProps
+type OpenAdvisorProps = {
   raceState: OpenState
   currentWeekend: RaceWeekend | undefined
+  assets: AssetLite[]
   assetsById: Record<string, AssetLite>
+  raceNumber: number
+  meta: FeedProvenance
   projection: ProjectionResult
   totals: Record<string, number>
   preset: PresetId
   onPresetChange: (id: PresetId) => void
   blendWeight: number
-  setBlendWeight: (w: number) => void
+  onBlendWeightChange: (w: number) => void
   whatIf: WhatIfMode
-  setWhatIf: (m: WhatIfMode) => void
+  onWhatIfChange: (mode: WhatIfMode) => void
   team: TeamStateV1
   applyPlan: (
     roster: string[],
     budgetTenths: number,
     savedProjection?: TeamStateV1["savedProjection"]
   ) => void
-}) {
+}
+
+/**
+ * The OPEN-state screen: a single centered column — Grand Prix card → merged
+ * team/plan card → alternatives → controls → honesty note. Owns the editor
+ * toggle, the optimizer (via useOptimizer, which keeps the search a lazy
+ * chunk), the apply flow, and the sr-only status region.
+ */
+export function OpenAdvisor({
+  raceState,
+  currentWeekend,
+  assets,
+  assetsById,
+  raceNumber,
+  meta,
+  projection,
+  totals,
+  preset,
+  onPresetChange,
+  blendWeight,
+  onBlendWeightChange,
+  whatIf,
+  onWhatIfChange,
+  team,
+  applyPlan,
+}: OpenAdvisorProps) {
   const [showEditor, setShowEditor] = useState(false)
-  const roster = team.roster
-  const budgetTenths = team.budgetTenths
-  const storeFreeTransfers = team.freeTransfers
+  const { roster, budgetTenths, freeTransfers } = team
 
   const { result, baseline, unresolvedIds, error, isPending, statusMessage } = useOptimizer({
-    enabled: true,
-    assets: props.assets,
+    assets,
     totals,
     roster,
     budgetTenths,
-    freeTransfers: storeFreeTransfers,
+    freeTransfers,
     whatIf,
   })
 
-  // "applied" is derived from whether the CURRENT result is the one applied, so
+  // "applied" is derived from whether the current result is the one applied, so
   // any later recompute (a new result reference) re-arms the button with no
   // effect and no cascading render.
   const [appliedResult, setAppliedResult] = useState<OptimizerResult | null>(null)
@@ -103,8 +106,8 @@ export function OpenAdvisor({
   if (showEditor) {
     return (
       <TeamPicker
-        assets={props.assets}
-        raceNumber={props.constraints.raceNumber}
+        assets={assets}
+        raceNumber={raceNumber}
         mode="edit"
         onDone={() => setShowEditor(false)}
       />
@@ -116,7 +119,7 @@ export function OpenAdvisor({
       <div role="status" aria-live="polite" className="sr-only">
         {statusMessage}
       </div>
-      <SnapshotBanner meta={props.meta} />
+      <SnapshotBanner meta={meta} />
 
       {currentWeekend && (
         <Card className="bg-surface-1 p-5">
@@ -143,7 +146,7 @@ export function OpenAdvisor({
             assetsById={assetsById}
             totals={totals}
             budgetTenths={budgetTenths}
-            freeTransfers={whatIf !== "none" ? "unlimited" : storeFreeTransfers}
+            freeTransfers={whatIf !== "none" ? "unlimited" : freeTransfers}
             whatIf={whatIf}
             unresolvedIds={unresolvedIds}
             applied={applied}
@@ -169,9 +172,9 @@ export function OpenAdvisor({
         preset={preset}
         onPresetChange={onPresetChange}
         blendWeight={blendWeight}
-        onBlendWeightChange={setBlendWeight}
+        onBlendWeightChange={onBlendWeightChange}
         whatIf={whatIf}
-        onWhatIfChange={setWhatIf}
+        onWhatIfChange={onWhatIfChange}
         projection={projection}
       />
       <HonestyNote />

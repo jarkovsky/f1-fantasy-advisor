@@ -8,7 +8,7 @@ import { currentTimeMs } from "@/lib/dev-now"
 /**
  * Mount-gated ticking clock for the deadline countdown. Returns `now` (null
  * until mount, so server + first client render agree) and a coarse milestone
- * `announcement` for a polite live region. Ticks once a second and FREEZES at
+ * `announcement` for a polite live region. Ticks once a second and freezes at
  * the lock (the interval is cleared).
  */
 export function useCountdown(lockAtMs: number): { now: number | null; announcement: string } {

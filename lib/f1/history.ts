@@ -2,11 +2,11 @@
  * Pure season-history assembly across per-race payloads.
  *
  * Why this module exists: the feed's own season totals (`OverallPpints`,
- * `AdditionalStats`) are CONTAMINATED — old race files get regenerated, so a
+ * `AdditionalStats`) are contaminated — old race files get regenerated, so a
  * race-4 file fetched today reports the race-5-era cumulative (verified live:
  * Gasly's race-4 file says 53 while the true sum through race 4 is 37). The
  * only reliable per-race series are the race points / session points /
- * prices, so the season cumulative is RECOMPUTED here by summing them.
+ * prices, so the season cumulative is recomputed here by summing them.
  *
  * Pure function — no I/O, no caching. feed.ts wraps it (getHistory).
  */
@@ -32,9 +32,7 @@ export function assembleHistory(payloads: RacePayload[]): SeasonHistory {
   for (const payload of deduped) {
     for (const asset of payload.assets) {
       const pending = asset.racePoints === null
-      if (pending && payload.raceNumber !== pendingRace) {
-        pendingRace = payload.raceNumber
-      }
+      if (pending) pendingRace = payload.raceNumber
 
       const point: AssetRacePoint = {
         raceNumber: payload.raceNumber,
@@ -87,8 +85,8 @@ export function assembleHistory(payloads: RacePayload[]): SeasonHistory {
     const last = history.perRace[history.perRace.length - 1]
     history.priceDeltaTenths = first && last ? last.priceTenths - first.priceTenths : 0
 
-    // Price-chain invariant: price[race] === prevPrice[race+1] for CONSECUTIVE
-    // races (a gap from a mid-season swap legitimately breaks the chain).
+    // Price-chain invariant: price[race] === prevPrice[race+1] for consecutive
+    // races only (a gap from a mid-season swap legitimately breaks the chain).
     for (let i = 1; i < history.perRace.length; i++) {
       const prev = history.perRace[i - 1]
       const curr = history.perRace[i]

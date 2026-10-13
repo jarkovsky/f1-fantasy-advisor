@@ -4,7 +4,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes"
 
 /**
  * Canonical next-themes wrapper (shadcn pattern). Light is the product default
- * (spec §10 M5): no system preference — the user opts into dark via the
+ * and the system preference is ignored: the user opts into dark via the
  * sidebar toggle, persisted under next-themes' `theme` localStorage key.
  * next-themes injects a blocking pre-paint script, so the PPR static shell
  * stays theme-free and there is no flash on either theme.

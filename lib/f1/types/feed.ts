@@ -2,10 +2,9 @@
  * The feed-boundary contract: a parse Result in, a provenance-stamped Feed out,
  * and the Snapshot shape of the committed fallback.
  *
- * Pure types with zero imports — importable from server-only modules
- * (snapshot-data.ts, feed.ts) and un-fenced testable ones (fetch-or-snapshot.ts)
- * alike. Keeping the Snapshot shape here is what lets fetch-or-snapshot.ts stay
- * un-fenced while snapshot-data.ts is server-only.
+ * Types only, with zero imports, so both the server-only modules
+ * (snapshot-data.ts, feed.ts) and the un-fenced, directly tested
+ * fetch-or-snapshot.ts can share them.
  */
 
 export type ParseResult<T> =

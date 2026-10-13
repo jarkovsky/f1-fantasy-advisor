@@ -1,40 +1,44 @@
-import type { Feed, ParseResult, Snapshot } from "./types/feed"
-
 /**
  * The degradation core of the data layer: try the live feed, fall back to the
- * committed snapshot, NEVER throw.
+ * committed snapshot, never throw.
  *
  * This guarantee is what makes the offline build work: `'use cache'` fetchers
  * execute at build time, and a build machine with no network must still
  * produce a working app (rendering snapshot data with provenance).
  *
- * Deliberately NOT `server-only`: this module is pure(ish) and directly
- * unit-tested with an injected fetchImpl — the server-only fence lives in
- * feed.ts, the only production caller.
+ * Deliberately not `server-only`, so it can be unit-tested directly with an
+ * injected fetchImpl — the server-only fence lives in feed.ts, the only
+ * production caller.
  */
+import type { Feed, ParseResult, Snapshot } from "./types/feed"
+
 import { F1_FEED_BASE, FEED_TIMEOUT_MS, FEED_UA } from "./config"
 
-export type FetchOrSnapshotOptions = {
+export type FetchOrSnapshotOptions<E> = {
   fetchImpl?: typeof fetch
-  /** Last-resort value when live fails AND no/invalid snapshot exists. */
-  empty: unknown
+  /** Last-resort value when live fails and no valid snapshot exists. */
+  empty: E
 }
 
-export async function fetchOrSnapshot<T>(
+function requestFeed(fetchImpl: typeof fetch, path: string): Promise<Response> {
+  return fetchImpl(F1_FEED_BASE + path, {
+    headers: { "user-agent": FEED_UA },
+    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+  })
+}
+
+export async function fetchOrSnapshot<T, E>(
   path: string,
   parse: (raw: unknown) => ParseResult<T>,
   snapshot: () => Snapshot | null,
-  options: FetchOrSnapshotOptions,
+  options: FetchOrSnapshotOptions<E>,
   race?: number
-): Promise<Feed<T>> {
+): Promise<Feed<T | E>> {
   const fetchImpl = options.fetchImpl ?? fetch
 
   // 1. Live.
   try {
-    const res = await fetchImpl(F1_FEED_BASE + path, {
-      headers: { "user-agent": FEED_UA },
-      signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
-    })
+    const res = await requestFeed(fetchImpl, path)
     if (res.ok) {
       const json: unknown = await res.json() // may throw → caught below
       const parsed = parse(json)
@@ -76,10 +80,10 @@ export async function fetchOrSnapshot<T>(
     console.error(`[f1-feed] ${path} snapshot ALSO failed schema — serving empty value`)
   }
 
-  // 3. Last resort: typed empty value. Dead branch for races within the
-  // snapshot range; exists so this function provably cannot throw.
+  // 3. Last resort: the caller's typed empty value. Unreachable for races
+  // within the snapshot range; exists so this function provably cannot throw.
   return {
-    data: options.empty as T,
+    data: options.empty,
     meta: { source: "snapshot", asOf: "", race },
   }
 }
@@ -87,13 +91,11 @@ export async function fetchOrSnapshot<T>(
 /**
  * Probe whether a feed path is published, by HTTP status alone.
  *
- * Exists because getDrivers (via fetchOrSnapshot) CANNOT answer "is race N+1
- * published?": it degrades a 403 to the committed snapshot, swallowing the
- * status. Unpublished races return 403 (S3 deny-on-missing-key), not 404, so
- * status is the only signal — but it never surfaces through the degradation
- * path. This probe reads status only (no body) and reports res.ok.
+ * fetchOrSnapshot can't answer "is race N+1 published?": it degrades the
+ * unpublished-race 403 to the committed snapshot, swallowing the status. This
+ * probe reads the status only (no body).
  *
- * Like fetchOrSnapshot, it NEVER throws: every failure mode (403, 5xx, network
+ * Like fetchOrSnapshot it never throws — every failure mode (403, 5xx, network
  * error, timeout/abort) collapses to false. It runs inside a 'use cache' scope
  * at build time, where a throw would abort prerender.
  */
@@ -101,12 +103,8 @@ export async function probeFeedPublished(
   path: string,
   opts?: { fetchImpl?: typeof fetch }
 ): Promise<boolean> {
-  const fetchImpl = opts?.fetchImpl ?? fetch
   try {
-    const res = await fetchImpl(F1_FEED_BASE + path, {
-      headers: { "user-agent": FEED_UA },
-      signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
-    })
+    const res = await requestFeed(opts?.fetchImpl ?? fetch, path)
     return res.ok
   } catch {
     // Network down, DNS failure, timeout/abort — treat as not published.

@@ -23,6 +23,17 @@ import { LockedView } from "@/app/_components/advisor/locked-view"
 
 const POLL_MS = 30_000
 
+const firstVisitLockFmt = new Intl.DateTimeFormat(undefined, {
+  weekday: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+})
+
+function firstVisitIntro(gpName: string | undefined, lockAtMs: number | null): string {
+  if (lockAtMs === null) return "Next race — schedule pending."
+  return `Building your team for the ${gpName ?? "next race"} · locks ${firstVisitLockFmt.format(lockAtMs)}`
+}
+
 /** Neutral block layout mirrored by the Suspense fallback + pre-derive shell. */
 function PanelShell() {
   return (
@@ -44,13 +55,22 @@ export function AdvisorPanel(props: AdvisorServerProps) {
 }
 
 /**
- * The advisor island: derives the §5.4 race-week state on the client and
- * dispatches to the matching screen. Preset (URL-driven) and blend/what-if live
- * here because the resolved projection is consumed by both LOCKED and OPEN.
- * useSearchParams (inside usePresetParam) MUST stay under the Suspense boundary
- * above — this component is that boundary.
+ * The advisor island: derives the race-week state on the client and dispatches
+ * to the matching screen. Preset (URL-driven) and blend weight live here
+ * because the resolved projection feeds both LOCKED and OPEN. usePresetParam
+ * reads useSearchParams, so this component must render inside the Suspense
+ * boundary in AdvisorPanel.
  */
-function AdvisorPanelInner(props: AdvisorServerProps) {
+function AdvisorPanelInner({
+  constraints,
+  raceWeekends,
+  nextRacePublished,
+  live,
+  assets,
+  projectionsByPreset,
+  lastRacePoints,
+  meta,
+}: AdvisorServerProps) {
   const { state: team, hydrated, applyPlan, confirmRollover } = useTeamStore()
 
   const now = useNow(POLL_MS)
@@ -59,48 +79,37 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
   const [blendWeight, setBlendWeight] = useState(0.5)
   const [whatIf, setWhatIf] = useState<WhatIfMode>("none")
 
-  const { projection, totals } = useProjection(props.projectionsByPreset, preset, blendWeight)
+  const { projection, totals } = useProjection(projectionsByPreset, preset, blendWeight)
 
   const assetsById = useMemo<Record<string, AssetLite>>(() => {
     const out: Record<string, AssetLite> = {}
-    for (const a of props.assets) out[a.playerId] = a
+    for (const a of assets) out[a.playerId] = a
     return out
-  }, [props.assets])
+  }, [assets])
 
   const raceState = useRaceWeekState({
     now,
     hydrated,
-    constraints: props.constraints,
-    raceWeekends: props.raceWeekends,
-    nextRacePublished: props.nextRacePublished,
-    live: props.live,
+    constraints,
+    raceWeekends,
+    nextRacePublished,
+    live,
     storedRaceNumber: team.raceNumber,
   })
 
   if (raceState === null) return <PanelShell />
 
-  const currentWeekend = props.raceWeekends.find(
-    (w) => w.raceNumber === props.constraints.raceNumber
-  )
-  const roster = team.roster
+  const currentWeekend = raceWeekends.find((w) => w.raceNumber === constraints.raceNumber)
+  const roster = team.roster ?? []
 
   switch (raceState.kind) {
     case "FIRST_VISIT": {
       return (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
-            {raceState.lockAtMs !== null
-              ? `Building your team for the ${currentWeekend?.gpName ?? "next race"} · locks ${new Intl.DateTimeFormat(
-                  undefined,
-                  { weekday: "short", hour: "2-digit", minute: "2-digit" }
-                ).format(raceState.lockAtMs)}`
-              : "Next race — schedule pending."}
+            {firstVisitIntro(currentWeekend?.gpName, raceState.lockAtMs)}
           </p>
-          <TeamPicker
-            assets={props.assets}
-            raceNumber={props.constraints.raceNumber}
-            mode="first-run"
-          />
+          <TeamPicker assets={assets} raceNumber={constraints.raceNumber} mode="first-run" />
         </div>
       )
     }
@@ -110,7 +119,7 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
         <RolloverForm
           from={raceState.from}
           to={raceState.to}
-          assets={props.assets}
+          assets={assets}
           assetsById={assetsById}
           team={team}
           onConfirm={confirmRollover}
@@ -119,12 +128,12 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
     }
 
     case "LOCKED": {
-      const later = props.raceWeekends.find((w) => w.raceNumber > raceState.race)
+      const later = raceWeekends.find((w) => w.raceNumber > raceState.race)
       return (
         <LockedView
           gpName={raceState.gpName}
           live={raceState.live}
-          roster={roster ?? []}
+          roster={roster}
           assetsById={assetsById}
           projection={projection}
           nextLockAtMs={later?.lockAtMs ?? null}
@@ -136,36 +145,36 @@ function AdvisorPanelInner(props: AdvisorServerProps) {
       return (
         <BetweenRounds
           lastCompleted={raceState.lastCompleted}
-          pointsRace={
-            props.constraints.lastCompletedRace >= 1 ? props.constraints.lastCompletedRace : null
-          }
-          roster={roster ?? []}
+          pointsRace={constraints.lastCompletedRace >= 1 ? constraints.lastCompletedRace : null}
+          roster={roster}
           assetsById={assetsById}
-          lastRacePoints={props.lastRacePoints}
+          lastRacePoints={lastRacePoints}
           savedProjection={team.savedProjection}
         />
       )
     }
 
     case "SEASON_ENDED": {
-      return <SeasonEnded roster={roster ?? []} assetsById={assetsById} />
+      return <SeasonEnded roster={roster} assetsById={assetsById} />
     }
 
     case "OPEN": {
       return (
         <OpenAdvisor
-          props={props}
           raceState={raceState}
           currentWeekend={currentWeekend}
+          assets={assets}
           assetsById={assetsById}
+          raceNumber={constraints.raceNumber}
+          meta={meta}
           projection={projection}
           totals={totals}
           preset={preset}
           onPresetChange={onPresetChange}
           blendWeight={blendWeight}
-          setBlendWeight={setBlendWeight}
+          onBlendWeightChange={setBlendWeight}
           whatIf={whatIf}
-          setWhatIf={setWhatIf}
+          onWhatIfChange={setWhatIf}
           team={team}
           applyPlan={applyPlan}
         />

@@ -1,5 +1,5 @@
 /**
- * Types for the assembled season history: per-asset series with RECOMPUTED
+ * Types for the assembled season history: per-asset series with recomputed
  * cumulatives. The assembly logic (and why the feed's own totals can't be
  * trusted) lives in ../history.ts.
  */
@@ -28,14 +28,16 @@ export type AssetHistory = {
   teamName: string | null
   /** Ordered by raceNumber; only races where the asset was present. */
   perRace: AssetRacePoint[]
-  /** RECOMPUTED: sum of scored per-race points (never the feed's total). */
+  /** Recomputed: sum of scored per-race points (never the feed's total). */
   cumulativePoints: number
   /** Running sum over scored races — sparkline/series-ready. */
   cumulativeByRace: { raceNumber: number; cumulative: number }[]
   /** Latest price minus earliest price across present races. */
   priceDeltaTenths: number
-  /** Season-to-date stat breakdown from the latest SCORED race — a snapshot
-   *  of feed-generation time, never summed as a series. */
+  /**
+   * Season-to-date stat breakdown from the latest scored race — a snapshot as
+   * of feed generation, never summed as a series.
+   */
   latestAdditionalStats: AssetAdditionalStats | null
 }
 

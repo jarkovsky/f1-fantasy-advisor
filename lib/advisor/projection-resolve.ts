@@ -1,64 +1,42 @@
+/**
+ * Client-side preset resolver.
+ *
+ * The server never serializes SeasonHistory; it ships every concrete preset
+ * pre-computed (see AdvisorServerProps.projectionsByPreset). The "custom-blend"
+ * preset is derived here, in the browser, by linear interpolation between
+ * "season-average" (w=0) and "weighted-recent" (w=1). This is exact, not an
+ * approximation: the projection engine's blend is itself linear in the two
+ * endpoints, so a per-field lerp reproduces projectAssets(..., {preset:
+ * "custom-blend", blendWeight}) to floating-point precision. That equivalence
+ * is pinned by projection-resolve.test.ts.
+ *
+ * Pure (no I/O, no clock) and cheap enough to run on every advisor render.
+ */
 import type {
   AssetProjection,
   ProjectionResult,
   SessionExpectation,
 } from "@/lib/projections/types/projection"
-/**
- * Client-side preset resolver (plan D1/D3).
- *
- * The server never serializes SeasonHistory; it ships every CONCRETE preset
- * pre-computed (see AdvisorServerProps.projectionsByPreset). The "custom-blend"
- * preset is derived HERE, in the browser, by exact linear interpolation between
- * "season-average" (w=0) and "weighted-recent" (w=1). This is exact, not an
- * approximation: the projection engine's blend is itself linear in the two
- * endpoints, so a per-field lerp reproduces projectAssets(..., {preset:
- * "custom-blend", blendWeight}) byte-for-byte. That equivalence is pinned by
- * the wire-format test (lib/advisor/projection-resolve.test.ts).
- *
- * PURE: no I/O, no wall-clock — runs on every advisor render (cheap).
- */
 import type { ConcretePresetId, PresetId } from "@/lib/projections/types/presets"
 
 function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x))
 }
 
-/** Union two note arrays preserving order, de-duplicated. */
-function unionNotes(a: string[], b: string[]): string[] {
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const n of [...a, ...b]) {
-    if (seen.has(n)) continue
-    seen.add(n)
-    out.push(n)
-  }
-  return out
-}
-
 /**
  * Lerp one asset's projection between the season-average (A) and
  * weighted-recent (B) endpoints. Sessions zip by index: by construction both
- * endpoints were projected for the SAME upcoming weekend on the SAME history,
- * so their session lists are identical in length and label (asserted — the
- * fixtures prove it). basisRaces is preset-independent (it counts scored
- * sessions), so it is copied; priorBlended carries through identically.
+ * endpoints were projected for the same upcoming weekend on the same history,
+ * so their session lists are identical in length and label (asserted below).
+ * basisRaces is preset-independent (it counts scored sessions), so it is
+ * copied; priorBlended carries through identically.
  */
 function lerpAsset(a: AssetProjection, b: AssetProjection, w: number): AssetProjection {
   // Per-asset fallback: when the B-side asset fell back to equal-ppm (no
-  // history / mid-season swap), BOTH endpoints hold the identical equal-ppm
+  // history / mid-season swap), both endpoints hold the identical equal-ppm
   // value (the engine forces equal-ppm for that asset under every history
-  // preset), so the lerp is the identity — copy B's source + fallback verbatim.
-  if (b.fallback) {
-    return {
-      playerId: b.playerId,
-      kind: b.kind,
-      totalPoints: b.totalPoints,
-      perSession: b.perSession,
-      source: b.source,
-      basis: b.basis,
-      fallback: b.fallback,
-    }
-  }
+  // preset), so the lerp is the identity — copy B, source and fallback included.
+  if (b.fallback) return { ...b }
 
   if (a.perSession.length !== b.perSession.length) {
     throw new Error(
@@ -93,8 +71,8 @@ function lerpAsset(a: AssetProjection, b: AssetProjection, w: number): AssetProj
 /**
  * Resolve the effective ProjectionResult for the chosen preset.
  *
- * - Concrete preset → the server's pre-computed result, returned UNCHANGED
- *   (referential identity — cheap, and lets memoized consumers compare ===).
+ * - Concrete preset → the server's pre-computed result, returned as-is (same
+ *   reference, so memoized consumers can compare with ===).
  * - "custom-blend" → at cold start the engine forces equal-ppm, so we return
  *   the equal-ppm result object directly; otherwise lerp season-average ↔
  *   weighted-recent at w = clamp(blendWeight ?? 0.5).
@@ -134,6 +112,6 @@ export function resolveClientProjection(
     effectivePreset: "custom-blend",
     basis: b.basis,
     coldStart: false,
-    notes: unionNotes(a.notes, b.notes),
+    notes: [...new Set([...a.notes, ...b.notes])], // order-preserving union
   }
 }

@@ -1,15 +1,15 @@
-// jsdom is missing several browser globals that UI components reach for
-// (ResizeObserver, IntersectionObserver, matchMedia). These installers are
-// exported as opt-in functions — NOT side-effecting imports and NOT wired into
-// vitest.setup.ts — so each test that needs a stub asks for it explicitly.
-// Globalizing them would silently paper over a component that forgot to guard a
-// missing API. Every installer returns an uninstall fn restoring the prior
-// value (a test installs in beforeEach, restores in afterEach).
+// jsdom is missing browser globals that UI components reach for
+// (ResizeObserver, matchMedia). These installers are exported as opt-in
+// functions — not side-effecting imports and not wired into vitest.setup.ts —
+// so each test that needs a stub asks for it explicitly. Globalizing them would
+// silently paper over a component that forgot to guard a missing API. Every
+// installer returns an uninstall fn restoring the prior value (a test installs
+// in beforeEach, restores in afterEach).
 
 /** Restores whatever was on the global before install (often undefined). */
 type Uninstall = () => void
 
-/** Minimal ResizeObserver: records callbacks, never fires (no layout in jsdom). */
+/** Minimal no-op ResizeObserver: never fires (jsdom has no layout). */
 export function installResizeObserverStub(): Uninstall {
   class ResizeObserverStub {
     observe(): void {}
@@ -20,27 +20,6 @@ export function installResizeObserverStub(): Uninstall {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof globalThis.ResizeObserver
   return () => {
     globalThis.ResizeObserver = prior
-  }
-}
-
-/** Minimal IntersectionObserver: records callbacks, never fires. */
-export function installIntersectionObserverStub(): Uninstall {
-  class IntersectionObserverStub {
-    readonly root = null
-    readonly rootMargin = ""
-    readonly thresholds: ReadonlyArray<number> = []
-    observe(): void {}
-    unobserve(): void {}
-    disconnect(): void {}
-    takeRecords(): IntersectionObserverEntry[] {
-      return []
-    }
-  }
-  const prior = globalThis.IntersectionObserver
-  globalThis.IntersectionObserver =
-    IntersectionObserverStub as unknown as typeof globalThis.IntersectionObserver
-  return () => {
-    globalThis.IntersectionObserver = prior
   }
 }
 
