@@ -132,6 +132,6 @@ describe("BetweenRounds", () => {
       screen.getByText(/Results are still being scored — check back soon\./)
     ).toBeInTheDocument()
     expect(screen.queryByText(/You scored/)).not.toBeInTheDocument()
-    expect(screen.queryByText(/Actual vs projected/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Points by asset/)).not.toBeInTheDocument()
   })
 })

@@ -86,7 +86,7 @@ export function BetweenRounds({
       )}
 
       <Card className="gap-3 bg-surface-1 p-4">
-        <h2 className="text-sm font-semibold">Actual vs projected</h2>
+        <h2 className="text-sm font-semibold">Points by asset</h2>
         <Table>
           <TableHeader>
             <TableRow className="text-xs text-muted-foreground hover:bg-transparent">

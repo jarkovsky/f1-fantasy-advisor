@@ -188,6 +188,17 @@ describe("RolloverForm", () => {
     expect(snap.activeChip).toBe("limitless")
   })
 
+  it("cancelling the squad editor withdraws the edit choice", async () => {
+    const user = userEvent.setup()
+    renderForm()
+
+    await user.click(screen.getByRole("radio", { name: /I made transfers/i }))
+    await user.click(screen.getByRole("button", { name: /^cancel$/i }))
+
+    // Nothing was edited, so the form must not go on to confirm "your edited squad".
+    expect(screen.getByRole("radio", { name: /I made transfers/i })).not.toBeChecked()
+  })
+
   it("exposes an sr-only polite status summary region before confirm", () => {
     renderForm()
     const status = screen.getByRole("status")

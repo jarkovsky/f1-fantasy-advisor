@@ -99,8 +99,11 @@ export function useRolloverForm(args: {
     setEditing(true)
   }
 
+  // Saving in the editor ends the rollover (this form unmounts), so closing
+  // here only ever means Cancel: nothing was edited, so withdraw the choice.
   function closeEditor(): void {
     setEditing(false)
+    setSquadChoice(null)
   }
 
   function handleConfirm(): void {

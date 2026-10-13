@@ -14,7 +14,9 @@ export function Delta(props: DeltaProps) {
   const { value, className } = props
   const text = props.points ? formatSignedPoints(value) : formatDeltaTenths(value)
 
-  const tone = value > 0 ? "text-pos" : value < 0 ? "text-neg" : "text-muted-foreground"
+  // Tone follows the displayed text: a points delta that rounds to zero shows
+  // the neutral "·" and must not be colored as a gain or a loss.
+  const tone = text === "·" ? "text-muted-foreground" : value > 0 ? "text-pos" : "text-neg"
 
   return <span className={cn("tabular-nums", tone, className)}>{text}</span>
 }
