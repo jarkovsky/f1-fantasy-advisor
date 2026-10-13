@@ -1,10 +1,19 @@
 # Fantasy F1 Race-Weekend Advisor
 
-A free, no-login web app that tells you the best F1 Fantasy squad and transfers for the upcoming Grand Prix. It pulls the official F1 Fantasy CDN feeds, projects every driver and constructor under transparent presets, then exhaustively searches all ~1.45M legal squads for the optimum. Your team lives in `localStorage` only — no accounts, no server state — and every number is explained, not hidden behind a black box.
+**Finds the provably optimal F1 Fantasy squad and transfers for the next Grand Prix by checking all 1,448,370 legal squads in ~6 ms, right in the browser.**
 
-Light-first design on a dot-pattern paper grey, with a floating icon sidebar and a dark "telemetry" theme one toggle away (`next-themes`, light by default). The advisor is a single centered column: the Grand Prix card, then your team with the recommended transfers and DRS Boost baked directly into the roster rows.
+Exact, not heuristic: given the projections, no better squad exists. It pulls the official F1 Fantasy feeds, projects every driver and constructor under transparent presets, and explains every number. Free, no login; your team lives in `localStorage` only.
+
+- **Exact search with a proof.** Budget-only pruning with a written optimality proof. Tests check the global optimum _and_ the best squad at every transfer count against a brute-force oracle.
+- **Degrades instead of breaking.** Every feed is validated with zod at the boundary and falls back from live to committed snapshot to typed empty. The production build succeeds with no network at all.
+- **Next.js 16 Cache Components.** A cacheable static shell with one streamed data hole. Lighthouse 100 on Accessibility, Best Practices and SEO; LCP 407 ms at 4× CPU throttle.
+- **Tested and strictly typed.** 321 tests (Vitest + Testing Library), strict TypeScript with `noUncheckedIndexedAccess`.
+
+**Stack:** Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · zod · Vitest
 
 ## Screenshots
+
+Light by default on a dot-pattern paper grey, with a dark "telemetry" theme one toggle away. The recommended transfers and DRS Boost are baked directly into your roster rows.
 
 | The advisor — live Monaco data                                 | Team setup                                      | Stats                                |
 | -------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------ |
@@ -20,15 +29,15 @@ flowchart TD
     ZOD[zod boundary<br/>verbatim wire names · verified feed typos normalized]
     DEG[fetch-or-snapshot degradation core<br/>live → committed snapshot → typed empty · never throws]
     CACHE['use cache' fetchers<br/>per-feed cacheLife]
-    HIST[season history<br/>cumulatives RECOMPUTED per-race · regenerated feed files healed]
-    PROJ[projects ALL four concrete presets]
+    HIST[season history<br/>cumulatives recomputed per race · regenerated feed files healed]
+    PROJ[projects all four concrete presets]
     PROPS[serialized props<br/>SeasonHistory never crosses the wire]
     ZOD --> DEG --> CACHE --> HIST --> PROJ --> PROPS
   end
 
   subgraph client[Client island]
     STORE[localStorage store 'f1:v1']
-    SM[§5.4 race-week state machine<br/>wall clock + stored race stamp]
+    SM[race-week state machine<br/>wall clock + stored race stamp]
     BLEND[custom-blend = exact lerp of two presets]
     ADAPT[optimizer adapter]
     OPT[optimizer behind dynamic import<br/>exhaustive C 22,5 × C 11,2 = 1,448,370<br/>budget-prune w/ optimality proof]
@@ -46,31 +55,31 @@ flowchart TD
   classDef side fill:#2a2a2a,color:#bbb,stroke-dasharray:4 3;
 ```
 
-The server resolves a single streamed data hole (a fully cacheable async RSC, no `searchParams`, no wall clock), pre-computes the four concrete presets, and ships serializable ingredients. The client island runs the §5.4 state machine itself, derives `custom-blend` by exact interpolation, and only then lazy-loads the optimizer.
+The server resolves a single streamed data hole (a fully cacheable async RSC, no `searchParams`, no wall clock), pre-computes the four concrete presets, and ships serializable ingredients. The client island runs the race-week state machine itself, derives `custom-blend` by exact interpolation, and only then lazy-loads the optimizer.
 
 ## Key decisions
 
 | Decision                                                               | Why                                                                                                    |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Money is integer tenths-of-a-million end to end                        | Exact budget-boundary comparisons (cost == purse affordable; one tenth more is not)                    |
-| Season cumulatives RECOMPUTED by summing per-race points               | Feed totals are contaminated — old race files get regenerated with later-era cumulatives               |
-| Team lock from the raceday ISO8601 first-session start                 | `constraints.DeadlineDate` proven stale/advisory — never trusted                                       |
-| HTTP 403 on the next-race drivers feed = unpublished                   | S3 deny, an expected signal (`nextRacePublished`), not an error                                        |
-| Never recompute scoring from results                                   | The feed's per-race / per-session points suffice; no re-derivation                                     |
-| §5.4 state machine runs client-side                                    | It needs wall clock + stored race; nothing time/user-dependent in the PPR shell                        |
-| `custom-blend` = exact lerp of season-average and weighted-recent      | The engine's blend is linear in its endpoints, so SeasonHistory never has to ship                      |
 | Exhaustive search, budget-only pruning with a written optimality proof | Score/upper-bound pruning deliberately omitted — it could cut a non-global per-transfer-count optimum  |
 | Oracle-verified optimality                                             | Tested against a brute-force oracle — global optimum and every transfer bucket                         |
 | DRS captain co-optimized for free                                      | Captain is the max-projection term folded into the score, not a second pass                            |
+| Money is integer tenths-of-a-million end to end                        | Exact budget-boundary comparisons (cost == purse affordable; one tenth more is not)                    |
+| Season cumulatives recomputed by summing per-race points               | Feed totals are contaminated — old race files get regenerated with later-era cumulatives               |
+| Team lock from the raceday ISO8601 first-session start                 | `constraints.DeadlineDate` proven stale/advisory — never trusted                                       |
+| HTTP 403 on the next-race drivers feed = unpublished                   | S3 deny, an expected signal (`nextRacePublished`), not an error                                        |
+| Never recompute scoring from results                                   | The feed's per-race / per-session points suffice; no re-derivation                                     |
+| Committed snapshots feed offline builds                                | `'use cache'` fetchers fall back to `data/`, so `next build` needs zero network                        |
 | Sprint small-sample prior                                              | Sprint sessions are shrunk toward a prior (few samples per season)                                     |
 | Equal-PPM is per-race calibrated                                       | Divides by completed races so it sits on the single-race scale as a fallback                           |
+| `custom-blend` = exact lerp of season-average and weighted-recent      | The engine's blend is linear in its endpoints, so SeasonHistory never has to ship                      |
+| Race-week state machine runs client-side                               | It needs wall clock + stored race; nothing time/user-dependent in the PPR shell                        |
 | `localStorage`-only persistence                                        | No accounts, no backend; degrades silently when storage is blocked                                     |
-| Committed snapshots feed offline builds                                | `'use cache'` fetchers fall back to `data/`, so `next build` needs zero network                        |
 | Light default via `next-themes` pre-paint script                       | Zero FOUC and PPR-safe: the static shell stays theme-free; the class lands before first paint          |
-| Text and surface tokens are designed as PAIRS                          | Muted-on-raised-grey and white-on-red-fill each fail AA if tuned alone — found by auditing both themes |
+| Text and surface tokens are designed as pairs                          | Muted-on-raised-grey and white-on-red-fill each fail AA if tuned alone — found by auditing both themes |
 | Recommended plan baked into the roster rows                            | One merged team card (out → in per row, DRS chip on the pick) beats two cards saying the same thing    |
 | Picker = two kind tables + one shared search                           | A checkbox column is the a11y source of truth; sort/announce mechanics shared with the stats table     |
-| Dot-pattern background generated by a SEEDED PRNG                      | The speckle SVGs are deterministic build inputs (`pnpm pattern`), not random output                    |
+| Dot-pattern background generated by a seeded PRNG                      | The speckle SVGs are deterministic build inputs (`pnpm pattern`), not random output                    |
 
 ## Performance
 
@@ -82,9 +91,11 @@ Optimizer microbenchmark — Apple M1 Pro, node 22; 1,448,370 candidate squads; 
 | wildcard  | 4.724  | 6.061     | 7.053  |
 | limitless | 6.632  | 6.872     | 7.204  |
 
-Production-build record (M5 light-first redesign): Lighthouse 100/100/100 (Accessibility / Best Practices / SEO) on `/` (desktop + mobile) and `/stats`, plus 100 Accessibility on the fully expanded OPEN advisor in BOTH themes. LCP 407 ms at 4× CPU throttle (the text hero is the LCP element), CLS 0.00. The optimizer runs in ~25 ms even at 4× throttle, so it stays on the main thread inside a `startTransition` — no Web Worker needed.
+Production build: Lighthouse 100/100/100 (Accessibility / Best Practices / SEO) on `/` (desktop and mobile) and `/stats`, plus 100 Accessibility on the fully expanded advisor in both themes. LCP 407 ms at 4× CPU throttle (the text hero is the LCP element), CLS 0.00. The optimizer runs in ~25 ms even at 4× throttle, so it stays on the main thread inside a `startTransition` — no Web Worker needed.
 
 ## Commands
+
+Requires Node ≥ 20.9 and pnpm. Run `pnpm install` first.
 
 | Command             | What it does                                                             |
 | ------------------- | ------------------------------------------------------------------------ |
@@ -100,13 +111,11 @@ Production-build record (M5 light-first redesign): Lighthouse 100/100/100 (Acces
 | `pnpm format:check` | Prettier check                                                           |
 | `pnpm typecheck`    | `next typegen && tsc --noEmit`                                           |
 
-The flagship proof — the build runs entirely from committed snapshots with no reachable network:
+The build needs no network. With the feed pointed at an unreachable host, it still succeeds end to end and renders snapshot data with provenance:
 
 ```sh
 F1_FEED_BASE=http://127.0.0.1:1 pnpm build
 ```
-
-succeeds end to end, rendering snapshot data with provenance.
 
 ## Honesty notes
 
