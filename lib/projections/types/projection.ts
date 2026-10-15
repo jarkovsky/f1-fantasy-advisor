@@ -1,8 +1,8 @@
-import type { AssetHistory } from "@/lib/f1/types/history"
 /**
  * Result types for the projection engine (per-asset expected points under a
  * preset). The engine that produces these lives in ../engine.ts.
  */
+import type { AssetHistory } from "@/lib/f1/types/history"
 import type { SessionLabelType } from "@/lib/f1/schemas"
 import type { PresetId } from "./presets"
 
@@ -41,7 +41,7 @@ export type ProjectionResult = {
   /** Differs from requested only at cold start (equal-ppm forced). */
   effectivePreset: PresetId
   basis: { completedRaces: number; completedSprints: number }
-  /** True at race 1: history presets greyed, equal-ppm locked (spec §6.2). */
+  /** True before any race is scored: history presets greyed, equal-ppm forced. */
   coldStart: boolean
   notes: string[]
 }

@@ -7,8 +7,8 @@ import { DRS_BOOST_MULTIPLIER, EXTRA_TRANSFER_PENALTY } from "@/lib/constants"
 import { OptimizerInputError, optimize } from "./optimize"
 
 // ---------------------------------------------------------------------------
-// Brute-force oracle: enumerate EVERYTHING, no pruning, straight from the
-// spec formula — the ground truth optimize() must match field-for-field.
+// Brute-force oracle: enumerate every squad with no pruning, straight from the
+// scoring formula — the ground truth optimize() must match field-for-field.
 // ---------------------------------------------------------------------------
 
 function combinations<T>(items: T[], k: number): T[][] {
@@ -37,18 +37,6 @@ function bruteForce(input: OptimizerInput): OptimizerResult {
 
   const drivers = input.assets.filter((a) => a.kind === "driver")
   const constructors = input.assets.filter((a) => a.kind === "constructor")
-
-  const teamKey = (team: OptimizerAsset[]) => {
-    const d = team
-      .filter((a) => a.kind === "driver")
-      .map((a) => a.id)
-      .sort()
-    const c = team
-      .filter((a) => a.kind === "constructor")
-      .map((a) => a.id)
-      .sort()
-    return `${d.join(",")}|${c.join(",")}`
-  }
 
   const toPlan = (team: OptimizerAsset[]): TeamPlan => {
     const teamDrivers = team.filter((a) => a.kind === "driver")
@@ -97,7 +85,6 @@ function bruteForce(input: OptimizerInput): OptimizerResult {
     const incKey = `${inc.driverIds.join(",")}|${inc.constructorIds.join(",")}`
     return candKey < incKey
   }
-  void teamKey
 
   let best: TeamPlan | null = null
   const buckets: (TeamPlan | null)[] = Array.from({ length: 8 }, () => null)
@@ -317,7 +304,7 @@ describe("captain co-optimization", () => {
     // drivers + the constructors):
     //   A: star(30) + four 5s   → cost 180, sum 50, captain 30 → raw 80
     //   B: five 12s             → cost 180, sum 60, captain 12 → raw 72
-    // Without the captain term B wins on sum (60 > 50); WITH it A wins —
+    // Without the captain term B wins on sum (60 > 50); with it A wins —
     // proving the DRS pick is co-optimized, not bolted on. Any mix
     // (star + a 12) costs ≥ 196 and is unaffordable.
     const grid = makeGrid(
@@ -489,10 +476,10 @@ describe("full-size grid (22 drivers / 11 constructors)", () => {
       freeTransfers: 2,
       mode: "limitless",
     })
-    // Smoke, not a benchmark: unloaded this is ~7ms (pnpm bench is the
+    // Smoke, not a benchmark: limitless skips the budget prune, so every one of
+    // the ~1.45M squads is scored. Unloaded this is ~7ms (pnpm bench is the
     // record), but with the full suite saturating every core it has measured
-    // 300ms+. 1s still catches an algorithmic regression (losing the prune or
-    // the SoA layout is a >10× blowup) without flaking under parallel load.
+    // 300ms+. 1s still catches an algorithmic regression without flaking.
     expect(performance.now() - start).toBeLessThan(1_000)
   })
 

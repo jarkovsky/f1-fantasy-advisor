@@ -1,3 +1,23 @@
+/**
+ * Projection engine: turns SeasonHistory into per-asset expected fantasy points
+ * for the upcoming race, under five transparent presets, with session-aware
+ * composition matched to the upcoming weekend's format.
+ *
+ * Pure: no I/O, no caching, no clock. The caller injects the history and the
+ * upcoming weekend's shape.
+ *
+ * Key invariant (tested): for a normal (non-sprint) upcoming weekend,
+ *   Σ perSession.expected === totalPoints === preset(elementwise quali+race)
+ * Quali and race exist in the same set of races, so their preset weight
+ * vectors are identical and the weighted mean is linear. Comparing against
+ * whole-race points instead would be wrong: in sprint races those include the
+ * sprint session.
+ *
+ * Equal PPM is per-race calibrated: k_class divides season points by season
+ * price and by completed races, so its outputs sit on the same single-race
+ * scale as the history presets. That matters because Equal PPM is also the
+ * fallback mixed into history-preset results for no-history assets.
+ */
 import type {
   AssetProjection,
   ProjectionOptions,
@@ -9,26 +29,6 @@ import type { AssetHistory, SeasonHistory } from "@/lib/f1/types/history"
 import type { PresetDefinition, PresetId } from "./types/presets"
 import type { SessionLabelType } from "@/lib/f1/schemas"
 
-/**
- * Projection engine (spec §6): turns SeasonHistory into per-asset expected
- * fantasy points for the upcoming race, under five transparent presets, with
- * session-aware composition matched to the upcoming weekend's format.
- *
- * PURE: no I/O, no caching, no Date.now(). The caller injects the history and
- * the upcoming weekend's shape, exactly as raceweek.ts injects `now`.
- *
- * Key invariant (tested): for a NORMAL upcoming weekend,
- *   Σ perSession.expected === totalPoints === preset(elementwise quali+race)
- * Quali and race exist in the same set of races, so their preset weight
- * vectors are identical and the weighted mean is linear. (The naive variant —
- * comparing against whole-race points — is WRONG: those include sprint
- * sessions in sprint races.)
- *
- * Equal PPM is per-race calibrated: k_class divides season points by season
- * price AND by completed races, so its outputs sit on the same single-race
- * scale as the history presets. That matters because Equal PPM is also the
- * fallback mixed into history-preset results for no-history assets.
- */
 import {
   EWMA_HALF_LIFE,
   FORM_WINDOW,
@@ -37,7 +37,7 @@ import {
 } from "@/lib/constants"
 
 // ---------------------------------------------------------------------------
-// Preset registry (the M3 dropdown consumes this)
+// Preset registry: labels and gating for the preset picker
 // ---------------------------------------------------------------------------
 
 export const PRESET_REGISTRY: readonly PresetDefinition[] = [
@@ -78,7 +78,7 @@ function mean(values: number[]): number {
 }
 
 /**
- * Exponentially weighted mean: the LAST element is the most recent (age 0),
+ * Exponentially weighted mean: the last element is the most recent (age 0),
  * w = 0.5^(age / halfLife), normalized over the present values only.
  * Exported for direct numeric testing.
  */
@@ -221,8 +221,10 @@ function composeSessions(
       return { session, expected: raw, basisRaces: series.length }
     }
 
-    // Sprint small-sample guard: shrink toward the asset's race expectation
-    // scaled by the grid-wide sprint/race ratio (spec §6.3).
+    // Sprint small-sample guard: a season has only a handful of sprints, so
+    // shrink the raw sprint mean toward the asset's race expectation scaled by
+    // the grid-wide sprint/race ratio. The raw mean's weight grows as sprints
+    // accumulate: α = completedSprints / (completedSprints + K).
     const raceSeries = sessionSeries(history, "Race")
     const raceExpectation = expectFor(raceSeries)
     const alpha = completedSprints / (completedSprints + SPRINT_PRIOR_SHRINKAGE_K)
@@ -240,7 +242,7 @@ function clamp01(x: number): number {
 }
 
 /**
- * Project every requested preset in one pass, computing the preset-INDEPENDENT
+ * Project every requested preset in one pass, computing the preset-independent
  * basis (completed races/sprints, class-K price coefficients, grid sprint ratio)
  * exactly once and sharing it across presets. The advisor RSC materializes all
  * four concrete presets per render, so this replaces four redundant full-grid
@@ -287,8 +289,6 @@ export function projectAssetsMany<P extends PresetId>(
 
     const byPlayerId: Record<string, AssetProjection> = {}
     for (const history of Object.values(season.byPlayerId)) {
-      const scoredRaces = history.perRace.filter((r) => r.status === "scored")
-
       const equalPpm = (fallback?: AssetProjection["fallback"]): AssetProjection => ({
         playerId: history.playerId,
         kind: history.kind,
@@ -309,8 +309,9 @@ export function projectAssetsMany<P extends PresetId>(
         continue
       }
 
-      // Per-asset no-history fallback (mid-season swap, spec §6.3).
-      if (scoredRaces.length === 0) {
+      // An asset with no scored race yet (e.g. a mid-season driver swap) has
+      // nothing for a history preset to weight.
+      if (!history.perRace.some((r) => r.status === "scored")) {
         byPlayerId[history.playerId] = equalPpm("equal-ppm-no-history")
         continue
       }

@@ -30,16 +30,16 @@ export type TeamPlan = {
   constructorIds: string[]
   /** The DRS-boosted driver (max projection; ties → lower id). */
   captainId: string
-  /** Raw points incl. captain bonus, NO penalty. */
+  /** Raw points including the DRS Boost bonus, before any transfer penalty. */
   projectedTotal: number
   /** projectedTotal + penaltyPoints. */
   score: number
   /** Net swaps vs the roster, 0..7. */
   transfers: number
-  /** EXTRA_TRANSFER_PENALTY · max(0, transfers − f); 0 when unlimited. */
+  /** EXTRA_TRANSFER_PENALTY · max(0, transfers − freeTransfers); 0 when unlimited. */
   penaltyPoints: number
   costTenths: number
-  /** purse − cost; signed-truthful (negative possible in limitless mode). */
+  /** purse − cost; negative when a limitless-mode squad overspends. */
   budgetLeftTenths: number
 }
 

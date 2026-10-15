@@ -1,42 +1,46 @@
-import type { TeamStateV1 } from "./types/team-state"
-
 /**
  * The client preference plane: the user's team, persisted to localStorage and
  * surfaced to React islands via useSyncExternalStore.
  *
- * This is the ONLY mutable client state in the app. The data layer (lib/f1/*)
- * is the read-only server plane; this module is the read-write client plane.
- * It is DUMB persistence — squad-shape validation belongs to the picker, not
- * here. We only guard the SHAPE we read back (anything we didn't write is
- * treated as corrupt → DEFAULT_STATE).
+ * This is the app's only persisted client state. The data layer (lib/f1/*) is
+ * the read-only server plane; this module is the read-write client plane. It is
+ * deliberately dumb persistence: squad rules belong to the picker. The only
+ * validation is a shape guard on what we read back — anything we didn't write
+ * is treated as corrupt and replaced with DEFAULT_STATE.
  *
- * Three hard contracts make useSyncExternalStore safe:
+ * Three contracts make useSyncExternalStore safe:
  * 1. getSnapshot() is reference-stable between mutations. React compares with
  *    Object.is; a fresh object per call would loop forever. We hand back a
  *    cached object and only swap the reference on an actual mutation.
- * 2. getServerSnapshot() === the FIRST client getSnapshot() (both DEFAULT_STATE)
- *    so the server render and the first client render agree (no hydration
- *    mismatch). localStorage is read LAZILY on first subscribe, never inside
- *    getSnapshot — a synchronous read there would diverge from the server HTML.
- * 3. `hydrated` lives in the same snapshot, so an island can re-render from
- *    skeleton to real content the moment the first localStorage read lands.
+ * 2. getServerSnapshot() and the first client getSnapshot() are both
+ *    DEFAULT_STATE, so the server render and the first client render agree (no
+ *    hydration mismatch). localStorage is read lazily on first subscribe, never
+ *    inside getSnapshot — a synchronous read there would diverge from the
+ *    server HTML.
+ * 3. `hydrated` is exposed next to the snapshot so an island can hold a
+ *    skeleton until the first localStorage read lands.
  *
  * No wall-clock reads anywhere — the race-week machine (lib/f1/raceweek.ts)
  * owns time; this module only stores the raceNumber a team was entered for.
  *
- * Persistence degrades silently: a blocked/quota'd/throwing localStorage still
- * yields a working in-memory session (Safari private mode, full quota). The
- * key is versioned ("f1:v1") so a future shape can migrate rather than crash.
+ * Persistence degrades silently: a blocked, full, or throwing localStorage
+ * (e.g. Safari private mode) still yields a working in-memory session. The key
+ * is versioned ("f1:v1") so a future shape can migrate rather than crash.
  */
+import type { TeamStateV1 } from "./types/team-state"
+
 import { useSyncExternalStore } from "react"
 
-import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
+import { INITIAL_BUDGET_TENTHS, SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
+
+type FreeTransfers = TeamStateV1["freeTransfers"]
+type Chip = TeamStateV1["activeChip"]
 
 const STORAGE_KEY = "f1:v1"
 
 /**
  * The pristine first-visit state. Frozen and shared by reference: it is the
- * server snapshot AND the pre-hydration client snapshot, so both renders match.
+ * server snapshot and the pre-hydration client snapshot, so both renders match.
  */
 export const DEFAULT_STATE: TeamStateV1 = Object.freeze({
   v: 1,
@@ -51,8 +55,8 @@ export const DEFAULT_STATE: TeamStateV1 = Object.freeze({
 
 // ---------------------------------------------------------------------------
 // Module cache — the single source of the current snapshot reference.
-// `cache` is what getSnapshot() returns; it changes ONLY on a real mutation.
-// `hydrated` is exposed through the snapshot (see snapshot()).
+// `cache` is what getSnapshot() returns; it is replaced only when the state
+// changes (a mutation, hydration, or a cross-tab write).
 // ---------------------------------------------------------------------------
 
 let cache: TeamStateV1 = DEFAULT_STATE
@@ -74,11 +78,19 @@ function emit(): void {
 
 function isRoster(value: unknown): value is string[] | null {
   if (value === null) return true
-  return Array.isArray(value) && value.length === 7 && value.every((id) => typeof id === "string")
+  return (
+    Array.isArray(value) &&
+    value.length === SQUAD_DRIVERS + SQUAD_CONSTRUCTORS &&
+    value.every((id) => typeof id === "string")
+  )
 }
 
-function isFreeTransfers(value: unknown): value is 2 | 3 | "unlimited" {
+function isFreeTransfers(value: unknown): value is FreeTransfers {
   return value === 2 || value === 3 || value === "unlimited"
+}
+
+function isChip(value: unknown): value is Chip {
+  return value === "none" || value === "wildcard" || value === "limitless"
 }
 
 function isSavedProjection(value: unknown): value is TeamStateV1["savedProjection"] {
@@ -95,9 +107,7 @@ function validateV1(parsed: Record<string, unknown>): TeamStateV1 {
     Number.isInteger(parsed.budgetTenths) &&
     isFreeTransfers(parsed.freeTransfers) &&
     (parsed.raceNumber === null || Number.isInteger(parsed.raceNumber)) &&
-    (parsed.activeChip === "none" ||
-      parsed.activeChip === "wildcard" ||
-      parsed.activeChip === "limitless") &&
+    isChip(parsed.activeChip) &&
     typeof parsed.dismissedHonestyNote === "boolean" &&
     isSavedProjection(parsed.savedProjection)
   ) {
@@ -129,7 +139,7 @@ function migrate(parsed: unknown): TeamStateV1 {
 
 /**
  * SSR-safe localStorage read. Corrupt JSON, blocked storage, or any throw →
- * DEFAULT_STATE. NEVER throws (a crashed read must not crash the island).
+ * DEFAULT_STATE. Never throws: a failed read must not crash the island.
  */
 function load(): TeamStateV1 {
   if (typeof window === "undefined") return DEFAULT_STATE
@@ -142,27 +152,23 @@ function load(): TeamStateV1 {
   }
 }
 
-/**
- * Best-effort persist. Failure (Safari private mode, quota) is swallowed: the
- * in-memory cache is the source of truth for the session; persistence degrades.
- */
+/** Best-effort persist; failures (private mode, full quota) are swallowed. */
 function persist(state: TeamStateV1): void {
   if (typeof window === "undefined") return
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   } catch {
-    // Persistence silently degrades; the session still works in memory.
+    // The in-memory cache stays authoritative for this session.
   }
 }
 
 // ---------------------------------------------------------------------------
-// Snapshot — reference-stable, with `hydrated` folded in. The cached object is
-// returned as-is; we only build a fresh one when something changed.
+// Snapshot and subscription
 // ---------------------------------------------------------------------------
 
-function commit(next: TeamStateV1, write: boolean): void {
+function commit(next: TeamStateV1): void {
   cache = next
-  if (write) persist(next)
+  persist(next)
   emit()
 }
 
@@ -175,18 +181,15 @@ function getServerSnapshot(): TeamStateV1 {
 }
 
 function hydrate(): void {
-  const loaded = load()
   hydrated = true
-  // Swap the reference even when the value equals DEFAULT_STATE-by-fields:
-  // `hydrated` flipped, and islands gating skeletons must re-render.
-  cache = loaded
+  cache = load()
   emit()
 }
 
 function subscribe(cb: () => void): () => void {
   listeners.add(cb)
 
-  // Lazy hydration on the FIRST subscriber: read localStorage once, swap the
+  // Lazy hydration on the first subscriber: read localStorage once, swap the
   // cache, and notify. Doing this here (not in getSnapshot) keeps the server
   // and first-client renders identical.
   if (!hydrated) hydrate()
@@ -194,7 +197,7 @@ function subscribe(cb: () => void): () => void {
   // Install the single cross-tab listener on the first subscriber.
   if (storageHandler === null && typeof window !== "undefined") {
     storageHandler = (e: StorageEvent) => {
-      // Ignore other keys; storageArea null on a manual clear() — re-read.
+      // Ignore other keys. key is null when another tab calls clear(), so re-read.
       if (e.key !== null && e.key !== STORAGE_KEY) return
       cache = load()
       emit()
@@ -214,27 +217,19 @@ function subscribe(cb: () => void): () => void {
 }
 
 // ---------------------------------------------------------------------------
-// Mutators — plain module functions. Each builds the next snapshot from the
-// current cache, commits it (writes + notifies), and is referentially stable.
-// Same-tab writes notify via emit(); the "storage" event does NOT fire in the
-// originating tab, so the internal emit is the same-tab path.
+// Mutators — plain module functions, so they are referentially stable. Each
+// builds the next snapshot from the current cache and commits it (persist +
+// notify). The "storage" event never fires in the tab that wrote, so emit() is
+// the same-tab notification path.
 // ---------------------------------------------------------------------------
 
 function setTeam(
   roster: string[],
   budgetTenths: number,
-  freeTransfers: 2 | 3 | "unlimited",
+  freeTransfers: FreeTransfers,
   raceNumber: number
 ): void {
-  commit({ ...cache, roster, budgetTenths, freeTransfers, raceNumber }, true)
-}
-
-function setBudget(tenths: number): void {
-  commit({ ...cache, budgetTenths: tenths }, true)
-}
-
-function setFreeTransfers(ft: 2 | 3 | "unlimited"): void {
-  commit({ ...cache, freeTransfers: ft }, true)
+  commit({ ...cache, roster, budgetTenths, freeTransfers, raceNumber })
 }
 
 function applyPlan(
@@ -244,7 +239,7 @@ function applyPlan(
 ): void {
   const next: TeamStateV1 = { ...cache, roster, budgetTenths }
   if (savedProjection !== undefined) next.savedProjection = savedProjection
-  commit(next, true)
+  commit(next)
 }
 
 /**
@@ -254,15 +249,15 @@ function applyPlan(
 function confirmRollover(args: {
   roster: string[]
   budgetTenths: number
-  freeTransfers: 2 | 3 | "unlimited"
+  freeTransfers: FreeTransfers
   raceNumber: number
-  activeChip: "none" | "wildcard" | "limitless"
+  activeChip: Chip
 }): void {
-  commit({ ...cache, ...args }, true)
+  commit({ ...cache, ...args })
 }
 
 function dismissHonestyNote(): void {
-  commit({ ...cache, dismissedHonestyNote: true }, true)
+  commit({ ...cache, dismissedHonestyNote: true })
 }
 
 /** Back to first-visit. Removes the key so a reload re-hydrates DEFAULT. */
@@ -298,8 +293,6 @@ export const teamStore = {
   getServerSnapshot,
   subscribe,
   setTeam,
-  setBudget,
-  setFreeTransfers,
   applyPlan,
   confirmRollover,
   dismissHonestyNote,
@@ -308,16 +301,14 @@ export const teamStore = {
 }
 
 // ---------------------------------------------------------------------------
-// React hook — the island-facing API. Mutators are spread verbatim from the
-// frozen module object, so they are referentially stable across renders.
+// React hook — the island-facing API. The mutators are the module functions
+// themselves, so they are referentially stable across renders.
 // ---------------------------------------------------------------------------
 
 export function useTeamStore(): {
   state: TeamStateV1
   hydrated: boolean
   setTeam: typeof setTeam
-  setBudget: typeof setBudget
-  setFreeTransfers: typeof setFreeTransfers
   applyPlan: typeof applyPlan
   confirmRollover: typeof confirmRollover
   dismissHonestyNote: typeof dismissHonestyNote
@@ -326,12 +317,11 @@ export function useTeamStore(): {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
   return {
     state,
-    // `hydrated` is module-level (not in the snapshot value object) but the
-    // snapshot reference swaps when it flips, so this read is always current.
+    // Module state read at render time, not part of the snapshot. Hydrating an
+    // empty store keeps the DEFAULT_STATE reference, so React skips that
+    // re-render and this flag can lag until the next one.
     hydrated,
     setTeam,
-    setBudget,
-    setFreeTransfers,
     applyPlan,
     confirmRollover,
     dismissHonestyNote,

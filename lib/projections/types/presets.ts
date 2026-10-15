@@ -1,8 +1,7 @@
 /**
- * Projection preset identities. PRESET_IDS is the single source of truth — the
- * PresetId union is derived from it, so the value and the type must travel
- * together (a sanctioned value-in-a-types-file: it IS the type source).
- * The label/minRaces data (PRESET_REGISTRY) and the engine live in ../engine.ts.
+ * Projection preset identities. PRESET_IDS is the single source of truth: the
+ * PresetId union is derived from it, which is why this types file holds a
+ * value. Labels and gating (PRESET_REGISTRY) and the engine live in ../engine.ts.
  */
 
 export const PRESET_IDS = [

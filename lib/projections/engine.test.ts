@@ -127,7 +127,7 @@ describe("history presets — normal-weekend totals (E[quali] + E[race])", () =>
   }
 })
 
-describe("session-sum invariant (normal weekend) — spec exit criterion", () => {
+describe("session-sum invariant (normal weekend)", () => {
   it("Σ perSession.expected === totalPoints for every asset × preset", () => {
     for (const preset of HISTORY_PRESETS) {
       const result = projection(SEASON, preset)
@@ -246,15 +246,15 @@ describe("custom-blend", () => {
 describe("custom blend linearity", () => {
   // Pins custom-blend == the exact per-session lerp of its two endpoint
   // presets: E_custom(w) = (1−w)·E_season-average + w·E_weighted-recent, for
-  // both totals and every perSession entry, on normal AND sprint weekends.
+  // both totals and every perSession entry, on normal and sprint weekends.
   //
   // Why exact, and why it matters: α (sprint shrinkage) and the grid ratio R
-  // are preset-INDEPENDENT scalars, so the sprint guard
+  // are preset-independent scalars, so the sprint guard
   //   E = α·raw + (1−α)·E_race·R
   // stays affine in the underlying preset means — blending two presets and
   // blending the resulting expectations are the same operation. That exactness
-  // is what licenses the M3 client to derive custom-blend by lerping the two
-  // endpoint preset projections in the browser, instead of shipping the full
+  // is what lets the client derive custom-blend by lerping the two endpoint
+  // preset projections in the browser, instead of shipping the full
   // SeasonHistory across the RSC boundary to recompute it.
   for (const isSprint of [false, true]) {
     const label = isSprint ? "sprint weekend" : "normal weekend"

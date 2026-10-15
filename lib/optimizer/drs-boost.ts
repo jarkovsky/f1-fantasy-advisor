@@ -1,9 +1,8 @@
 /**
  * The DRS Boost captain: the driver with the highest projection, ties broken by
- * the lower playerId. This MUST agree with the optimizer's own captain choice in
- * toPlan (optimize.ts) — the read-only views (locked, between-rounds) pick it
- * directly rather than re-running the search. drs-boost.test.ts pins that
- * agreement against a real optimize() run.
+ * the lower playerId. optimize() picks its plan captains with this, and the
+ * read-only views (locked, between-rounds) call it directly instead of
+ * re-running the search, so every screen boosts the same driver.
  */
 export function pickDrsCaptainId(
   driverIds: readonly string[],

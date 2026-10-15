@@ -77,14 +77,8 @@ describe("round-trip", () => {
     unsub()
   })
 
-  it("setBudget / setFreeTransfers / applyPlan / dismissHonestyNote mutate as contracted", () => {
+  it("applyPlan and dismissHonestyNote write their fields to the snapshot", () => {
     teamStore.subscribe(() => {})
-
-    teamStore.setBudget(15)
-    expect(teamStore.getSnapshot().budgetTenths).toBe(15)
-
-    teamStore.setFreeTransfers(3)
-    expect(teamStore.getSnapshot().freeTransfers).toBe(3)
 
     teamStore.applyPlan(ROSTER7, 7, { totalPoints: 99, preset: "ewma" })
     const afterPlan = teamStore.getSnapshot()
@@ -109,7 +103,7 @@ describe("round-trip", () => {
   it("each mutation swaps the snapshot reference (Object.is changes)", () => {
     teamStore.subscribe(() => {})
     const before = teamStore.getSnapshot()
-    teamStore.setBudget(1)
+    teamStore.dismissHonestyNote()
     expect(teamStore.getSnapshot()).not.toBe(before)
   })
 })
@@ -184,7 +178,7 @@ describe("cross-tab sync", () => {
     expect(teamStore.getSnapshot()).toEqual(VALID_V1)
   })
 
-  it("StorageEvent for a DIFFERENT key is ignored", () => {
+  it("StorageEvent for a different key is ignored", () => {
     const cb = vi.fn()
     teamStore.subscribe(cb)
     cb.mockClear()
@@ -277,7 +271,7 @@ describe("race-stamp semantics", () => {
 })
 
 describe("hydration laziness", () => {
-  it("a seeded value is NOT reflected before subscribe (still DEFAULT reference)", () => {
+  it("a seeded value is not read before the first subscribe", () => {
     localStorage.setItem(KEY, JSON.stringify(VALID_V1))
     // No subscribe yet → no localStorage read.
     expect(teamStore.getSnapshot()).toBe(DEFAULT_STATE)

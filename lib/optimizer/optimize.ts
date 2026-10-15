@@ -1,3 +1,31 @@
+/**
+ * Exact-search transfer optimizer.
+ *
+ * Exhaustively enumerates every legal squad — C(22,5) × C(11,2) ≈ 1.45M
+ * combinations — and returns the global optimum plus the best squad at every
+ * transfer count, in one pass. Pure and synchronous (no I/O); the advisor
+ * imports it lazily and runs it in the browser. adapter.ts builds its input
+ * from the feed grid and a projections table.
+ *
+ * score(T) = Σ projected(a) + (DRS_BOOST_MULTIPLIER − 1)·max driver projected
+ *            + EXTRA_TRANSFER_PENALTY · max(0, transfers(T) − freeTransfers)
+ *
+ * The only pruning is budget feasibility. A partial pick is abandoned when
+ *   priceSoFar + (sum of the `need` cheapest remaining drivers)
+ *              + (cheapest constructor pair)              > purse.
+ * Drivers are sorted ascending by price, so the bound is monotonic at each
+ * level: once it fails at one index it fails for every later one, and the
+ * loop breaks instead of continuing.
+ * Proof this never cuts a feasible team T: on T's emission path the cheapest
+ * `need`-subset of the remaining suffix lower-bounds T's own remaining
+ * drivers, and the cheapest pair lower-bounds T's pair, so the bound is
+ * ≤ cost(T) ≤ purse and the prune cannot fire. Score/upper-bound pruning is
+ * deliberately omitted: it could discard the optimum of a non-global
+ * transfer bucket, and byTransferCount must be optimal in every bucket.
+ *
+ * Money is integer tenths throughout, so budget-boundary comparisons are exact
+ * (a team costing exactly the purse is affordable; one tenth more is not).
+ */
 import type {
   OptimizerAsset,
   OptimizerInput,
@@ -6,35 +34,6 @@ import type {
   TeamPlan,
 } from "./types/optimizer"
 
-/**
- * Exact-search transfer optimizer (spec §7).
- *
- * Exhaustively enumerates every legal squad — C(22,5) × C(11,2) ≈ 1.45M
- * combinations — and returns the global optimum plus the best squad at every
- * transfer count, in one pass. PURE: no I/O; runs client-side in M3 inside
- * startTransition.
- *
- * score(T) = Σ projected(a) + (DRS_BOOST_MULTIPLIER − 1)·max driver projected
- *            + EXTRA_TRANSFER_PENALTY · max(0, transfers(T) − freeTransfers)
- *
- * PRUNING: budget-feasibility only. With drivers sorted ascending by price,
- * a partial pick is abandoned (loop BREAK — monotonic at each level) when
- *   priceSoFar + (sum of the `need` cheapest remaining drivers)
- *              + (cheapest constructor pair)              > purse.
- * Proof this never cuts a feasible team T: on T's emission path the cheapest
- * `need`-subset of the remaining suffix lower-bounds T's own remaining
- * drivers, and the cheapest pair lower-bounds T's pair, so the bound is
- * ≤ cost(T) ≤ purse and the prune cannot fire. Score/upper-bound pruning is
- * DELIBERATELY OMITTED: it could discard the optimum of a non-global
- * transfer bucket (byTransferCount must be optimal in every bucket).
- *
- * Money is integer tenths throughout — exact budget-boundary comparisons
- * (a team costing exactly the purse is affordable; one tenth more is not).
- *
- * M3 adapter seam (not part of this module):
- *   toOptimizerAssets(assets: Asset[], totals: Record<playerId, number>)
- *     → OptimizerAsset[]   // joins the feed grid with projections.byPlayerId
- */
 import {
   DRS_BOOST_MULTIPLIER,
   EXTRA_TRANSFER_PENALTY,
@@ -42,9 +41,13 @@ import {
   SQUAD_DRIVERS,
 } from "@/lib/constants"
 
+import { pickDrsCaptainId } from "./drs-boost"
+
 export class OptimizerInputError extends Error {}
 
-const MAX_TRANSFERS = SQUAD_DRIVERS + SQUAD_CONSTRUCTORS // 7
+const SQUAD_SIZE = SQUAD_DRIVERS + SQUAD_CONSTRUCTORS
+/** Transfer counts run 0..SQUAD_SIZE (every slot swapped). */
+const MAX_TRANSFERS = SQUAD_SIZE
 
 // ---------------------------------------------------------------------------
 // Internal scratch shape: winners are tracked as dense indices and primitive
@@ -112,20 +115,18 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     byId.set(asset.id, asset)
   }
 
-  // Grid size BEFORE roster resolution — otherwise a roster id missing from a
-  // too-small grid reports the wrong (less actionable) error.
-  const gridDrivers = input.assets.filter((a) => a.kind === "driver").length
-  const gridConstructors = input.assets.length - gridDrivers
-  if (gridDrivers < SQUAD_DRIVERS || gridConstructors < SQUAD_CONSTRUCTORS) {
+  // Check grid size before resolving the roster — otherwise a roster id missing
+  // from a too-small grid reports the wrong (less actionable) error.
+  const drivers = input.assets.filter((a) => a.kind === "driver")
+  const constructors = input.assets.filter((a) => a.kind === "constructor")
+  if (drivers.length < SQUAD_DRIVERS || constructors.length < SQUAD_CONSTRUCTORS) {
     throw new OptimizerInputError(
-      `grid too small: need ≥${SQUAD_DRIVERS} drivers and ≥${SQUAD_CONSTRUCTORS} constructors, got ${gridDrivers} + ${gridConstructors}`
+      `grid too small: need ≥${SQUAD_DRIVERS} drivers and ≥${SQUAD_CONSTRUCTORS} constructors, got ${drivers.length} + ${constructors.length}`
     )
   }
 
-  if (input.roster.length !== MAX_TRANSFERS) {
-    throw new OptimizerInputError(
-      `roster must have ${MAX_TRANSFERS} ids, got ${input.roster.length}`
-    )
+  if (input.roster.length !== SQUAD_SIZE) {
+    throw new OptimizerInputError(`roster must have ${SQUAD_SIZE} ids, got ${input.roster.length}`)
   }
   const rosterSet = new Set(input.roster)
   if (rosterSet.size !== input.roster.length) {
@@ -133,11 +134,13 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
   let rosterDrivers = 0
   let rosterConstructors = 0
+  let rosterCostTenths = 0
   for (const id of input.roster) {
     const asset = byId.get(id)
     if (!asset) throw new OptimizerInputError(`roster id ${id} not found in assets`)
     if (asset.kind === "driver") rosterDrivers += 1
     else rosterConstructors += 1
+    rosterCostTenths += asset.priceTenths
   }
   if (rosterDrivers !== SQUAD_DRIVERS || rosterConstructors !== SQUAD_CONSTRUCTORS) {
     throw new OptimizerInputError(
@@ -145,25 +148,21 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     )
   }
 
-  const allDrivers = input.assets.filter((a) => a.kind === "driver")
-  const allConstructors = input.assets.filter((a) => a.kind === "constructor")
-
   // ---- mode fold ----------------------------------------------------------
   const budgetEnforced = mode !== "limitless"
   const unlimited =
     mode === "wildcard" || mode === "limitless" || input.freeTransfers === "unlimited"
-  const f = unlimited ? Number.POSITIVE_INFINITY : (input.freeTransfers as number)
+  const freeTransfers = unlimited ? Number.POSITIVE_INFINITY : (input.freeTransfers as number)
+  // What a full sell-off would leave in the bank: every owned asset is sellable.
+  const purseTenths = input.budgetTenths + rosterCostTenths
 
-  let purseTenths = input.budgetTenths
-  for (const id of input.roster) {
-    purseTenths += byId.get(id)?.priceTenths ?? 0
-  }
-
-  // ---- data prep: dense indices, SoA typed arrays, sorted ascending -------
-  const sortAsc = (a: OptimizerAsset, b: OptimizerAsset) =>
+  // ---- data prep: sort ascending by price, then dense SoA typed arrays -----
+  // Every index below (d0..d4, pairI/pairJ) points into these sorted arrays.
+  const byPriceThenId = (a: OptimizerAsset, b: OptimizerAsset) =>
     a.priceTenths - b.priceTenths || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
-  const drivers = [...allDrivers].sort(sortAsc)
-  const constructors = [...allConstructors].sort(sortAsc)
+  drivers.sort(byPriceThenId)
+  constructors.sort(byPriceThenId)
+  const inRoster = (asset: OptimizerAsset | undefined) => (asset && rosterSet.has(asset.id) ? 1 : 0)
 
   const D = drivers.length
   const dPrice = new Int32Array(D)
@@ -174,59 +173,42 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     if (!d) continue
     dPrice[i] = d.priceTenths
     dProj[i] = d.projected
-    dInRoster[i] = rosterSet.has(d.id) ? 1 : 0
+    dInRoster[i] = inRoster(d)
   }
-  // Ascending prefix sums: cheapest `need` drivers from index `start` onward
-  // cost dPrefix[start + need] - dPrefix[start] (sorted → they ARE cheapest).
+  // Prefix sums over ascending prices: the cheapest `need` drivers from index
+  // `start` onward cost dPrefix[start + need] - dPrefix[start].
   const dPrefix = new Int32Array(D + 1)
   for (let i = 0; i < D; i++) dPrefix[i + 1] = (dPrefix[i] ?? 0) + (dPrice[i] ?? 0)
 
-  // All constructor pairs, sorted ascending by price.
-  const C = constructors.length
-  const pairCount = (C * (C - 1)) / 2
+  // Every constructor pair, sorted ascending by combined price.
+  const pairs: { i: number; j: number; price: number }[] = []
+  for (let i = 0; i < constructors.length; i++) {
+    for (let j = i + 1; j < constructors.length; j++) {
+      const price = (constructors[i]?.priceTenths ?? 0) + (constructors[j]?.priceTenths ?? 0)
+      pairs.push({ i, j, price })
+    }
+  }
+  pairs.sort((x, y) => x.price - y.price)
+
+  const pairCount = pairs.length
   const pairPrice = new Int32Array(pairCount)
   const pairProj = new Float64Array(pairCount)
   const pairTransfers = new Int32Array(pairCount)
   const pairI = new Int32Array(pairCount)
   const pairJ = new Int32Array(pairCount)
-  {
-    // Build unsorted, then sort an index permutation by price.
-    const order: number[] = []
-    let p = 0
-    for (let i = 0; i < C; i++) {
-      for (let j = i + 1; j < C; j++) {
-        pairPrice[p] = (constructors[i]?.priceTenths ?? 0) + (constructors[j]?.priceTenths ?? 0)
-        pairProj[p] = (constructors[i]?.projected ?? 0) + (constructors[j]?.projected ?? 0)
-        const iIn = rosterSet.has(constructors[i]?.id ?? "") ? 1 : 0
-        const jIn = rosterSet.has(constructors[j]?.id ?? "") ? 1 : 0
-        pairTransfers[p] = 2 - iIn - jIn
-        pairI[p] = i
-        pairJ[p] = j
-        order.push(p)
-        p += 1
-      }
-    }
-    order.sort((a, b) => (pairPrice[a] ?? 0) - (pairPrice[b] ?? 0))
-    const sp = new Int32Array(pairCount)
-    const sj = new Float64Array(pairCount)
-    const st = new Int32Array(pairCount)
-    const si = new Int32Array(pairCount)
-    const sJ = new Int32Array(pairCount)
-    for (let k = 0; k < pairCount; k++) {
-      const src = order[k] ?? 0
-      sp[k] = pairPrice[src] ?? 0
-      sj[k] = pairProj[src] ?? 0
-      st[k] = pairTransfers[src] ?? 0
-      si[k] = pairI[src] ?? 0
-      sJ[k] = pairJ[src] ?? 0
-    }
-    pairPrice.set(sp)
-    pairProj.set(sj)
-    pairTransfers.set(st)
-    pairI.set(si)
-    pairJ.set(sJ)
+  // A plain loop, not forEach: a closure capturing these arrays makes V8
+  // context-allocate them, and the hot loop reads them ~1.45M times (a forEach
+  // here measured ~15% slower in pnpm bench).
+  for (const [k, { i, j, price }] of pairs.entries()) {
+    const ci = constructors[i]
+    const cj = constructors[j]
+    pairPrice[k] = price
+    pairProj[k] = (ci?.projected ?? 0) + (cj?.projected ?? 0)
+    pairTransfers[k] = 2 - inRoster(ci) - inRoster(cj)
+    pairI[k] = i
+    pairJ[k] = j
   }
-  const minPairPrice = pairCount > 0 ? (pairPrice[0] ?? 0) : 0
+  const minPairPrice = pairPrice[0] ?? 0
 
   // ---- accumulators --------------------------------------------------------
   // Global best compares penalty-folded score; buckets compare raw points
@@ -236,12 +218,12 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const buckets: Scratch[] = Array.from({ length: MAX_TRANSFERS + 1 }, emptyScratch)
 
   const penaltyFor = (transfers: number): number => {
-    const excess = Math.max(0, transfers - f)
-    // Guard the excess===0 case explicitly: -10 * 0 is JavaScript's -0.
+    const excess = Math.max(0, transfers - freeTransfers)
+    // A literal 0 within the allowance: the negative penalty × 0 would be -0.
     return excess > 0 ? EXTRA_TRANSFER_PENALTY * excess : 0
   }
 
-  /** Tie-break: lower cost, then lexicographic sorted team identity. */
+  /** Canonical team identity (sorted ids per class) — the final tie-break. */
   function teamKey(s: Scratch): string {
     const ids = [
       drivers[s.d0]?.id ?? "",
@@ -257,6 +239,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     return `${ids.join(",")}|${cons.join(",")}`
   }
 
+  /**
+   * Whether `candidate` displaces `incumbent`: higher key (keyDelta > 0), then
+   * lower cost, then the lexicographically smaller teamKey. A total order, so
+   * the winner never depends on enumeration order.
+   */
   function challenge(incumbent: Scratch, candidate: Scratch, keyDelta: number): boolean {
     if (!incumbent.occupied) return true
     if (keyDelta !== 0) return keyDelta > 0
@@ -276,6 +263,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
 
   const candidate = emptyScratch()
 
+  /** Slow path: offer one squad to the global and per-bucket incumbents. */
   function record(
     d0: number,
     d1: number,
@@ -382,26 +370,16 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       constructors[pairJ[s.pair] ?? 0],
     ].filter((x) => x !== undefined)
 
-    // Captain: max projection; ties → lower id (deterministic).
-    let captain = teamDrivers[0]
-    for (const d of teamDrivers) {
-      if (!captain) {
-        captain = d
-        continue
-      }
-      if (
-        d.projected > captain.projected ||
-        (d.projected === captain.projected && d.id < captain.id)
-      ) {
-        captain = d
-      }
-    }
+    const captainId = pickDrsCaptainId(
+      teamDrivers.map((d) => d.id),
+      (id) => byId.get(id)?.projected ?? 0
+    )
 
     const penaltyPoints = penaltyFor(s.transfers)
     return {
       driverIds: teamDrivers.map((d) => d.id).sort(),
       constructorIds: teamConstructors.map((c) => c.id).sort(),
-      captainId: captain?.id ?? "",
+      captainId: captainId ?? "",
       projectedTotal: s.projectedTotal,
       score: s.projectedTotal + penaltyPoints,
       transfers: s.transfers,
@@ -412,8 +390,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
 
   if (!globalBest.occupied) {
-    // Only possible when budget excludes every team INCLUDING the roster —
-    // impossible by construction (purse ≥ roster cost), but guard anyway.
+    // Unreachable for valid input: the roster itself always fits the purse
+    // (purse = bank + roster cost). Kept as a loud guard, not a silent null.
     throw new OptimizerInputError("no feasible team exists under the purse")
   }
 
