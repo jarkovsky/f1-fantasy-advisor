@@ -7,13 +7,12 @@ import { Suspense, useMemo, useState } from "react"
 
 import { useTeamStore } from "@/lib/team/store"
 
-import { Skeleton } from "@/components/ui/skeleton"
-
 import { useRaceWeekState } from "@/hooks/use-race-week-state"
 import { usePresetParam } from "@/hooks/use-preset-param"
 import { useProjection } from "@/hooks/use-projection"
 import { useNow } from "@/hooks/use-now"
 
+import { AdvisorSkeleton } from "@/app/_components/advisor/advisor-skeleton"
 import { BetweenRounds } from "@/app/_components/advisor/between-rounds"
 import { RolloverForm } from "@/app/_components/rollover/rollover-form"
 import { TeamPicker } from "@/app/_components/team-picker/team-picker"
@@ -34,21 +33,9 @@ function firstVisitIntro(gpName: string | undefined, lockAtMs: number | null): s
   return `Building your team for the ${gpName ?? "next race"} · locks ${firstVisitLockFmt.format(lockAtMs)}`
 }
 
-/** Neutral block layout mirrored by the Suspense fallback + pre-derive shell. */
-function PanelShell() {
-  return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-96 w-full" />
-      <Skeleton className="h-12 w-full" />
-      <Skeleton className="h-48 w-full" />
-    </div>
-  )
-}
-
 export function AdvisorPanel(props: AdvisorServerProps) {
   return (
-    <Suspense fallback={<PanelShell />}>
+    <Suspense fallback={<AdvisorSkeleton />}>
       <AdvisorPanelInner {...props} />
     </Suspense>
   )
@@ -95,7 +82,7 @@ function AdvisorPanelInner({
     storedRaceNumber: team.raceNumber,
   })
 
-  if (raceState === null) return <PanelShell />
+  if (raceState === null) return <AdvisorSkeleton />
 
   const currentWeekend = raceWeekends.find((w) => w.raceNumber === constraints.raceNumber)
   const roster = team.roster ?? []
