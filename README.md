@@ -5,9 +5,9 @@
 Exact, not heuristic: given the projections, no better squad exists. It pulls the official F1 Fantasy feeds, projects every driver and constructor under transparent presets, and explains every number. Free, no login; your team lives in `localStorage` only.
 
 - **Exact search with a proof.** Budget-only pruning with a written optimality proof. Tests check the global optimum _and_ the best squad at every transfer count against a brute-force oracle.
-- **Degrades instead of breaking.** Every feed is validated with zod at the boundary and falls back from live to committed snapshot to typed empty. The production build succeeds with no network at all.
+- **Degrades instead of breaking.** Every feed is validated with zod at the boundary and falls back from live to committed snapshot to typed empty. The production build succeeds with the feeds unreachable.
 - **Next.js 16 Cache Components.** A cacheable static shell with one streamed data hole. Lighthouse 100 on Accessibility, Best Practices and SEO; LCP 407 ms at 4× CPU throttle.
-- **Tested and strictly typed.** 321 tests (Vitest + Testing Library), strict TypeScript with `noUncheckedIndexedAccess`.
+- **Tested and strictly typed.** 320 tests (Vitest + Testing Library), strict TypeScript with `noUncheckedIndexedAccess`.
 
 **Stack:** Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · zod · Vitest
 
@@ -68,7 +68,7 @@ The server resolves a single streamed data hole (a fully cacheable async RSC, no
 | Season cumulatives recomputed by summing per-race points               | Feed totals are contaminated — old race files get regenerated with later-era cumulatives               |
 | Team lock from the raceday ISO8601 first-session start                 | `constraints.DeadlineDate` proven stale/advisory — never trusted                                       |
 | Never recompute scoring from results                                   | The feed's per-race / per-session points suffice; no re-derivation                                     |
-| Committed snapshots feed offline builds                                | `'use cache'` fetchers fall back to `data/`, so `next build` needs zero network                        |
+| Committed snapshots feed offline builds                                | `'use cache'` fetchers fall back to `data/`, so `next build` never needs the live feeds                |
 | Sprint small-sample prior                                              | Sprint sessions are shrunk toward a prior (few samples per season)                                     |
 | Equal-PPM is per-race calibrated                                       | Divides by completed races so it sits on the single-race scale as a fallback                           |
 | `custom-blend` = exact lerp of season-average and weighted-recent      | The engine's blend is linear in its endpoints, so SeasonHistory never has to ship                      |
@@ -101,7 +101,7 @@ Requires Node ≥ 20.9 and pnpm. Run `pnpm install` first.
 | `pnpm dev`          | Start the dev server                                                     |
 | `pnpm build`        | Production build                                                         |
 | `pnpm start`        | Serve the production build                                               |
-| `pnpm test`         | Run the suite (321 tests)                                                |
+| `pnpm test`         | Run the suite (320 tests)                                                |
 | `pnpm bench`        | Optimizer microbenchmark (the perf record)                               |
 | `pnpm snapshot`     | Refresh committed feed snapshots in `data/`                              |
 | `pnpm assets`       | Download OpenF1 headshots (blocked during live sessions; always exits 0) |
@@ -110,7 +110,7 @@ Requires Node ≥ 20.9 and pnpm. Run `pnpm install` first.
 | `pnpm format:check` | Prettier check                                                           |
 | `pnpm typecheck`    | `next typegen && tsc --noEmit`                                           |
 
-The build needs no network. With the feed pointed at an unreachable host, it still succeeds end to end and renders snapshot data with provenance:
+The build never needs the live feeds. With the feed pointed at an unreachable host, it still succeeds end to end and renders snapshot data with provenance:
 
 ```sh
 F1_FEED_BASE=http://127.0.0.1:1 pnpm build
