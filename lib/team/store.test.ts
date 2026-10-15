@@ -1,10 +1,11 @@
 import type { TeamStateV1 } from "./types/team-state"
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { renderHook } from "@testing-library/react"
 
 import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
 
-import { DEFAULT_STATE, teamStore } from "./store"
+import { DEFAULT_STATE, teamStore, useTeamStore } from "./store"
 
 const KEY = "f1:v1"
 
@@ -286,5 +287,12 @@ describe("hydration laziness", () => {
     const cb = vi.fn()
     teamStore.subscribe(cb)
     expect(cb).toHaveBeenCalled()
+  })
+
+  it("useTeamStore reports hydrated after mount even when storage is empty", () => {
+    // An empty store hydrates to the same DEFAULT_STATE reference, so the
+    // snapshot alone never changes; the flag must still re-render the island.
+    const { result } = renderHook(() => useTeamStore())
+    expect(result.current.hydrated).toBe(true)
   })
 })

@@ -17,8 +17,9 @@
  *    hydration mismatch). localStorage is read lazily on first subscribe, never
  *    inside getSnapshot — a synchronous read there would diverge from the
  *    server HTML.
- * 3. `hydrated` is exposed next to the snapshot so an island can hold a
- *    skeleton until the first localStorage read lands.
+ * 3. `hydrated` is its own subscription (false on the server and the first
+ *    client render), so an island can hold a skeleton until the first
+ *    localStorage read lands — even when that read leaves the snapshot as-is.
  *
  * No wall-clock reads anywhere — the race-week machine (lib/f1/raceweek.ts)
  * owns time; this module only stores the raceNumber a team was entered for.
@@ -180,6 +181,14 @@ function getServerSnapshot(): TeamStateV1 {
   return DEFAULT_STATE
 }
 
+function getHydrated(): boolean {
+  return hydrated
+}
+
+function getServerHydrated(): boolean {
+  return false
+}
+
 function hydrate(): void {
   hydrated = true
   cache = load()
@@ -315,12 +324,12 @@ export function useTeamStore(): {
   reset: typeof reset
 } {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+  // Subscribed separately: hydrating an empty store keeps the DEFAULT_STATE
+  // reference, so the snapshot alone would never re-render the island.
+  const isHydrated = useSyncExternalStore(subscribe, getHydrated, getServerHydrated)
   return {
     state,
-    // Module state read at render time, not part of the snapshot. Hydrating an
-    // empty store keeps the DEFAULT_STATE reference, so React skips that
-    // re-render and this flag can lag until the next one.
-    hydrated,
+    hydrated: isHydrated,
     setTeam,
     applyPlan,
     confirmRollover,
