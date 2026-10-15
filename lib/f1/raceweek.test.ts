@@ -18,7 +18,6 @@ function input(overrides: Partial<RaceWeekInput>): RaceWeekInput {
     now: new Date(LOCK - 60_000),
     constraints: fixtureConstraints(),
     raceWeekends: fixtureWeekends(),
-    nextRacePublished: false,
     storedRaceNumber: 6,
     ...overrides,
   }

@@ -2,8 +2,8 @@ import type { Snapshot } from "./types/feed"
 
 import { describe, expect, it } from "vitest"
 
-import { fetchOrSnapshot, probeFeedPublished } from "./fetch-or-snapshot"
 import { type Asset, parseDriversFeed } from "./schemas"
+import { fetchOrSnapshot } from "./fetch-or-snapshot"
 import race1 from "./__fixtures__/drivers.race1.json"
 
 // The full degradation decision table, with an injected mock fetch.
@@ -96,61 +96,5 @@ describe("fetchOrSnapshot decision table", () => {
       }
     )
     expect(feed.data).toEqual([])
-  })
-})
-
-// Publication probe: status-only, never throws. ok ⇒ true, everything else ⇒ false.
-
-describe("probeFeedPublished decision table", () => {
-  it("HTTP 200 → true", async () => {
-    await expect(
-      probeFeedPublished(PATH, {
-        fetchImpl: mockFetch(() => new Response("body", { status: 200 })),
-      })
-    ).resolves.toBe(true)
-  })
-
-  it("HTTP 403 (race not yet published) → false", async () => {
-    await expect(
-      probeFeedPublished(PATH, {
-        fetchImpl: mockFetch(() => new Response("AccessDenied", { status: 403 })),
-      })
-    ).resolves.toBe(false)
-  })
-
-  it("HTTP 404 → false", async () => {
-    await expect(
-      probeFeedPublished(PATH, {
-        fetchImpl: mockFetch(() => new Response("", { status: 404 })),
-      })
-    ).resolves.toBe(false)
-  })
-
-  it("HTTP 500 → false", async () => {
-    await expect(
-      probeFeedPublished(PATH, {
-        fetchImpl: mockFetch(() => new Response("", { status: 500 })),
-      })
-    ).resolves.toBe(false)
-  })
-
-  it("network failure (reject) → false, never throws", async () => {
-    await expect(
-      probeFeedPublished(PATH, {
-        fetchImpl: (() => Promise.reject(new Error("ENOTFOUND"))) as unknown as typeof fetch,
-      })
-    ).resolves.toBe(false)
-  })
-
-  it("timeout/abort (rejects with abort) → false, never throws", async () => {
-    // Mirrors the abort path: AbortSignal.timeout fires → fetch rejects.
-    await expect(
-      probeFeedPublished(PATH, {
-        fetchImpl: (() =>
-          Promise.reject(
-            new DOMException("The operation was aborted.", "TimeoutError")
-          )) as unknown as typeof fetch,
-      })
-    ).resolves.toBe(false)
   })
 })

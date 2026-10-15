@@ -20,13 +20,6 @@ export type FetchOrSnapshotOptions<E> = {
   empty: E
 }
 
-function requestFeed(fetchImpl: typeof fetch, path: string): Promise<Response> {
-  return fetchImpl(F1_FEED_BASE + path, {
-    headers: { "user-agent": FEED_UA },
-    signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
-  })
-}
-
 export async function fetchOrSnapshot<T, E>(
   path: string,
   parse: (raw: unknown) => ParseResult<T>,
@@ -38,7 +31,10 @@ export async function fetchOrSnapshot<T, E>(
 
   // 1. Live.
   try {
-    const res = await requestFeed(fetchImpl, path)
+    const res = await fetchImpl(F1_FEED_BASE + path, {
+      headers: { "user-agent": FEED_UA },
+      signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+    })
     if (res.ok) {
       const json: unknown = await res.json() // may throw → caught below
       const parsed = parse(json)
@@ -85,29 +81,5 @@ export async function fetchOrSnapshot<T, E>(
   return {
     data: options.empty,
     meta: { source: "snapshot", asOf: "", race },
-  }
-}
-
-/**
- * Probe whether a feed path is published, by HTTP status alone.
- *
- * fetchOrSnapshot can't answer "is race N+1 published?": it degrades the
- * unpublished-race 403 to the committed snapshot, swallowing the status. This
- * probe reads the status only (no body).
- *
- * Like fetchOrSnapshot it never throws — every failure mode (403, 5xx, network
- * error, timeout/abort) collapses to false. It runs inside a 'use cache' scope
- * at build time, where a throw would abort prerender.
- */
-export async function probeFeedPublished(
-  path: string,
-  opts?: { fetchImpl?: typeof fetch }
-): Promise<boolean> {
-  try {
-    const res = await requestFeed(opts?.fetchImpl ?? fetch, path)
-    return res.ok
-  } catch {
-    // Network down, DNS failure, timeout/abort — treat as not published.
-    return false
   }
 }

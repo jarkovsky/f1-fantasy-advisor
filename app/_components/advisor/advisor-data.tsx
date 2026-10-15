@@ -3,14 +3,7 @@ import type { FeedProvenance } from "@/lib/advisor/types/contract"
 import type { FeedMeta } from "@/lib/f1/types/feed"
 import type { AssetLite } from "@/lib/asset-lite"
 
-import {
-  getConstraints,
-  getDrivers,
-  getHistory,
-  getMixapi,
-  getNextRacePublished,
-  getRaceday,
-} from "@/lib/f1/feed"
+import { getConstraints, getDrivers, getHistory, getMixapi, getRaceday } from "@/lib/f1/feed"
 import { projectAssetsMany } from "@/lib/projections/engine"
 import { headshotPath } from "@/lib/headshots"
 
@@ -73,10 +66,9 @@ export async function AdvisorData() {
   const r = constraints.data.raceNumber
   const lastCompletedRace = constraints.data.lastCompletedRace
 
-  const [drivers, history, nextRacePublished, lastRaceDrivers] = await Promise.all([
+  const [drivers, history, lastRaceDrivers] = await Promise.all([
     getDrivers(r, r <= lastCompletedRace),
     getHistory(r, lastCompletedRace),
-    getNextRacePublished(r),
     lastCompletedRace >= 1 ? getDrivers(lastCompletedRace, true) : null,
   ])
   const raceday = await racedayPromise
@@ -121,7 +113,6 @@ export async function AdvisorData() {
     <AdvisorPanel
       constraints={constraints.data}
       raceWeekends={raceday.data}
-      nextRacePublished={nextRacePublished}
       live={mixapi.data?.isLive ?? false}
       assets={assets}
       projectionsByPreset={projectionsByPreset}

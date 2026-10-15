@@ -67,7 +67,6 @@ The server resolves a single streamed data hole (a fully cacheable async RSC, no
 | Money is integer tenths-of-a-million end to end                        | Exact budget-boundary comparisons (cost == purse affordable; one tenth more is not)                    |
 | Season cumulatives recomputed by summing per-race points               | Feed totals are contaminated — old race files get regenerated with later-era cumulatives               |
 | Team lock from the raceday ISO8601 first-session start                 | `constraints.DeadlineDate` proven stale/advisory — never trusted                                       |
-| HTTP 403 on the next-race drivers feed = unpublished                   | S3 deny, an expected signal (`nextRacePublished`), not an error                                        |
 | Never recompute scoring from results                                   | The feed's per-race / per-session points suffice; no re-derivation                                     |
 | Committed snapshots feed offline builds                                | `'use cache'` fetchers fall back to `data/`, so `next build` needs zero network                        |
 | Sprint small-sample prior                                              | Sprint sessions are shrunk toward a prior (few samples per season)                                     |

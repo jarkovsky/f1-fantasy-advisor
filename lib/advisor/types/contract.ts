@@ -32,7 +32,6 @@ export type AdvisorServerProps = {
   /** Race-week state-machine inputs; the island runs deriveRaceWeekState itself. */
   constraints: RaceWeekConstraints
   raceWeekends: RaceWeekend[]
-  nextRacePublished: boolean
   live: boolean
   /** The full current-race grid, trimmed for the wire (see AssetLite). */
   assets: AssetLite[]

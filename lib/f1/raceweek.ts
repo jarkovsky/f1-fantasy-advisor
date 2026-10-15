@@ -21,11 +21,6 @@ export type RaceWeekInput = {
   now: Date
   constraints: RaceWeekConstraints
   raceWeekends: RaceWeekend[]
-  /**
-   * The drivers feed for raceNumber + 1 is published (200; it is 403 until
-   * then). Not consulted by any branch of deriveRaceWeekState.
-   */
-  nextRacePublished: boolean
   /** The race the user's saved team was entered for; null = first visit. */
   storedRaceNumber: number | null
   /** mixapi.isLive — refines LOCKED's `live` flag, never gates a state. */

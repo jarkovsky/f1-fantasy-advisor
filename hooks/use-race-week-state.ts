@@ -16,21 +16,18 @@ export function useRaceWeekState(args: {
   hydrated: boolean
   constraints: RaceWeekConstraints
   raceWeekends: RaceWeekend[]
-  nextRacePublished: boolean
   live: boolean
   storedRaceNumber: number | null
 }): RaceWeekState | null {
-  const { now, hydrated, constraints, raceWeekends, nextRacePublished, live, storedRaceNumber } =
-    args
+  const { now, hydrated, constraints, raceWeekends, live, storedRaceNumber } = args
   return useMemo(() => {
     if (now === null || !hydrated) return null
     return deriveRaceWeekState({
       now: new Date(now),
       constraints,
       raceWeekends,
-      nextRacePublished,
       storedRaceNumber,
       live,
     })
-  }, [now, hydrated, constraints, raceWeekends, nextRacePublished, live, storedRaceNumber])
+  }, [now, hydrated, constraints, raceWeekends, live, storedRaceNumber])
 }

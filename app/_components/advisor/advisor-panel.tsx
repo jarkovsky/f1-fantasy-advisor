@@ -64,7 +64,6 @@ export function AdvisorPanel(props: AdvisorServerProps) {
 function AdvisorPanelInner({
   constraints,
   raceWeekends,
-  nextRacePublished,
   live,
   assets,
   projectionsByPreset,
@@ -92,7 +91,6 @@ function AdvisorPanelInner({
     hydrated,
     constraints,
     raceWeekends,
-    nextRacePublished,
     live,
     storedRaceNumber: team.raceNumber,
   })

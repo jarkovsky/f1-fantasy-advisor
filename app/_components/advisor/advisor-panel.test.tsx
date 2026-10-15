@@ -184,7 +184,6 @@ function makeProps(over: Partial<AdvisorServerProps> = {}): AdvisorServerProps {
   return {
     constraints: makeConstraints(),
     raceWeekends: fixtureWeekends(),
-    nextRacePublished: false,
     live: false,
     assets: GRID,
     projectionsByPreset: projectionsByPreset(),
