@@ -3,6 +3,7 @@
 import type { FeedProvenance, WhatIfMode } from "@/lib/advisor/types/contract"
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { OptimizerResult } from "@/lib/optimizer/types/optimizer"
+import type { DriverProfile } from "@/lib/profile/types/profile"
 import type { PresetId } from "@/lib/projections/types/presets"
 import type { TeamStateV1 } from "@/lib/team/types/team-state"
 import type { RaceWeekState } from "@/lib/f1/raceweek"
@@ -14,16 +15,17 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 
 import { Skeleton } from "@/components/ui/skeleton"
-import { Card } from "@/components/ui/card"
 
 import { useOptimizer } from "@/hooks/use-optimizer"
 
 import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
 import { SnapshotBanner } from "@/app/_components/advisor/snapshot-banner"
 import { TeamPlanCard } from "@/app/_components/team-plan/team-plan-card"
+import { DrsBoostHero } from "@/app/_components/advisor/drs-boost-hero"
 import { TeamPicker } from "@/app/_components/team-picker/team-picker"
 import { Alternatives } from "@/app/_components/advisor/alternatives"
 import { HonestyNote } from "@/app/_components/advisor/honesty-note"
+import { TeamOverview } from "@/app/_components/team/team-overview"
 import { RaceHeader } from "@/app/_components/advisor/race-header"
 
 type OpenState = Extract<RaceWeekState, { kind: "OPEN" }>
@@ -33,6 +35,7 @@ type OpenAdvisorProps = {
   currentWeekend: RaceWeekend | undefined
   assets: AssetLite[]
   assetsById: Record<string, AssetLite>
+  driverProfiles: Record<string, DriverProfile>
   raceNumber: number
   meta: FeedProvenance
   projection: ProjectionResult
@@ -52,16 +55,17 @@ type OpenAdvisorProps = {
 }
 
 /**
- * The OPEN-state screen: a single centered column — Grand Prix card → merged
- * team/plan card → alternatives → controls → honesty note. Owns the editor
- * toggle, the optimizer (via useOptimizer, which keeps the search a lazy
- * chunk), the apply flow, and the sr-only status region.
+ * The OPEN-state screen: a single centered column — DRS Boost hero → Grand
+ * Prix widget → your team (with Edit team) → recommended team → alternatives
+ * → controls → honesty note. Owns the editor toggle, the optimizer (via useOptimizer, which keeps
+ * the search a lazy chunk), the apply flow, and the sr-only status region.
  */
 export function OpenAdvisor({
   raceState,
   currentWeekend,
   assets,
   assetsById,
+  driverProfiles,
   raceNumber,
   meta,
   projection,
@@ -103,6 +107,8 @@ export function OpenAdvisor({
     setAppliedResult(result)
   }
 
+  const heroProfile = result ? driverProfiles[result.best.captainId] : undefined
+
   if (showEditor) {
     return (
       <TeamPicker
@@ -121,16 +127,34 @@ export function OpenAdvisor({
       </div>
       <SnapshotBanner meta={meta} />
 
+      {heroProfile ? (
+        <div className={cn(isPending && "opacity-60")}>
+          <DrsBoostHero profile={heroProfile} projected={totals[heroProfile.playerId] ?? 0} />
+        </div>
+      ) : (
+        !result && !error && <Skeleton className="h-80 w-full rounded-2xl" />
+      )}
+
       {currentWeekend && (
-        <Card className="bg-surface-1 p-5">
-          <RaceHeader
-            gpName={raceState.gpName}
-            circuitLocation={currentWeekend.circuitLocation}
-            isSprint={raceState.isSprint}
-            sessions={currentWeekend.sessions}
-            lockAtMs={raceState.lockAtMs}
-          />
-        </Card>
+        <RaceHeader
+          raceNumber={raceState.race}
+          gpName={raceState.gpName}
+          circuitLocation={currentWeekend.circuitLocation}
+          isSprint={raceState.isSprint}
+          sessions={currentWeekend.sessions}
+          lockAtMs={raceState.lockAtMs}
+        />
+      )}
+
+      {roster && (
+        <TeamOverview
+          roster={roster}
+          assetsById={assetsById}
+          totals={totals}
+          budgetTenths={budgetTenths}
+          freeTransfers={freeTransfers}
+          onEdit={() => setShowEditor(true)}
+        />
       )}
 
       <div className={cn(isPending && "opacity-60")}>

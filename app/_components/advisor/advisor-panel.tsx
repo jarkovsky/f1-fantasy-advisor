@@ -54,6 +54,7 @@ function AdvisorPanelInner({
   live,
   assets,
   projectionsByPreset,
+  driverProfiles,
   lastRacePoints,
   meta,
 }: AdvisorServerProps) {
@@ -150,6 +151,7 @@ function AdvisorPanelInner({
           currentWeekend={currentWeekend}
           assets={assets}
           assetsById={assetsById}
+          driverProfiles={driverProfiles}
           raceNumber={constraints.raceNumber}
           meta={meta}
           projection={projection}

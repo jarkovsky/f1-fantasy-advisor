@@ -3,91 +3,113 @@
   "byPlayerId": {
     "11": {
       "file": "11.png",
-      "tla": "ALB"
+      "tla": "ALB",
+      "number": 23
     },
     "12": {
       "file": "12.png",
-      "tla": "ALO"
+      "tla": "ALO",
+      "number": 14
     },
     "13": {
       "file": "13.png",
-      "tla": "BOT"
+      "tla": "BOT",
+      "number": 77
     },
     "18": {
       "file": "18.png",
-      "tla": "GAS"
+      "tla": "GAS",
+      "number": 10
     },
     "110": {
       "file": "110.png",
-      "tla": "HAM"
+      "tla": "HAM",
+      "number": 44
     },
     "111": {
       "file": "111.png",
-      "tla": "HUL"
+      "tla": "HUL",
+      "number": 27
     },
     "114": {
       "file": "114.png",
-      "tla": "LAW"
+      "tla": "LAW",
+      "number": 30
     },
     "115": {
       "file": "115.png",
-      "tla": "LEC"
+      "tla": "LEC",
+      "number": 16
     },
     "117": {
       "file": "117.png",
-      "tla": "NOR"
+      "tla": "NOR",
+      "number": 1
     },
     "118": {
       "file": "118.png",
-      "tla": "OCO"
+      "tla": "OCO",
+      "number": 31
     },
     "121": {
       "file": "121.png",
-      "tla": "PER"
+      "tla": "PER",
+      "number": 11
     },
     "124": {
       "file": "124.png",
-      "tla": "RUS"
+      "tla": "RUS",
+      "number": 63
     },
     "125": {
       "file": "125.png",
-      "tla": "SAI"
+      "tla": "SAI",
+      "number": 55
     },
     "129": {
       "file": "129.png",
-      "tla": "STR"
+      "tla": "STR",
+      "number": 18
     },
     "131": {
       "file": "131.png",
-      "tla": "VER"
+      "tla": "VER",
+      "number": 3
     },
     "1982": {
       "file": "1982.png",
-      "tla": "PIA"
+      "tla": "PIA",
+      "number": 81
     },
     "11031": {
       "file": "11031.png",
-      "tla": "BEA"
+      "tla": "BEA",
+      "number": 87
     },
     "11032": {
       "file": "11032.png",
-      "tla": "HAD"
+      "tla": "HAD",
+      "number": 6
     },
     "11051": {
       "file": "11051.png",
-      "tla": "BOR"
+      "tla": "BOR",
+      "number": 5
     },
     "11059": {
       "file": "11059.png",
-      "tla": "COL"
+      "tla": "COL",
+      "number": 43
     },
     "11149": {
       "file": "11149.png",
-      "tla": "LIN"
+      "tla": "LIN",
+      "number": 41
     },
     "11161": {
       "file": "11161.png",
-      "tla": "ANT"
+      "tla": "ANT",
+      "number": 12
     }
   }
 }

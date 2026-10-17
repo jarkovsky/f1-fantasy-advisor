@@ -43,3 +43,16 @@ export const SPRINT_PRIOR_SHRINKAGE_K = 2
 
 /** History presets are greyed below this many completed races (cold start). */
 export const HISTORY_PRESET_MIN_RACES = 1
+
+// ---------------------------------------------------------------------------
+// Driver profile hero. Display-only summaries; nothing here feeds the optimizer.
+// ---------------------------------------------------------------------------
+
+/** Quali/Race ratings: the grid is split into this many equal bands (5 pips). */
+export const RATING_STEPS = 5
+
+/** Sentiment: change in selection % over the last N races. */
+export const SENTIMENT_WINDOW = 3
+
+/** Sentiment meter: a change of ±N selection-% points pins the needle to the end. */
+export const SENTIMENT_FULL_SCALE = 10

@@ -42,7 +42,22 @@ async function tlaToPlayerId(): Promise<Map<string, string>> {
   )
 }
 
-type OpenF1Driver = { name_acronym?: string; headshot_url?: string | null }
+type OpenF1Driver = {
+  name_acronym?: string
+  headshot_url?: string | null
+  driver_number?: number | null
+}
+
+/**
+ * OpenF1's headshot_url points at the F1 media CDN's `1col` render (93×93),
+ * too small for the driver hero. The CDN serves the same transparent cutout at
+ * other widths by swapping the transform segment; `4col` is 432×432 (~55KB).
+ */
+const HEADSHOT_RENDER = "4col"
+
+function heroRender(url: string): string {
+  return url.replace(/\.transform\/\d+col\//, `.transform/${HEADSHOT_RENDER}/`)
+}
 
 const byTla = await tlaToPlayerId()
 console.log(`· ${byTla.size} drivers in the latest snapshot`)
@@ -63,7 +78,7 @@ if (!Array.isArray(payload)) {
 }
 
 await mkdir(OUT_DIR, { recursive: true })
-const manifest: Record<string, { file: string; tla: string }> = {}
+const manifest: Record<string, { file: string; tla: string; number: number | null }> = {}
 let downloaded = 0
 let kept = 0
 
@@ -79,14 +94,14 @@ for (const entry of payload as OpenF1Driver[]) {
 
   const ext = new URL(url).pathname.match(/\.(png|webp|jpe?g|avif)$/i)?.[1]
   const file = `${playerId}.${(ext ?? "png").toLowerCase()}`
-  manifest[playerId] = { file, tla }
+  manifest[playerId] = { file, tla, number: entry.driver_number ?? null }
 
   const target = `${OUT_DIR}/${file}`
   if (existsSync(target) && !force) {
     kept += 1
     continue
   }
-  const img = await fetch(url).catch(() => null)
+  const img = await fetch(heroRender(url)).catch(() => null)
   if (!img || !img.ok) {
     console.log(`· ${tla}: headshot download failed — monogram fallback`)
     delete manifest[playerId]

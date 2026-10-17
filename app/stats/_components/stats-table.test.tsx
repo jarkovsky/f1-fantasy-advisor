@@ -21,6 +21,7 @@ function row(over: Partial<StatsRow> & Pick<StatsRow, "playerId" | "tla">): Stat
     kind: "driver",
     displayName: over.tla,
     teamName: "Team",
+    hasProfile: false,
     colorKey: "27",
     priceTenths: 300,
     priceDeltaTenths: 0,
@@ -227,5 +228,24 @@ describe("StatsTable", () => {
     expect(screen.getByText("·")).toBeInTheDocument()
     // DEL has +12 tenths → "+1.2".
     expect(screen.getByText("+1.2")).toBeInTheDocument()
+  })
+})
+
+describe("StatsTable — driver profile links", () => {
+  it("links a driver with a profile and leaves the rest as plain text", () => {
+    render(
+      <StatsTable
+        rows={[
+          row({ playerId: "131", tla: "VER", displayName: "M. Verstappen", hasProfile: true }),
+          row({ playerId: "116", tla: "LAW", displayName: "L. Lawson" }),
+        ]}
+        caption="Profiles"
+      />
+    )
+    expect(screen.getByRole("link", { name: "M. Verstappen" })).toHaveAttribute(
+      "href",
+      "/drivers/131"
+    )
+    expect(screen.queryByRole("link", { name: "L. Lawson" })).not.toBeInTheDocument()
   })
 })

@@ -48,6 +48,16 @@ describe("AppSidebar", () => {
   })
 })
 
+describe("AppSidebar — driver profiles", () => {
+  it("marks Stats as the current section on a driver profile", () => {
+    pathnameMock = "/drivers/131"
+    render(<AppSidebar />)
+
+    expect(screen.getByRole("link", { name: "Stats" })).toHaveAttribute("aria-current", "true")
+    expect(screen.getByRole("link", { name: "Advisor" })).not.toHaveAttribute("aria-current")
+  })
+})
+
 describe("MobileTopBar", () => {
   it("renders the same primary nav with active state on the advisor route", () => {
     render(<MobileTopBar />)

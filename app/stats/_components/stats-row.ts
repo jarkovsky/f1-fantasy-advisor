@@ -10,6 +10,8 @@ export type StatsRow = {
   displayName: string
   tla: string
   teamName: string | null
+  /** Active drivers link to /drivers/[playerId]; constructors and stale entries do not. */
+  hasProfile: boolean
   /** team-colors join key (assetColorKey) — drives the decorative bar only. */
   colorKey: string | null
   priceTenths: number

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   formatDateISO,
   formatDeltaTenths,
+  formatOrdinal,
   formatPoints,
   formatPriceTenths,
   formatSignedPoints,
@@ -86,5 +87,24 @@ describe("formatDateISO", () => {
   it("takes the UTC date even near a day boundary", () => {
     // 23:30 UTC stays on the same UTC day regardless of the runner's TZ.
     expect(formatDateISO(Date.UTC(2026, 0, 1, 23, 30))).toBe("2026-01-01")
+  })
+})
+
+describe("formatOrdinal", () => {
+  it("suffixes 1st/2nd/3rd and the teens", () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 101, 111].map(formatOrdinal)).toEqual([
+      "1st",
+      "2nd",
+      "3rd",
+      "4th",
+      "11th",
+      "12th",
+      "13th",
+      "21st",
+      "22nd",
+      "23rd",
+      "101st",
+      "111th",
+    ])
   })
 })

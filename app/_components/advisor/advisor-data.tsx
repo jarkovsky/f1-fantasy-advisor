@@ -4,8 +4,9 @@ import type { FeedMeta } from "@/lib/f1/types/feed"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { getConstraints, getDrivers, getHistory, getMixapi, getRaceday } from "@/lib/f1/feed"
+import { buildDriverProfiles } from "@/lib/profile/build-profiles"
 import { projectAssetsMany } from "@/lib/projections/engine"
-import { headshotPath } from "@/lib/headshots"
+import { carNumber, headshotPath } from "@/lib/headshots"
 
 import { AdvisorPanel } from "./advisor-panel"
 
@@ -95,6 +96,11 @@ export async function AdvisorData() {
     headshotPath: headshotPath(a.playerId),
   }))
 
+  const driverProfiles = buildDriverProfiles(drivers.data, history.data, (id) => ({
+    headshotPath: headshotPath(id),
+    carNumber: carNumber(id),
+  }))
+
   // Ships the whole grid (~33 numbers, <1KB) even though the client reads only
   // the ~7 roster ids. We cannot pre-filter to the roster here: the roster is
   // localStorage-only client state and must never leak into this cacheable RSC.
@@ -116,6 +122,7 @@ export async function AdvisorData() {
       live={mixapi.data?.isLive ?? false}
       assets={assets}
       projectionsByPreset={projectionsByPreset}
+      driverProfiles={driverProfiles}
       lastRacePoints={lastRacePoints}
       meta={meta}
     />

@@ -23,7 +23,7 @@ import { DrsBoostRanking } from "./drs-boost-ranking"
 import { RosterPlanRow } from "./roster-plan-row"
 
 /**
- * The "Your team" card: the recommended squad rendered in place, where kept slots
+ * The "Recommended team" card: the recommended squad rendered in place, where kept slots
  * are plain roster rows and swapped slots show out→in with the per-swap delta
  * (RosterPlanRow). The DRS chip and DRS Boost summary follow the optimizer's
  * captain (result.best.captainId) rather than a locally derived one, so the card
@@ -104,13 +104,10 @@ export function TeamPlanCard({
       <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px] bg-accent-f1" />
 
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-base font-semibold">Your team</h2>
+        <h2 className="text-base font-semibold">Recommended team</h2>
         <Badge variant="secondary">
           {best.transfers} transfer{best.transfers === 1 ? "" : "s"}
         </Badge>
-        <Button type="button" variant="ghost" size="sm" onClick={onEdit} className="ml-auto">
-          Edit team
-        </Button>
       </div>
 
       <div className="flex flex-col gap-0.5">

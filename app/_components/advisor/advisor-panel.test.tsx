@@ -2,6 +2,7 @@ import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/
 import type { OptimizerInput, OptimizerResult } from "@/lib/optimizer/types/optimizer"
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
 import type { AdvisorServerProps } from "@/lib/advisor/types/contract"
+import type { DriverProfile } from "@/lib/profile/types/profile"
 import type { RaceWeekConstraints } from "@/lib/f1/schemas"
 import type { AssetLite } from "@/lib/asset-lite"
 
@@ -187,6 +188,7 @@ function makeProps(over: Partial<AdvisorServerProps> = {}): AdvisorServerProps {
     live: false,
     assets: GRID,
     projectionsByPreset: projectionsByPreset(),
+    driverProfiles: {},
     lastRacePoints: {},
     meta: { source: "live", asOf: "2026-06-05" },
     ...over,
@@ -278,6 +280,77 @@ describe("OPEN", () => {
 
     expect(await screen.findByRole("heading", { name: "Monaco Grand Prix" })).toBeInTheDocument()
     expect(await findPlanHeadline()).toBeInTheDocument()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// DRS Boost hero + team overview — the hero follows the optimizer's pick; the
+// overview shows the saved team and owns the Edit team entry point.
+// ---------------------------------------------------------------------------
+function profileOf(a: AssetLite): DriverProfile {
+  const [firstName = "", lastName = ""] = a.fullName.split(" ")
+  return {
+    playerId: a.playerId,
+    firstName,
+    lastName,
+    tla: a.tla,
+    teamName: a.teamName,
+    constructorId: a.constructorId,
+    birthplace: null,
+    carNumber: null,
+    headshotPath: null,
+    priceTenths: a.priceTenths,
+    seasonPriceDeltaTenths: 0,
+    lastPriceDeltaTenths: 0,
+    seasonPoints: a.seasonPoints,
+    seasonRank: 1,
+    gridSize: DRIVERS.length,
+    scoredRaces: 5,
+    quali: null,
+    race: null,
+    sentiment: { selectedPercent: a.selectedPercent, change: null, races: 0 },
+    captainSelectedPercent: a.captainSelectedPercent,
+  }
+}
+
+describe("OPEN — DRS Boost hero and team overview", () => {
+  it("headlines the optimizer's DRS Boost pick with a link to the driver profile", async () => {
+    seedDevNow(BEFORE_LOCK)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
+    const driverProfiles = Object.fromEntries(DRIVERS.map((a) => [a.playerId, profileOf(a)]))
+    render(<AdvisorPanel {...makeProps({ driverProfiles })} />)
+
+    await findPlanHeadline()
+    const exp = expectedPlan({
+      roster: DEFAULT_ROSTER,
+      totals: WEIGHTED,
+      budgetTenths: 500,
+      freeTransfers: 3,
+    })
+    const pick = profileOf(GRID.find((a) => a.playerId === exp.best.captainId) as AssetLite)
+
+    const hero = screen.getByRole("region", { name: `${pick.firstName} ${pick.lastName}` })
+    expect(within(hero).getByText(/DRS Boost ×2/)).toBeInTheDocument()
+    expect(within(hero).getByRole("link", { name: /Driver profile/ })).toHaveAttribute(
+      "href",
+      `/drivers/${pick.playerId}`
+    )
+  })
+
+  it("shows the saved team and opens the editor from Edit team", async () => {
+    const user = userEvent.setup()
+    seedDevNow(BEFORE_LOCK)
+    seedTeam(DEFAULT_ROSTER, 500, 3, 6)
+    render(<AdvisorPanel {...makeProps()} />)
+
+    await findPlanHeadline()
+    const overview = screen.getByRole("region", { name: "Your team" })
+    expect(within(overview).getAllByRole("listitem")).toHaveLength(DEFAULT_ROSTER.length)
+    expect(within(overview).getByText("3")).toBeInTheDocument() // free transfers
+
+    await user.click(within(overview).getByRole("button", { name: "Edit team" }))
+    expect(screen.queryByRole("region", { name: "Your team" })).not.toBeInTheDocument()
+    expect(screen.getByRole("searchbox", { name: "Search drivers and constructors" })).toBeVisible()
   })
 })
 
@@ -606,9 +679,9 @@ describe("OPEN — preset switch", () => {
 
     await findPlanHeadline()
 
-    // The merged "Your team" card renders each kept asset's projected total.
+    // The merged "Recommended team" card renders each kept asset's projected total.
     // d4's season-average total (65.0) differs from its weighted-recent (70.0).
-    const heading = screen.getByRole("heading", { name: "Your team" })
+    const heading = screen.getByRole("heading", { name: "Recommended team" })
     const card = heading.closest("[data-slot=card]") as HTMLElement
     const d4Row = within(card).getByText("Driver 4").closest("li") as HTMLElement
     expect(within(d4Row).getByText("65.0")).toBeInTheDocument()
@@ -684,7 +757,7 @@ describe("OPEN — merged card rows", () => {
       freeTransfers: 3,
     })
 
-    const heading = screen.getByRole("heading", { name: "Your team" })
+    const heading = screen.getByRole("heading", { name: "Recommended team" })
     const card = heading.closest("[data-slot=card]") as HTMLElement
 
     const nameOf = (id: string) => GRID.find((a) => a.playerId === id)?.displayName ?? id

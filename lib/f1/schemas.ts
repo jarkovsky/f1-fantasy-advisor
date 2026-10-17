@@ -164,6 +164,9 @@ export const AssetSchema = z
     OldPlayerValue: moneyTenths, // price at the previous race
     TeamId: z.string(), // driver → constructor PlayerId link
     FUllName: z.string(), // [feed typo]
+    FirstName: emptyToNull.optional(), // driver profile hero: light first name…
+    LastName: emptyToNull.optional(), // …heavy surname (constructors repeat the team name)
+    IsActive: z.string().optional(), // '0' marks a stale entry (e.g. a driver's pre-swap team)
     DisplayName: z.string(),
     DriverTLA: z.string(),
     TeamName: emptyToNull, // '' for constructors
@@ -199,6 +202,8 @@ export const AssetSchema = z
       prevPriceTenths: r.OldPlayerValue,
       selectedPercent: r.SelectedPercentage,
       captainSelectedPercent: r.CaptainSelectedPercentage,
+      /** false for the feed's stale leftovers; absent flag ⇒ active. */
+      active: r.IsActive !== "0",
       /** Whole-race-weekend fantasy points (feed: GamedayPoints). */
       racePoints: pending ? null : r.GamedayPoints,
       noNegativePoints: pending ? null : r.NoNegativePoints,
@@ -213,6 +218,8 @@ export const AssetSchema = z
           constructorId: r.TeamId,
           teamName: r.TeamName,
           countryName: r.CountryName,
+          firstName: r.FirstName ?? null,
+          lastName: r.LastName ?? null,
         }
       : {
           kind: "constructor" as const,

@@ -1,5 +1,7 @@
 import type { StatsRow } from "./stats-row"
 
+import Link from "next/link"
+
 import { formatPriceTenths } from "@/lib/format"
 import { teamColor } from "@/lib/team-colors"
 
@@ -23,7 +25,16 @@ export function DataRow({ row }: { row: StatsRow }) {
         <div className="flex items-center gap-2">
           <TeamColorBar color={teamColor(row.colorKey)} className="h-5" />
           <span className="font-mono text-xs font-semibold">{row.tla}</span>
-          <span className="text-muted-foreground">{row.displayName}</span>
+          {row.hasProfile ? (
+            <Link
+              href={`/drivers/${row.playerId}`}
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              {row.displayName}
+            </Link>
+          ) : (
+            <span className="text-muted-foreground">{row.displayName}</span>
+          )}
         </div>
       </TableCell>
       <NumCell>{formatPriceTenths(row.priceTenths)}</NumCell>

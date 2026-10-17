@@ -17,6 +17,7 @@
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { RaceWeekConstraints, RaceWeekend } from "@/lib/f1/schemas"
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
+import type { DriverProfile } from "@/lib/profile/types/profile"
 import type { DataSource } from "@/lib/f1/types/feed"
 import type { AssetLite } from "@/lib/asset-lite"
 
@@ -37,6 +38,11 @@ export type AdvisorServerProps = {
   assets: AssetLite[]
   /** Server-computed projections for every concrete preset. */
   projectionsByPreset: Record<ConcretePresetId, ProjectionResult>
+  /**
+   * Hero view model per driver. The hero follows the DRS Boost pick, which is
+   * only known once the client-side optimizer runs, so every driver ships.
+   */
+  driverProfiles: Record<string, DriverProfile>
   /** Actual points for the last completed race (LOCKED / BETWEEN_ROUNDS). */
   lastRacePoints: Record<string, number | null>
   /** Worst-of provenance across the feeds this page consumed. */

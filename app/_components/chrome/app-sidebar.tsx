@@ -16,9 +16,23 @@ import { Button } from "@/components/ui/button"
 // and render outside the streamed data holes.
 
 const NAV_ITEMS = [
-  { href: "/", label: "Advisor", icon: Gauge },
-  { href: "/stats", label: "Stats", icon: ChartColumn },
+  { href: "/", label: "Advisor", icon: Gauge, section: [] },
+  // Driver profiles are reached from the stats table, so they light up Stats.
+  { href: "/stats", label: "Stats", icon: ChartColumn, section: ["/drivers/"] },
 ] as const
+
+/**
+ * aria-current for a nav link: "page" on its own route, "true" inside its
+ * section (a driver profile under Stats), else nothing.
+ */
+function currentFor(
+  pathname: string,
+  item: (typeof NAV_ITEMS)[number]
+): "page" | "true" | undefined {
+  if (pathname === item.href) return "page"
+  if (item.section.some((prefix) => pathname.startsWith(prefix))) return "true"
+  return undefined
+}
 
 function Brand({ className }: { className?: string }) {
   return (
@@ -63,14 +77,16 @@ export function AppSidebar() {
         <Brand className="size-10" />
         <TooltipProvider>
           <nav aria-label="Primary" className="flex flex-col items-center gap-2">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href
+            {NAV_ITEMS.map((item) => {
+              const { href, label, icon: Icon } = item
+              const current = currentFor(pathname, item)
+              const active = current !== undefined
               return (
                 <Tooltip key={href}>
                   <TooltipTrigger asChild>
                     <Link
                       href={href}
-                      aria-current={active ? "page" : undefined}
+                      aria-current={current}
                       className={cn(
                         "flex size-10 items-center justify-center rounded-md transition-colors",
                         active
@@ -102,13 +118,15 @@ export function MobileTopBar() {
     <header className="sticky top-0 z-40 flex items-center gap-4 border-b border-grid-line bg-background/90 px-4 py-2 backdrop-blur md:hidden">
       <Brand className="size-8 [&_svg]:size-4" />
       <nav aria-label="Primary" className="flex items-center gap-1">
-        {NAV_ITEMS.map(({ href, label }) => {
-          const active = pathname === href
+        {NAV_ITEMS.map((item) => {
+          const { href, label } = item
+          const current = currentFor(pathname, item)
+          const active = current !== undefined
           return (
             <Link
               key={href}
               href={href}
-              aria-current={active ? "page" : undefined}
+              aria-current={current}
               className={cn(
                 "rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
                 active

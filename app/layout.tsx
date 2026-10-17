@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 
-import { Geist_Mono, Inter } from "next/font/google"
+import { Archivo, Geist_Mono, Inter } from "next/font/google"
 
 import { AppSidebar, MobileTopBar } from "@/app/_components/chrome/app-sidebar"
 import { ThemeProvider } from "@/app/_components/chrome/theme-provider"
@@ -16,6 +16,14 @@ const fontSans = Inter({
 const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+})
+
+// Display face for the driver hero and race widgets: one variable file covers
+// the expanded surnames (wdth 125) and the condensed widget titles (wdth 62).
+const fontDisplay = Archivo({
+  subsets: ["latin"],
+  variable: "--font-display",
+  axes: ["wdth"],
 })
 
 export const metadata: Metadata = {
@@ -41,7 +49,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fontSans.variable} ${fontMono.variable} font-sans antialiased`}
+      className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} font-sans antialiased`}
     >
       <body className="flex min-h-dvh tabular-nums">
         <ThemeProvider>

@@ -47,6 +47,9 @@ describe("parseDriversFeed — real fixture acceptance", () => {
     if (gasly.kind === "driver") {
       expect(gasly.constructorId).toBe("23") // Alpine's PlayerId
       expect(gasly.teamName).toBe("Alpine")
+      expect(gasly.active).toBe(true)
+      expect(gasly.firstName).toBe("Pierre")
+      expect(gasly.lastName).toBe("Gasly")
     }
   })
 
