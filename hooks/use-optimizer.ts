@@ -6,24 +6,24 @@ import type { AssetLite } from "@/lib/asset-lite"
 
 import { useEffect, useRef, useState, useTransition } from "react"
 
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
+import { reconcileLineup, toOptimizerAssets } from "@/lib/optimizer/adapter"
 
 // Type-only: the module itself is imported dynamically so the 1.45M-combination
 // search stays out of the island's first-load bundle.
 type OptimizerModule = typeof import("@/lib/optimizer/optimize")
 
 /**
- * Runs the transfer optimizer for the current squad + projections, lazily
+ * Runs the transfer optimizer for the current team + projections, lazily
  * importing the module on mount and recomputing (transition-wrapped, with
  * cancel guards) whenever the inputs change. Returns the plan, the keep-current
- * baseline, unresolved roster ids, an error string, the pending flag, and a
+ * baseline, unresolved lineup ids, an error string, the pending flag, and a
  * polite status message.
  */
 export function useOptimizer(input: {
   assets: AssetLite[]
   totals: Record<string, number>
-  roster: string[] | null
-  budgetTenths: number
+  lineup: string[] | null
+  remainingCostCapTenths: number
   freeTransfers: 2 | 3 | "unlimited"
   whatIf: WhatIfMode
 }): {
@@ -34,7 +34,7 @@ export function useOptimizer(input: {
   isPending: boolean
   statusMessage: string
 } {
-  const { assets, totals, roster, budgetTenths, freeTransfers, whatIf } = input
+  const { assets, totals, lineup, remainingCostCapTenths, freeTransfers, whatIf } = input
 
   const optimizerRef = useRef<OptimizerModule | null>(null)
   const [result, setResult] = useState<OptimizerResult | null>(null)
@@ -44,7 +44,7 @@ export function useOptimizer(input: {
   const [isPending, startTransition] = useTransition()
   const [statusMessage, setStatusMessage] = useState("")
 
-  // Warm the optimizer chunk on mount, even before there is a roster to optimize.
+  // Warm the optimizer chunk on mount, even before there is a lineup to optimize.
   useEffect(() => {
     if (optimizerRef.current) return
     let cancelled = false
@@ -57,7 +57,7 @@ export function useOptimizer(input: {
   }, [])
 
   useEffect(() => {
-    if (!roster) return
+    if (!lineup) return
     let cancelled = false
 
     void (async () => {
@@ -66,11 +66,11 @@ export function useOptimizer(input: {
       if (cancelled) return
 
       const grid = toOptimizerAssets(assets, totals)
-      const { assets: reconciled, unresolvedIds: missing } = reconcileRoster(roster, grid)
+      const { assets: reconciled, unresolvedIds: missing } = reconcileLineup(lineup, grid)
       const optInput = {
         assets: reconciled,
-        roster,
-        budgetTenths,
+        lineup,
+        remainingCostCapTenths,
         freeTransfers: whatIf !== "none" ? ("unlimited" as const) : freeTransfers,
         mode: whatIf === "none" ? ("normal" as const) : whatIf,
       }
@@ -107,7 +107,7 @@ export function useOptimizer(input: {
     return () => {
       cancelled = true
     }
-  }, [totals, roster, budgetTenths, freeTransfers, whatIf, assets])
+  }, [totals, lineup, remainingCostCapTenths, freeTransfers, whatIf, assets])
 
   return {
     result,

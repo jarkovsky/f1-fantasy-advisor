@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 /**
- * "Start over" confirmation (edit mode only) — clears the saved team, budget,
+ * "Start over" confirmation (edit mode only) — clears the saved team, Remaining Cost Cap,
  * and transfer count. Wrapped in a Dialog so the destructive action is
  * deliberate.
  */
@@ -27,7 +27,7 @@ export function StartOverDialog({ onConfirm }: { onConfirm: () => void }) {
         <DialogHeader>
           <DialogTitle>Start over?</DialogTitle>
           <DialogDescription>
-            This clears your saved team, budget, and transfer count.
+            This clears your saved team, Remaining Cost Cap, and transfer count.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

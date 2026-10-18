@@ -9,7 +9,7 @@ import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
 // Deterministic grid (mirrors team-picker.test.tsx). BetweenRounds is a pure
-// prop-driven view — no store, no devNow seeding. We pass a roster + the actual
+// prop-driven view — no store, no devNow seeding. We pass a lineup + the actual
 // last-race points and assert the honest scored-vs-projected comparison.
 // ---------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 10 + n,
-    captainSelectedPercent: n,
+    boostedPercent: n,
     constructorId: ["c1", "c2", "c3"][n % 3] ?? "c1",
     teamName: "Team",
     seasonPoints: 100 + n,
@@ -41,7 +41,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 5 + n,
-    captainSelectedPercent: 0,
+    boostedPercent: 0,
     constructorId: null,
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
@@ -59,8 +59,8 @@ const ASSETS_BY_ID: Record<string, AssetLite> = Object.fromEntries(
   ASSETS.map((a) => [a.playerId, a])
 )
 
-const ROSTER = ["d1", "d2", "d3", "d4", "d5", "c1", "c2"]
-// Actual points per roster id → scored sum = 25+18+15+12+10+33+27 = 140.
+const LINEUP = ["d1", "d2", "d3", "d4", "d5", "c1", "c2"]
+// Actual points per lineup id → scored sum = 25+18+15+12+10+33+27 = 140.
 const LAST_RACE_POINTS: Record<string, number | null> = {
   d1: 25,
   d2: 18,
@@ -88,7 +88,7 @@ function renderView(props?: Partial<Parameters<typeof BetweenRounds>[0]>) {
     <BetweenRounds
       lastCompleted={5}
       pointsRace={5}
-      roster={ROSTER}
+      lineup={LINEUP}
       assetsById={ASSETS_BY_ID}
       lastRacePoints={LAST_RACE_POINTS}
       savedProjection={{ totalPoints: 128.4, preset: "weighted-recent" }}
@@ -98,7 +98,7 @@ function renderView(props?: Partial<Parameters<typeof BetweenRounds>[0]>) {
 }
 
 describe("BetweenRounds", () => {
-  it("renders 'You scored X · we projected Y' with both numbers from lastRacePoints over the roster and the savedProjection", () => {
+  it("renders 'You scored X · we projected Y' with both numbers from lastRacePoints over the lineup and the savedProjection", () => {
     renderView()
 
     expect(screen.getByText(/Results are in for race 5\./)).toBeInTheDocument()

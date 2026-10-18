@@ -2,25 +2,25 @@ import type { OptimizerAsset } from "./types/optimizer"
 
 import { describe, expect, it } from "vitest"
 
-import { pickDrsCaptainId } from "./drs-boost"
+import { pickBoostDriverId } from "./boost"
 import { optimize } from "./optimize"
 
-describe("pickDrsCaptainId", () => {
+describe("pickBoostDriverId", () => {
   it("picks the highest projection", () => {
     const proj: Record<string, number> = { a: 1, b: 5, c: 3 }
-    expect(pickDrsCaptainId(["a", "b", "c"], (id) => proj[id] ?? 0)).toBe("b")
+    expect(pickBoostDriverId(["a", "b", "c"], (id) => proj[id] ?? 0)).toBe("b")
   })
 
   it("breaks ties by the lower id", () => {
     const proj: Record<string, number> = { z: 5, a: 5, m: 5 }
-    expect(pickDrsCaptainId(["z", "a", "m"], (id) => proj[id] ?? 0)).toBe("a")
+    expect(pickBoostDriverId(["z", "a", "m"], (id) => proj[id] ?? 0)).toBe("a")
   })
 
   it("returns null for an empty list", () => {
-    expect(pickDrsCaptainId([], () => 0)).toBeNull()
+    expect(pickBoostDriverId([], () => 0)).toBeNull()
   })
 
-  it("agrees with the optimizer's captain choice on a real plan", () => {
+  it("agrees with the optimizer's Boost choice on a real plan", () => {
     const grid: OptimizerAsset[] = [
       { id: "d0", kind: "driver", priceTenths: 50, projected: 5 },
       { id: "d1", kind: "driver", priceTenths: 60, projected: 8 },
@@ -38,12 +38,12 @@ describe("pickDrsCaptainId", () => {
     const projById = new Map(grid.map((a) => [a.id, a.projected]))
     const result = optimize({
       assets: grid,
-      roster: ["d0", "d1", "d2", "d3", "d4", "c0", "c1"],
-      budgetTenths: 400,
+      lineup: ["d0", "d1", "d2", "d3", "d4", "c0", "c1"],
+      remainingCostCapTenths: 400,
       freeTransfers: 2,
     })
-    expect(pickDrsCaptainId(result.best.driverIds, (id) => projById.get(id) ?? 0)).toBe(
-      result.best.captainId
+    expect(pickBoostDriverId(result.best.driverIds, (id) => projById.get(id) ?? 0)).toBe(
+      result.best.boostDriverId
     )
   })
 })

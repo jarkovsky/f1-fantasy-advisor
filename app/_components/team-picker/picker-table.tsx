@@ -46,7 +46,7 @@ const COLUMNS: SortableColumn<SortKey, AssetLite>[] = [
   { key: "price", label: "Price", value: (a) => a.priceTenths },
   { key: "pts", label: "Pts", value: (a) => a.seasonPoints },
   { key: "ppm", label: "PPM", value: (a) => ppmValue(a) },
-  { key: "sel", label: "Sel%", value: (a) => a.selectedPercent },
+  { key: "sel", label: "% Picked", value: (a) => a.selectedPercent },
 ]
 
 /** Points-per-million; null at price 0 (sorts last, renders an em dash). */

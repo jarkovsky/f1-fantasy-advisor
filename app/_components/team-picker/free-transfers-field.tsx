@@ -42,8 +42,8 @@ export function FreeTransfersField({
         ))}
       </ToggleGroup>
       <p className="text-xs text-muted-foreground">
-        3 only if you banked an unused transfer last week; none carry over after Wildcard or
-        Limitless. Unlimited = your first race or an active Wildcard.
+        3 only if an unused free transfer carried over from the last race; none carry over after
+        Wildcard or Limitless. Unlimited = your first race or an active Wildcard.
       </p>
     </fieldset>
   )

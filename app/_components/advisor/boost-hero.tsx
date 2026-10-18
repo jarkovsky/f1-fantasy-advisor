@@ -2,18 +2,18 @@ import type { DriverProfile } from "@/lib/profile/types/profile"
 
 import Link from "next/link"
 
-import { DRS_BOOST_MULTIPLIER } from "@/lib/constants"
+import { BOOST_MULTIPLIER } from "@/lib/constants"
 import { formatSignedPoints } from "@/lib/format"
 
 import { DriverHero } from "@/app/_components/driver/driver-hero"
 
 /**
- * The advisor's headline: the driver hero for the recommended plan's DRS Boost
- * pick (the optimizer's captain), with the boost it is worth. It follows
- * result.best.captainId, like the team card's DRS chip, so the two never
+ * The advisor's headline: the driver hero for the recommended plan's Boost
+ * pick (the optimizer's Boost driver), with the boost it is worth. It follows
+ * result.best.boostDriverId, like the team card's Boost badge, so the two never
  * disagree.
  */
-export function DrsBoostHero({
+export function BoostHero({
   profile,
   projected,
 }: {
@@ -21,14 +21,14 @@ export function DrsBoostHero({
   /** The pick's projected race-week points before the boost. */
   projected: number
 }) {
-  const boost = projected * (DRS_BOOST_MULTIPLIER - 1)
+  const boost = projected * (BOOST_MULTIPLIER - 1)
   return (
     <DriverHero
       profile={profile}
       badge={
         <p className="flex flex-col items-end gap-1">
           <span className="rounded-sm bg-warn px-2 py-1 font-display text-xs leading-none font-extrabold tracking-wide text-surface-0 uppercase [font-stretch:80%]">
-            DRS Boost ×{DRS_BOOST_MULTIPLIER}
+            x{BOOST_MULTIPLIER} Boost
           </span>
           <span className="font-mono text-xs text-muted-foreground">
             {formatSignedPoints(boost)} pts boosted

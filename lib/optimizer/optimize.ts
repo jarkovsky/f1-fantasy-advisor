@@ -1,30 +1,30 @@
 /**
  * Exact-search transfer optimizer.
  *
- * Exhaustively enumerates every legal squad — C(22,5) × C(11,2) ≈ 1.45M
- * combinations — and returns the global optimum plus the best squad at every
+ * Exhaustively enumerates every legal team — C(22,5) × C(11,2) ≈ 1.45M
+ * combinations — and returns the global optimum plus the best team at every
  * transfer count, in one pass. Pure and synchronous (no I/O); the advisor
  * imports it lazily and runs it in the browser. adapter.ts builds its input
  * from the feed grid and a projections table.
  *
- * score(T) = Σ projected(a) + (DRS_BOOST_MULTIPLIER − 1)·max driver projected
- *            + EXTRA_TRANSFER_PENALTY · max(0, transfers(T) − freeTransfers)
+ * score(T) = Σ projected(a) + (BOOST_MULTIPLIER − 1)·max driver projected
+ *            + ADDITIONAL_TRANSFER_PENALTY · max(0, transfers(T) − freeTransfers)
  *
- * The only pruning is budget feasibility. A partial pick is abandoned when
+ * The only pruning is cost cap feasibility. A partial pick is abandoned when
  *   priceSoFar + (sum of the `need` cheapest remaining drivers)
- *              + (cheapest constructor pair)              > purse.
+ *              + (cheapest constructor pair)              > cost cap.
  * Drivers are sorted ascending by price, so the bound is monotonic at each
  * level: once it fails at one index it fails for every later one, and the
  * loop breaks instead of continuing.
  * Proof this never cuts a feasible team T: on T's emission path the cheapest
  * `need`-subset of the remaining suffix lower-bounds T's own remaining
  * drivers, and the cheapest pair lower-bounds T's pair, so the bound is
- * ≤ cost(T) ≤ purse and the prune cannot fire. Score/upper-bound pruning is
+ * ≤ cost(T) ≤ cost cap and the prune cannot fire. Score/upper-bound pruning is
  * deliberately omitted: it could discard the optimum of a non-global
  * transfer bucket, and byTransferCount must be optimal in every bucket.
  *
- * Money is integer tenths throughout, so budget-boundary comparisons are exact
- * (a team costing exactly the purse is affordable; one tenth more is not).
+ * Money is integer tenths throughout, so cost-cap-boundary comparisons are exact
+ * (a team costing exactly the cost cap is affordable; one tenth more is not).
  */
 import type {
   OptimizerAsset,
@@ -35,19 +35,19 @@ import type {
 } from "./types/optimizer"
 
 import {
-  DRS_BOOST_MULTIPLIER,
-  EXTRA_TRANSFER_PENALTY,
-  SQUAD_CONSTRUCTORS,
-  SQUAD_DRIVERS,
+  BOOST_MULTIPLIER,
+  ADDITIONAL_TRANSFER_PENALTY,
+  TEAM_CONSTRUCTORS,
+  TEAM_DRIVERS,
 } from "@/lib/constants"
 
-import { pickDrsCaptainId } from "./drs-boost"
+import { pickBoostDriverId } from "./boost"
 
 export class OptimizerInputError extends Error {}
 
-const SQUAD_SIZE = SQUAD_DRIVERS + SQUAD_CONSTRUCTORS
-/** Transfer counts run 0..SQUAD_SIZE (every slot swapped). */
-const MAX_TRANSFERS = SQUAD_SIZE
+const TEAM_SIZE = TEAM_DRIVERS + TEAM_CONSTRUCTORS
+/** Transfer counts run 0..TEAM_SIZE (every slot swapped). */
+const MAX_TRANSFERS = TEAM_SIZE
 
 // ---------------------------------------------------------------------------
 // Internal scratch shape: winners are tracked as dense indices and primitive
@@ -96,9 +96,9 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       `freeTransfers must be a non-negative integer or "unlimited", got ${String(input.freeTransfers)}`
     )
   }
-  if (!Number.isInteger(input.budgetTenths) || input.budgetTenths < 0) {
+  if (!Number.isInteger(input.remainingCostCapTenths) || input.remainingCostCapTenths < 0) {
     throw new OptimizerInputError(
-      `budgetTenths must be a non-negative integer (tenths), got ${String(input.budgetTenths)}`
+      `remainingCostCapTenths must be a non-negative integer (tenths), got ${String(input.remainingCostCapTenths)}`
     )
   }
 
@@ -115,46 +115,46 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     byId.set(asset.id, asset)
   }
 
-  // Check grid size before resolving the roster — otherwise a roster id missing
+  // Check grid size before resolving the lineup — otherwise a lineup id missing
   // from a too-small grid reports the wrong (less actionable) error.
   const drivers = input.assets.filter((a) => a.kind === "driver")
   const constructors = input.assets.filter((a) => a.kind === "constructor")
-  if (drivers.length < SQUAD_DRIVERS || constructors.length < SQUAD_CONSTRUCTORS) {
+  if (drivers.length < TEAM_DRIVERS || constructors.length < TEAM_CONSTRUCTORS) {
     throw new OptimizerInputError(
-      `grid too small: need ≥${SQUAD_DRIVERS} drivers and ≥${SQUAD_CONSTRUCTORS} constructors, got ${drivers.length} + ${constructors.length}`
+      `grid too small: need ≥${TEAM_DRIVERS} drivers and ≥${TEAM_CONSTRUCTORS} constructors, got ${drivers.length} + ${constructors.length}`
     )
   }
 
-  if (input.roster.length !== SQUAD_SIZE) {
-    throw new OptimizerInputError(`roster must have ${SQUAD_SIZE} ids, got ${input.roster.length}`)
+  if (input.lineup.length !== TEAM_SIZE) {
+    throw new OptimizerInputError(`lineup must have ${TEAM_SIZE} ids, got ${input.lineup.length}`)
   }
-  const rosterSet = new Set(input.roster)
-  if (rosterSet.size !== input.roster.length) {
-    throw new OptimizerInputError("roster contains duplicate ids")
+  const lineupSet = new Set(input.lineup)
+  if (lineupSet.size !== input.lineup.length) {
+    throw new OptimizerInputError("lineup contains duplicate ids")
   }
-  let rosterDrivers = 0
-  let rosterConstructors = 0
-  let rosterCostTenths = 0
-  for (const id of input.roster) {
+  let lineupDrivers = 0
+  let lineupConstructors = 0
+  let lineupCostTenths = 0
+  for (const id of input.lineup) {
     const asset = byId.get(id)
-    if (!asset) throw new OptimizerInputError(`roster id ${id} not found in assets`)
-    if (asset.kind === "driver") rosterDrivers += 1
-    else rosterConstructors += 1
-    rosterCostTenths += asset.priceTenths
+    if (!asset) throw new OptimizerInputError(`lineup id ${id} not found in assets`)
+    if (asset.kind === "driver") lineupDrivers += 1
+    else lineupConstructors += 1
+    lineupCostTenths += asset.priceTenths
   }
-  if (rosterDrivers !== SQUAD_DRIVERS || rosterConstructors !== SQUAD_CONSTRUCTORS) {
+  if (lineupDrivers !== TEAM_DRIVERS || lineupConstructors !== TEAM_CONSTRUCTORS) {
     throw new OptimizerInputError(
-      `roster must be ${SQUAD_DRIVERS} drivers + ${SQUAD_CONSTRUCTORS} constructors, got ${rosterDrivers} + ${rosterConstructors}`
+      `lineup must be ${TEAM_DRIVERS} drivers + ${TEAM_CONSTRUCTORS} constructors, got ${lineupDrivers} + ${lineupConstructors}`
     )
   }
 
   // ---- mode fold ----------------------------------------------------------
-  const budgetEnforced = mode !== "limitless"
+  const costCapEnforced = mode !== "limitless"
   const unlimited =
     mode === "wildcard" || mode === "limitless" || input.freeTransfers === "unlimited"
   const freeTransfers = unlimited ? Number.POSITIVE_INFINITY : (input.freeTransfers as number)
-  // What a full sell-off would leave in the bank: every owned asset is sellable.
-  const purseTenths = input.budgetTenths + rosterCostTenths
+  // What a full sell-off would leave as Remaining Cost Cap: every owned asset is sellable.
+  const costCapTenths = input.remainingCostCapTenths + lineupCostTenths
 
   // ---- data prep: sort ascending by price, then dense SoA typed arrays -----
   // Every index below (d0..d4, pairI/pairJ) points into these sorted arrays.
@@ -162,18 +162,18 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     a.priceTenths - b.priceTenths || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   drivers.sort(byPriceThenId)
   constructors.sort(byPriceThenId)
-  const inRoster = (asset: OptimizerAsset | undefined) => (asset && rosterSet.has(asset.id) ? 1 : 0)
+  const inLineup = (asset: OptimizerAsset | undefined) => (asset && lineupSet.has(asset.id) ? 1 : 0)
 
   const D = drivers.length
   const dPrice = new Int32Array(D)
   const dProj = new Float64Array(D)
-  const dInRoster = new Uint8Array(D)
+  const dInLineup = new Uint8Array(D)
   for (let i = 0; i < D; i++) {
     const d = drivers[i]
     if (!d) continue
     dPrice[i] = d.priceTenths
     dProj[i] = d.projected
-    dInRoster[i] = inRoster(d)
+    dInLineup[i] = inLineup(d)
   }
   // Prefix sums over ascending prices: the cheapest `need` drivers from index
   // `start` onward cost dPrefix[start + need] - dPrefix[start].
@@ -204,7 +204,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     const cj = constructors[j]
     pairPrice[k] = price
     pairProj[k] = (ci?.projected ?? 0) + (cj?.projected ?? 0)
-    pairTransfers[k] = 2 - inRoster(ci) - inRoster(cj)
+    pairTransfers[k] = 2 - inLineup(ci) - inLineup(cj)
     pairI[k] = i
     pairJ[k] = j
   }
@@ -220,7 +220,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const penaltyFor = (transfers: number): number => {
     const excess = Math.max(0, transfers - freeTransfers)
     // A literal 0 within the allowance: the negative penalty × 0 would be -0.
-    return excess > 0 ? EXTRA_TRANSFER_PENALTY * excess : 0
+    return excess > 0 ? ADDITIONAL_TRANSFER_PENALTY * excess : 0
   }
 
   /** Canonical team identity (sorted ids per class) — the final tie-break. */
@@ -263,7 +263,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
 
   const candidate = emptyScratch()
 
-  /** Slow path: offer one squad to the global and per-bucket incumbents. */
+  /** Slow path: offer one team to the global and per-bucket incumbents. */
   function record(
     d0: number,
     d1: number,
@@ -299,7 +299,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
 
   // ---- enumeration ----------------------------------------------------------
-  const captainFactor = DRS_BOOST_MULTIPLIER - 1
+  const boostFactor = BOOST_MULTIPLIER - 1
 
   // cheapestNext(start, n): sum of the n cheapest drivers at index ≥ start.
   const cheapestNext = (start: number, n: number): number =>
@@ -307,46 +307,47 @@ export function optimize(input: OptimizerInput): OptimizerResult {
 
   for (let a = 0; a <= D - 5; a++) {
     const priceA = dPrice[a] ?? 0
-    if (budgetEnforced && priceA + cheapestNext(a + 1, 4) + minPairPrice > purseTenths) break
+    if (costCapEnforced && priceA + cheapestNext(a + 1, 4) + minPairPrice > costCapTenths) break
     const projA = dProj[a] ?? 0
     const capA = projA
-    const trA = 1 - (dInRoster[a] ?? 0)
+    const trA = 1 - (dInLineup[a] ?? 0)
 
     for (let b = a + 1; b <= D - 4; b++) {
       const priceB = priceA + (dPrice[b] ?? 0)
-      if (budgetEnforced && priceB + cheapestNext(b + 1, 3) + minPairPrice > purseTenths) break
+      if (costCapEnforced && priceB + cheapestNext(b + 1, 3) + minPairPrice > costCapTenths) break
       const projB = projA + (dProj[b] ?? 0)
       const capB = Math.max(capA, dProj[b] ?? 0)
-      const trB = trA + 1 - (dInRoster[b] ?? 0)
+      const trB = trA + 1 - (dInLineup[b] ?? 0)
 
       for (let c = b + 1; c <= D - 3; c++) {
         const priceC = priceB + (dPrice[c] ?? 0)
-        if (budgetEnforced && priceC + cheapestNext(c + 1, 2) + minPairPrice > purseTenths) break
+        if (costCapEnforced && priceC + cheapestNext(c + 1, 2) + minPairPrice > costCapTenths) break
         const projC = projB + (dProj[c] ?? 0)
         const capC = Math.max(capB, dProj[c] ?? 0)
-        const trC = trB + 1 - (dInRoster[c] ?? 0)
+        const trC = trB + 1 - (dInLineup[c] ?? 0)
 
         for (let d = c + 1; d <= D - 2; d++) {
           const priceD = priceC + (dPrice[d] ?? 0)
-          if (budgetEnforced && priceD + cheapestNext(d + 1, 1) + minPairPrice > purseTenths) break
+          if (costCapEnforced && priceD + cheapestNext(d + 1, 1) + minPairPrice > costCapTenths)
+            break
           const projD = projC + (dProj[d] ?? 0)
           const capD = Math.max(capC, dProj[d] ?? 0)
-          const trD = trC + 1 - (dInRoster[d] ?? 0)
+          const trD = trC + 1 - (dInLineup[d] ?? 0)
 
           for (let e = d + 1; e <= D - 1; e++) {
             const priceE = priceD + (dPrice[e] ?? 0)
-            if (budgetEnforced && priceE + minPairPrice > purseTenths) break
+            if (costCapEnforced && priceE + minPairPrice > costCapTenths) break
             const projE = projD + (dProj[e] ?? 0)
             const capE = Math.max(capD, dProj[e] ?? 0)
-            const trE = trD + 1 - (dInRoster[e] ?? 0)
+            const trE = trD + 1 - (dInLineup[e] ?? 0)
 
-            const driverBudget = purseTenths - priceE
-            const captainBonus = captainFactor * capE
-            const baseProj = projE + captainBonus
+            const driverCostCapLeft = costCapTenths - priceE
+            const boostBonus = boostFactor * capE
+            const baseProj = projE + boostBonus
 
             for (let p = 0; p < pairCount; p++) {
               const pp = pairPrice[p] ?? 0
-              if (budgetEnforced && pp > driverBudget) break
+              if (costCapEnforced && pp > driverCostCapLeft) break
               // Hot path: pure float compares; record() only on >= (rare).
               const transfers = trE + (pairTransfers[p] ?? 0)
               const raw = baseProj + (pairProj[p] ?? 0)
@@ -370,7 +371,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       constructors[pairJ[s.pair] ?? 0],
     ].filter((x) => x !== undefined)
 
-    const captainId = pickDrsCaptainId(
+    const boostDriverId = pickBoostDriverId(
       teamDrivers.map((d) => d.id),
       (id) => byId.get(id)?.projected ?? 0
     )
@@ -379,20 +380,20 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     return {
       driverIds: teamDrivers.map((d) => d.id).sort(),
       constructorIds: teamConstructors.map((c) => c.id).sort(),
-      captainId: captainId ?? "",
+      boostDriverId: boostDriverId ?? "",
       projectedTotal: s.projectedTotal,
       score: s.projectedTotal + penaltyPoints,
       transfers: s.transfers,
       penaltyPoints,
       costTenths: s.costTenths,
-      budgetLeftTenths: purseTenths - s.costTenths,
+      remainingCostCapTenths: costCapTenths - s.costTenths,
     }
   }
 
   if (!globalBest.occupied) {
-    // Unreachable for valid input: the roster itself always fits the purse
-    // (purse = bank + roster cost). Kept as a loud guard, not a silent null.
-    throw new OptimizerInputError("no feasible team exists under the purse")
+    // Unreachable for valid input: the lineup itself always fits the cost cap
+    // (cost cap = Remaining Cost Cap + lineup cost). Kept as a loud guard, not a silent null.
+    throw new OptimizerInputError("no feasible team exists under the cost cap")
   }
 
   return {

@@ -1,10 +1,10 @@
 # Fantasy F1 Race-Weekend Advisor
 
-**Finds the provably optimal F1 Fantasy squad and transfers for the next Grand Prix by checking all 1,448,370 legal squads in ~6 ms, right in the browser.**
+**Finds the provably optimal F1 Fantasy team and transfers for the next Grand Prix by checking all 1,448,370 legal teams in ~6 ms, right in the browser.**
 
-Exact, not heuristic: given the projections, no better squad exists. It pulls the official F1 Fantasy feeds, projects every driver and constructor under transparent presets, and explains every number. Free, no login; your team lives in `localStorage` only.
+Exact, not heuristic: given the projections, no better team exists. It pulls the official F1 Fantasy feeds, projects every driver and constructor under transparent presets, and explains every number. Free, no login; your team lives in `localStorage` only.
 
-- **Exact search with a proof.** Budget-only pruning with a written optimality proof. Tests check the global optimum _and_ the best squad at every transfer count against a brute-force oracle.
+- **Exact search with a proof.** Cost-cap-only pruning with a written optimality proof. Tests check the global optimum _and_ the best team at every transfer count against a brute-force oracle.
 - **Degrades instead of breaking.** Every feed is validated with zod at the boundary and falls back from live to committed snapshot to typed empty. The production build succeeds with the feeds unreachable.
 - **Next.js 16 Cache Components.** A cacheable static shell with one streamed data hole. Lighthouse 100 on Accessibility, Best Practices and SEO; LCP 407 ms at 4× CPU throttle.
 - **Tested and strictly typed.** 320 tests (Vitest + Testing Library), strict TypeScript with `noUncheckedIndexedAccess`.
@@ -13,7 +13,7 @@ Exact, not heuristic: given the projections, no better squad exists. It pulls th
 
 ## Screenshots
 
-Light by default on a dot-pattern paper grey, with a dark "telemetry" theme one toggle away. The recommended transfers and DRS Boost are baked directly into your roster rows.
+Light by default on a dot-pattern paper grey, with a dark "telemetry" theme one toggle away. The recommended transfers and Boost are baked directly into your lineup rows.
 
 | The advisor — live Monaco data                                 | Team setup                                      | Stats                                |
 | -------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------ |
@@ -40,7 +40,7 @@ flowchart TD
     SM[race-week state machine<br/>wall clock + stored race stamp]
     BLEND[custom-blend = exact lerp of two presets]
     ADAPT[optimizer adapter]
-    OPT[optimizer behind dynamic import<br/>exhaustive C 22,5 × C 11,2 = 1,448,370<br/>budget-prune w/ optimality proof]
+    OPT[optimizer behind dynamic import<br/>exhaustive C 22,5 × C 11,2 = 1,448,370<br/>cost-cap-prune w/ optimality proof]
     UI[recommendation UI]
     STORE --> SM --> BLEND --> ADAPT --> OPT --> UI
   end
@@ -59,30 +59,30 @@ The server resolves a single streamed data hole (a fully cacheable async RSC, no
 
 ## Key decisions
 
-| Decision                                                               | Why                                                                                                    |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Exhaustive search, budget-only pruning with a written optimality proof | Score/upper-bound pruning deliberately omitted — it could cut a non-global per-transfer-count optimum  |
-| Oracle-verified optimality                                             | Tested against a brute-force oracle — global optimum and every transfer bucket                         |
-| DRS captain co-optimized for free                                      | Captain is the max-projection term folded into the score, not a second pass                            |
-| Money is integer tenths-of-a-million end to end                        | Exact budget-boundary comparisons (cost == purse affordable; one tenth more is not)                    |
-| Season cumulatives recomputed by summing per-race points               | Feed totals are contaminated — old race files get regenerated with later-era cumulatives               |
-| Team lock from the raceday ISO8601 first-session start                 | `constraints.DeadlineDate` proven stale/advisory — never trusted                                       |
-| Never recompute scoring from results                                   | The feed's per-race / per-session points suffice; no re-derivation                                     |
-| Committed snapshots feed offline builds                                | `'use cache'` fetchers fall back to `data/`, so `next build` never needs the live feeds                |
-| Sprint small-sample prior                                              | Sprint sessions are shrunk toward a prior (few samples per season)                                     |
-| Equal-PPM is per-race calibrated                                       | Divides by completed races so it sits on the single-race scale as a fallback                           |
-| `custom-blend` = exact lerp of season-average and weighted-recent      | The engine's blend is linear in its endpoints, so SeasonHistory never has to ship                      |
-| Race-week state machine runs client-side                               | It needs wall clock + stored race; nothing time/user-dependent in the PPR shell                        |
-| `localStorage`-only persistence                                        | No accounts, no backend; degrades silently when storage is blocked                                     |
-| Light default via `next-themes` pre-paint script                       | Zero FOUC and PPR-safe: the static shell stays theme-free; the class lands before first paint          |
-| Text and surface tokens are designed as pairs                          | Muted-on-raised-grey and white-on-red-fill each fail AA if tuned alone — found by auditing both themes |
-| Recommended plan baked into the roster rows                            | One merged team card (out → in per row, DRS chip on the pick) beats two cards saying the same thing    |
-| Picker = two kind tables + one shared search                           | A checkbox column is the a11y source of truth; sort/announce mechanics shared with the stats table     |
-| Dot-pattern background generated by a seeded PRNG                      | The speckle SVGs are deterministic build inputs (`pnpm pattern`), not random output                    |
+| Decision                                                                 | Why                                                                                                    |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Exhaustive search, cost-cap-only pruning with a written optimality proof | Score/upper-bound pruning deliberately omitted — it could cut a non-global per-transfer-count optimum  |
+| Oracle-verified optimality                                               | Tested against a brute-force oracle — global optimum and every transfer bucket                         |
+| Boost driver co-optimized for free                                       | Boost driver is the max-projection term folded into the score, not a second pass                       |
+| Money is integer tenths-of-a-million end to end                          | Exact cost-cap-boundary comparisons (cost == cost cap affordable; one tenth more is not)               |
+| Season cumulatives recomputed by summing per-race points                 | Feed totals are contaminated — old race files get regenerated with later-era cumulatives               |
+| Team lock from the raceday ISO8601 first-session start                   | `constraints.DeadlineDate` proven stale/advisory — never trusted                                       |
+| Never recompute scoring from results                                     | The feed's per-race / per-session points suffice; no re-derivation                                     |
+| Committed snapshots feed offline builds                                  | `'use cache'` fetchers fall back to `data/`, so `next build` never needs the live feeds                |
+| Sprint small-sample prior                                                | Sprint sessions are shrunk toward a prior (few samples per season)                                     |
+| Equal-PPM is per-race calibrated                                         | Divides by completed races so it sits on the single-race scale as a fallback                           |
+| `custom-blend` = exact lerp of season-average and weighted-recent        | The engine's blend is linear in its endpoints, so SeasonHistory never has to ship                      |
+| Race-week state machine runs client-side                                 | It needs wall clock + stored race; nothing time/user-dependent in the PPR shell                        |
+| `localStorage`-only persistence                                          | No accounts, no backend; degrades silently when storage is blocked                                     |
+| Light default via `next-themes` pre-paint script                         | Zero FOUC and PPR-safe: the static shell stays theme-free; the class lands before first paint          |
+| Text and surface tokens are designed as pairs                            | Muted-on-raised-grey and white-on-red-fill each fail AA if tuned alone — found by auditing both themes |
+| Recommended plan baked into the lineup rows                              | One merged team card (out → in per row, Boost badge on the pick) beats two cards saying the same thing |
+| Picker = two kind tables + one shared search                             | A checkbox column is the a11y source of truth; sort/announce mechanics shared with the stats table     |
+| Dot-pattern background generated by a seeded PRNG                        | The speckle SVGs are deterministic build inputs (`pnpm pattern`), not random output                    |
 
 ## Performance
 
-Optimizer microbenchmark — Apple M1 Pro, node 22; 1,448,370 candidate squads; 50 warmup + 500 measured runs × 3 seeds. Reproduce with `pnpm bench`.
+Optimizer microbenchmark — Apple M1 Pro, node 22; 1,448,370 candidate teams; 50 warmup + 500 measured runs × 3 seeds. Reproduce with `pnpm bench`.
 
 | mode      | min ms | median ms | p95 ms |
 | --------- | ------ | --------- | ------ |

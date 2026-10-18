@@ -20,7 +20,7 @@ export type AssetLite = {
   priceTenths: number
   prevPriceTenths: number
   selectedPercent: number
-  captainSelectedPercent: number
+  boostedPercent: number
   /** Driver's team id (= the constructor's playerId); null for constructors. */
   constructorId: string | null
   teamName: string | null

@@ -1,26 +1,26 @@
-import type { SlotRow } from "@/lib/team/squad-diff"
+import type { SlotRow } from "@/lib/team/team-diff"
 
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
 import { teamColor } from "@/lib/team-colors"
 
 import { TeamColorBar } from "@/app/_components/shared/team-color-bar"
-import { RosterRow } from "@/app/_components/shared/roster-row"
+import { LineupRow } from "@/app/_components/shared/lineup-row"
 import { Delta } from "@/app/_components/shared/delta"
 
 /**
- * One recommended-squad row. A kept slot renders the shared RosterRow (TLA,
+ * One recommended-team row. A kept slot renders the shared LineupRow (TLA,
  * name, price, projection); a swapped slot renders the bespoke out→in layout
- * with the per-swap delta. The DRS captain gets a "C" chip either way.
+ * with the per-swap delta. The Boost driver gets an "x2" badge either way.
  */
-export function RosterPlanRow({
+export function LineupPlanRow({
   row,
-  captainId,
+  boostDriverId,
   assetsById,
   totals,
 }: {
   row: SlotRow
-  captainId: string
+  boostDriverId: string
   assetsById: Record<string, AssetLite>
   totals: Record<string, number>
 }) {
@@ -33,26 +33,26 @@ export function RosterPlanRow({
     return teamColor(a ? assetColorKey(a) : null)
   }
 
-  const isCaptain = row.inId === captainId
-  const captainChip = isCaptain && (
+  const isBoostDriver = row.inId === boostDriverId
+  const boostBadge = isBoostDriver && (
     <span
-      className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent-f1-quiet text-[10px] font-bold text-accent-f1"
-      aria-label="DRS Boost captain"
-      title="DRS Boost captain"
+      className="ml-1.5 inline-flex h-4 items-center justify-center rounded-sm bg-accent-f1-quiet px-1 text-[10px] font-bold text-accent-f1"
+      aria-label="x2 Boost driver"
+      title="x2 Boost driver"
     >
-      C
+      x2
     </span>
   )
 
   if (row.outId === null) {
     return (
-      <RosterRow
+      <LineupRow
         color={colorFor(row.inId)}
         tla={tlaOf(row.inId)}
         name={
           <>
             {nameOf(row.inId)}
-            {captainChip}
+            {boostBadge}
           </>
         }
       >
@@ -62,7 +62,7 @@ export function RosterPlanRow({
         <span className="w-12 shrink-0 text-right font-mono tabular-nums">
           {projOf(row.inId).toFixed(1)}
         </span>
-      </RosterRow>
+      </LineupRow>
     )
   }
 
@@ -83,7 +83,7 @@ export function RosterPlanRow({
         <TeamColorBar color={colorFor(row.inId)} className="h-3" />
         <span className="truncate font-medium">
           {nameOf(row.inId)}
-          {captainChip}
+          {boostBadge}
         </span>
       </span>
       <Delta value={swapDelta} points className="font-mono text-xs" />

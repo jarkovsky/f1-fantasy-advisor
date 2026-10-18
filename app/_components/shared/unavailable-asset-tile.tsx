@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button"
 
 /**
- * A roster id with no row in the current race feed (a driver/constructor that
- * dropped out mid-season). The store keeps only ids, so a healed roster still
+ * A lineup id with no row in the current race feed (a driver/constructor that
+ * dropped out mid-season). The store keeps only ids, so a healed lineup still
  * references it; the user must replace it to continue. Replacing an unavailable
  * asset still costs a transfer (the optimizer counts the swap naturally).
  */

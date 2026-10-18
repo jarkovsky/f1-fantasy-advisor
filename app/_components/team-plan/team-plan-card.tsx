@@ -6,9 +6,9 @@ import type { AssetLite } from "@/lib/asset-lite"
 
 import { useMemo } from "react"
 
-import { DRS_BOOST_MULTIPLIER, EXTRA_TRANSFER_PENALTY } from "@/lib/constants"
+import { BOOST_MULTIPLIER, ADDITIONAL_TRANSFER_PENALTY } from "@/lib/constants"
 import { formatPriceTenths, formatSignedPoints } from "@/lib/format"
-import { diffSquad, slotRows } from "@/lib/team/squad-diff"
+import { diffTeam, slotRows } from "@/lib/team/team-diff"
 import { cn } from "@/lib/utils"
 
 import { Progress } from "@/components/ui/progress"
@@ -19,14 +19,14 @@ import { Card } from "@/components/ui/card"
 import { UnavailableAssetTile } from "@/app/_components/shared/unavailable-asset-tile"
 import { Delta } from "@/app/_components/shared/delta"
 
-import { DrsBoostRanking } from "./drs-boost-ranking"
-import { RosterPlanRow } from "./roster-plan-row"
+import { LineupPlanRow } from "./lineup-plan-row"
+import { BoostRanking } from "./boost-ranking"
 
 /**
- * The "Recommended team" card: the recommended squad rendered in place, where kept slots
- * are plain roster rows and swapped slots show out→in with the per-swap delta
- * (RosterPlanRow). The DRS chip and DRS Boost summary follow the optimizer's
- * captain (result.best.captainId) rather than a locally derived one, so the card
+ * The "Recommended team" card: the recommended team rendered in place, where kept slots
+ * are plain lineup rows and swapped slots show out→in with the per-swap delta
+ * (LineupPlanRow). The Boost badge and Boost summary follow the optimizer's
+ * Boost driver (result.best.boostDriverId) rather than a locally derived one, so the card
  * never disagrees with the engine.
  */
 type TeamPlanCardProps = {
@@ -58,7 +58,7 @@ export function TeamPlanCard({
   const baselineTotal = baseline?.projectedTotal ?? 0
   const netGain = best.score - baselineTotal
 
-  const diff = useMemo(() => diffSquad(baseline, best), [baseline, best])
+  const diff = useMemo(() => diffTeam(baseline, best), [baseline, best])
   const swaps = useMemo(
     () =>
       [...diff.drivers, ...diff.constructors].filter((s) => s.outId !== null || s.inId !== null),
@@ -70,22 +70,22 @@ export function TeamPlanCard({
   )
 
   const free = freeTransfers === "unlimited" ? best.transfers : freeTransfers
-  const extra = Math.max(0, best.transfers - free)
-  const penaltyPts = extra * Math.abs(EXTRA_TRANSFER_PENALTY)
+  const additional = Math.max(0, best.transfers - free)
+  const penaltyPts = additional * Math.abs(ADDITIONAL_TRANSFER_PENALTY)
 
-  const captainName = assetsById[best.captainId]?.displayName ?? "—"
-  const captainProj = totals[best.captainId] ?? 0
-  const captainBoost = captainProj * (DRS_BOOST_MULTIPLIER - 1)
+  const boostDriverName = assetsById[best.boostDriverId]?.displayName ?? "—"
+  const boostDriverProj = totals[best.boostDriverId] ?? 0
+  const boostPoints = boostDriverProj * (BOOST_MULTIPLIER - 1)
 
   const isWhatIf = whatIf !== "none"
-  const budgetNegative = best.budgetLeftTenths < 0
+  const overCostCap = best.remainingCostCapTenths < 0
 
-  // Budget bar: the recommended squad's value as a share of its purse (squad
-  // cost + the plan's leftover bank). That equals the user's total purse, since
+  // Cost Cap bar: the recommended team's value as a share of its cost cap (team
+  // cost + the plan's Remaining Cost Cap). That equals the user's total cost cap, since
   // transfers never change the total money available.
-  const squadValueTenths = best.costTenths
-  const purseTenths = squadValueTenths + best.budgetLeftTenths
-  const spentPct = purseTenths > 0 ? Math.min(100, (squadValueTenths / purseTenths) * 100) : 0
+  const teamValueTenths = best.costTenths
+  const costCapTenths = teamValueTenths + best.remainingCostCapTenths
+  const spentPct = costCapTenths > 0 ? Math.min(100, (teamValueTenths / costCapTenths) * 100) : 0
 
   const ranked = useMemo(
     () =>
@@ -117,10 +117,10 @@ export function TeamPlanCard({
 
       <ul className="flex flex-col gap-0.5">
         {[...driverRows, ...constructorRows].map((row) => (
-          <RosterPlanRow
+          <LineupPlanRow
             key={row.inId}
             row={row}
-            captainId={best.captainId}
+            boostDriverId={best.boostDriverId}
             assetsById={assetsById}
             totals={totals}
           />
@@ -147,9 +147,9 @@ export function TeamPlanCard({
       )}
 
       <p className="text-xs">
-        {extra > 0 ? (
+        {additional > 0 ? (
           <span className="text-neg">
-            {free} free + {extra} extra · −{penaltyPts} pts penalty
+            {free} free + {additional} additional · −{penaltyPts} pts penalty
           </span>
         ) : (
           <span className="text-muted-foreground">Within your free transfers — no penalty.</span>
@@ -157,26 +157,26 @@ export function TeamPlanCard({
       </p>
 
       <p className="text-xs text-muted-foreground">
-        Budget after:{" "}
-        <span className={cn("font-mono tabular-nums", budgetNegative && "text-neg")}>
-          {formatPriceTenths(best.budgetLeftTenths)}
+        Remaining Cost Cap after:{" "}
+        <span className={cn("font-mono tabular-nums", overCostCap && "text-neg")}>
+          {formatPriceTenths(best.remainingCostCapTenths)}
         </span>
-        {whatIf === "limitless" && " (Limitless ignores budget)"}
+        {whatIf === "limitless" && " (Limitless: no cost cap)"}
       </p>
 
-      <Progress value={spentPct} aria-label="Squad value as a share of your purse" />
+      <Progress value={spentPct} aria-label="Team value as a share of your Cost Cap" />
 
       <div className="rounded-md bg-surface-2 p-3">
         <p className="text-sm font-medium">
-          DRS Boost → {captainName}{" "}
+          Boost → {boostDriverName}{" "}
           {/* Warn, not red: red small text fails AA contrast on the raised
               surface, and red is reserved for the primary action and deltas. */}
-          <span className="text-warn">(×{DRS_BOOST_MULTIPLIER})</span>
+          <span className="text-warn">(x{BOOST_MULTIPLIER})</span>
         </p>
         <p className="text-xs text-muted-foreground">
-          {formatSignedPoints(captainBoost)} pts boosted
+          {formatSignedPoints(boostPoints)} pts boosted
         </p>
-        <p className="text-xs text-muted-foreground">Highest projected driver in this squad.</p>
+        <p className="text-xs text-muted-foreground">Highest projected driver in this team.</p>
       </div>
 
       <div className="flex items-center gap-2">
@@ -195,7 +195,7 @@ export function TeamPlanCard({
         )}
       </div>
 
-      <DrsBoostRanking ranked={ranked} captainId={best.captainId} />
+      <BoostRanking ranked={ranked} boostDriverId={best.boostDriverId} />
     </Card>
   )
 }

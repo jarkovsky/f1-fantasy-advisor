@@ -13,7 +13,7 @@ export default function AdvisorPage() {
           Fantasy F1 Race-Weekend Advisor
         </h1>
         <p className="max-w-xl text-base text-pretty text-muted-foreground md:text-lg">
-          Optimal transfers and DRS Boost for the upcoming Grand Prix — free, with the math shown.
+          Optimal transfers and Boost for the upcoming Grand Prix — free, with the math shown.
         </p>
       </header>
       <Suspense fallback={<AdvisorSkeleton />}>

@@ -70,7 +70,7 @@ export async function getDrivers(race: number, completed: boolean): Promise<Feed
   )
 }
 
-/** Current race pointer, last completed race, budget cap. */
+/** Current race pointer, last completed race, initial cost cap. */
 export async function getConstraints(): Promise<Feed<RaceWeekConstraints | null>> {
   "use cache"
   cacheTag("f1", "f1:constraints")

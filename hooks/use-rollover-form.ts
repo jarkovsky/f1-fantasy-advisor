@@ -1,101 +1,101 @@
 "use client"
 
-import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import type { TeamStateV2 } from "@/lib/team/types/team-state"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { useEffect, useRef, useState } from "react"
 
-import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
-import { formatBankTenths } from "@/lib/team/bank"
+import { TEAM_CONSTRUCTORS, TEAM_DRIVERS } from "@/lib/constants"
+import { formatCostCapTenths } from "@/lib/team/cost-cap"
 import { formatPriceTenths } from "@/lib/format"
 
-import { useBankInput } from "@/hooks/use-bank-input"
+import { useCostCapInput } from "@/hooks/use-cost-cap-input"
 
-export type SquadChoice = "kept" | "edit"
-export type TransferChoice = "standard" | "banked" | "chip"
+export type TeamChoice = "kept" | "edit"
+export type TransferChoice = "standard" | "carriedOver" | "chip"
 export type ChipChoice = "wildcard" | "limitless"
 
-type FreeTransfers = TeamStateV1["freeTransfers"]
-type ActiveChip = TeamStateV1["activeChip"]
+type FreeTransfers = TeamStateV2["freeTransfers"]
+type ActiveChip = TeamStateV2["activeChip"]
 
 export type RolloverConfirm = (args: {
-  roster: string[]
-  budgetTenths: number
+  lineup: string[]
+  remainingCostCapTenths: number
   freeTransfers: FreeTransfers
   raceNumber: number
   activeChip: ActiveChip
 }) => void
 
 /**
- * The rollover form's state and derivation: the stepped squad, bank, and
+ * The rollover form's state and derivation: the stepped team, Remaining Cost Cap, and
  * transfer choices, focus management as each step reveals, and the confirm
  * summary and handler.
  */
 export function useRolloverForm(args: {
-  team: TeamStateV1
+  team: TeamStateV2
   to: number
   assetsById: Record<string, AssetLite>
   onConfirm: RolloverConfirm
 }) {
   const { team, to, assetsById, onConfirm } = args
-  const savedRoster = team.roster ?? []
+  const savedLineup = team.lineup ?? []
 
-  const [squadChoice, setSquadChoice] = useState<SquadChoice | null>(null)
+  const [teamChoice, setTeamChoice] = useState<TeamChoice | null>(null)
   const [editing, setEditing] = useState(false)
-  const bank = useBankInput(formatBankTenths(team.budgetTenths))
+  const costCap = useCostCapInput(formatCostCapTenths(team.remainingCostCapTenths))
   const [transferChoice, setTransferChoice] = useState<TransferChoice | null>(null)
   const [chipChoice, setChipChoice] = useState<ChipChoice | null>(null)
 
   // Move focus to each newly revealed step's legend.
   const step2Ref = useRef<HTMLLegendElement>(null)
   const step3Ref = useRef<HTMLLegendElement>(null)
-  const bankInputRef = useRef<HTMLInputElement>(null)
+  const costCapInputRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    if (squadChoice !== null) step2Ref.current?.focus()
-  }, [squadChoice])
+    if (teamChoice !== null) step2Ref.current?.focus()
+  }, [teamChoice])
 
-  const resolved = savedRoster
+  const resolved = savedLineup
     .map((id) => assetsById[id])
     .filter((a): a is AssetLite => a !== undefined)
-  const unresolvedIds = savedRoster.filter((id) => assetsById[id] === undefined)
+  const unresolvedIds = savedLineup.filter((id) => assetsById[id] === undefined)
 
   // Reveal focus for step 3, but never steal it from the step-2 legend (just
-  // placed by the effect above) or from the bank input while the user is
+  // placed by the effect above) or from the Remaining Cost Cap input while the user is
   // retyping a cleared value.
-  const step3Revealed = squadChoice !== null && bank.entered
+  const step3Revealed = teamChoice !== null && costCap.entered
   useEffect(() => {
     if (!step3Revealed) return
     const active = document.activeElement
-    if (active === step2Ref.current || active === bankInputRef.current) return
+    if (active === step2Ref.current || active === costCapInputRef.current) return
     step3Ref.current?.focus()
   }, [step3Revealed])
 
   const freeTransfers: FreeTransfers =
-    transferChoice === "chip" ? "unlimited" : transferChoice === "banked" ? 3 : 2
+    transferChoice === "chip" ? "unlimited" : transferChoice === "carriedOver" ? 3 : 2
   const activeChip: ActiveChip = transferChoice === "chip" ? (chipChoice ?? "none") : "none"
 
   const transfersResolved =
     transferChoice === "chip" ? chipChoice !== null : transferChoice !== null
 
   const canConfirm =
-    squadChoice !== null &&
-    savedRoster.length === SQUAD_DRIVERS + SQUAD_CONSTRUCTORS &&
-    bank.entered &&
+    teamChoice !== null &&
+    savedLineup.length === TEAM_DRIVERS + TEAM_CONSTRUCTORS &&
+    costCap.entered &&
     transfersResolved
 
-  const squadLabel = squadChoice === "kept" ? "your kept squad" : "your edited squad"
+  const teamLabel = teamChoice === "kept" ? "your kept team" : "your edited team"
   const allowance = allowanceLabel(freeTransfers, activeChip)
   const summary = canConfirm
-    ? `Confirming ${squadLabel} with ${formatPriceTenths(bank.tenths)} bank and ${allowance}.`
+    ? `Confirming ${teamLabel} with ${formatPriceTenths(costCap.tenths)} Remaining Cost Cap and ${allowance}.`
     : "Complete every step to continue."
 
-  function keepSquad(): void {
-    setSquadChoice("kept")
+  function keepTeam(): void {
+    setTeamChoice("kept")
     setEditing(false)
   }
 
-  function editSquad(): void {
-    setSquadChoice("edit")
+  function editTeam(): void {
+    setTeamChoice("edit")
     setEditing(true)
   }
 
@@ -103,14 +103,14 @@ export function useRolloverForm(args: {
   // here only ever means Cancel: nothing was edited, so withdraw the choice.
   function closeEditor(): void {
     setEditing(false)
-    setSquadChoice(null)
+    setTeamChoice(null)
   }
 
   function handleConfirm(): void {
     if (!canConfirm) return
     onConfirm({
-      roster: savedRoster,
-      budgetTenths: bank.tenths,
+      lineup: savedLineup,
+      remainingCostCapTenths: costCap.tenths,
       freeTransfers,
       raceNumber: to,
       activeChip,
@@ -118,13 +118,13 @@ export function useRolloverForm(args: {
   }
 
   return {
-    squadChoice,
-    keepSquad,
-    editSquad,
+    teamChoice,
+    keepTeam,
+    editTeam,
     editing,
     closeEditor,
-    bank,
-    bankInputRef,
+    costCap,
+    costCapInputRef,
     transferChoice,
     setTransferChoice,
     chipChoice,

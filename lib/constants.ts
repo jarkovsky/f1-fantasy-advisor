@@ -2,30 +2,30 @@
  * 2026 F1 Fantasy rule constants.
  *
  * All money values are integer tenths-of-a-million dollars: float sums of
- * 0.1s break exact budget-boundary comparisons in the optimizer.
+ * 0.1s break exact cost-cap-boundary comparisons in the optimizer.
  */
 
-/** Squad shape: 5 drivers + 2 constructors (2nd constructor new for 2026). */
-export const SQUAD_DRIVERS = 5
-export const SQUAD_CONSTRUCTORS = 2
+/** Team shape: 5 drivers + 2 constructors (2nd constructor new for 2026). */
+export const TEAM_DRIVERS = 5
+export const TEAM_CONSTRUCTORS = 2
 
 /** 2026 grid: Cadillac + Audi joined. */
 export const GRID = { drivers: 22, constructors: 11 } as const
 
 /**
- * Free transfers per Grand Prix: 2, plus max 1 banked from last week → 2 or 3.
+ * Free transfers per Grand Prix: 2, plus max 1 carried over from the last race → 2 or 3.
  * None carry over after a Wildcard/Limitless week.
  */
 export const FREE_TRANSFERS = { min: 2, max: 3 } as const
 
 /** Points penalty per transfer beyond the free allowance. */
-export const EXTRA_TRANSFER_PENALTY = -10
+export const ADDITIONAL_TRANSFER_PENALTY = -10
 
-/** Initial cost cap, in tenths of a million ($100.0M). Affordability is bank-based after race 1. */
-export const INITIAL_BUDGET_TENTHS = 1000
+/** Initial cost cap, in tenths of a million ($100.0M). After race 1, affordability follows the Remaining Cost Cap. */
+export const INITIAL_COST_CAP_TENTHS = 1000
 
-/** DRS Boost: doubles one driver's race-weekend score, free every week. */
-export const DRS_BOOST_MULTIPLIER = 2
+/** Boost: doubles one driver's race-weekend score, free every week. */
+export const BOOST_MULTIPLIER = 2
 
 // ---------------------------------------------------------------------------
 // Projection model tuning. These live here (model axis), not in

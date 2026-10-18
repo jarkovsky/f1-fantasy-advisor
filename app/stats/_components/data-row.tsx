@@ -48,7 +48,7 @@ export function DataRow({ row }: { row: StatsRow }) {
       <NumCell>{fmt1(row.raceAvg)}</NumCell>
       <NumCell>{fmt1(row.sprintAvg)}</NumCell>
       <NumCell>{row.selectedPercent}%</NumCell>
-      <NumCell>{row.captainSelectedPercent}%</NumCell>
+      <NumCell>{row.boostedPercent}%</NumCell>
       <TableCell className="text-right">
         <span className="inline-flex justify-end">
           <Sparkline series={row.spark} />

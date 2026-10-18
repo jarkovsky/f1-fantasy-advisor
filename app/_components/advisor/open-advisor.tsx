@@ -5,7 +5,7 @@ import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { OptimizerResult } from "@/lib/optimizer/types/optimizer"
 import type { DriverProfile } from "@/lib/profile/types/profile"
 import type { PresetId } from "@/lib/projections/types/presets"
-import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import type { TeamStateV2 } from "@/lib/team/types/team-state"
 import type { RaceWeekState } from "@/lib/f1/raceweek"
 import type { RaceWeekend } from "@/lib/f1/schemas"
 import type { AssetLite } from "@/lib/asset-lite"
@@ -21,12 +21,12 @@ import { useOptimizer } from "@/hooks/use-optimizer"
 import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
 import { SnapshotBanner } from "@/app/_components/advisor/snapshot-banner"
 import { TeamPlanCard } from "@/app/_components/team-plan/team-plan-card"
-import { DrsBoostHero } from "@/app/_components/advisor/drs-boost-hero"
 import { TeamPicker } from "@/app/_components/team-picker/team-picker"
 import { Alternatives } from "@/app/_components/advisor/alternatives"
 import { HonestyNote } from "@/app/_components/advisor/honesty-note"
 import { TeamOverview } from "@/app/_components/team/team-overview"
 import { RaceHeader } from "@/app/_components/advisor/race-header"
+import { BoostHero } from "@/app/_components/advisor/boost-hero"
 
 type OpenState = Extract<RaceWeekState, { kind: "OPEN" }>
 
@@ -46,16 +46,16 @@ type OpenAdvisorProps = {
   onBlendWeightChange: (w: number) => void
   whatIf: WhatIfMode
   onWhatIfChange: (mode: WhatIfMode) => void
-  team: TeamStateV1
+  team: TeamStateV2
   applyPlan: (
-    roster: string[],
-    budgetTenths: number,
-    savedProjection?: TeamStateV1["savedProjection"]
+    lineup: string[],
+    remainingCostCapTenths: number,
+    savedProjection?: TeamStateV2["savedProjection"]
   ) => void
 }
 
 /**
- * The OPEN-state screen: a single centered column — DRS Boost hero → Grand
+ * The OPEN-state screen: a single centered column — Boost hero → Grand
  * Prix widget → your team (with Edit team) → recommended team → alternatives
  * → controls → honesty note. Owns the editor toggle, the optimizer (via useOptimizer, which keeps
  * the search a lazy chunk), the apply flow, and the sr-only status region.
@@ -80,13 +80,13 @@ export function OpenAdvisor({
   applyPlan,
 }: OpenAdvisorProps) {
   const [showEditor, setShowEditor] = useState(false)
-  const { roster, budgetTenths, freeTransfers } = team
+  const { lineup, remainingCostCapTenths, freeTransfers } = team
 
   const { result, baseline, unresolvedIds, error, isPending, statusMessage } = useOptimizer({
     assets,
     totals,
-    roster,
-    budgetTenths,
+    lineup,
+    remainingCostCapTenths,
     freeTransfers,
     whatIf,
   })
@@ -100,14 +100,14 @@ export function OpenAdvisor({
   function handleApply(): void {
     if (!result) return
     const plan = result.best
-    applyPlan([...plan.driverIds, ...plan.constructorIds], plan.budgetLeftTenths, {
+    applyPlan([...plan.driverIds, ...plan.constructorIds], plan.remainingCostCapTenths, {
       totalPoints: plan.projectedTotal,
       preset: projection.effectivePreset,
     })
     setAppliedResult(result)
   }
 
-  const heroProfile = result ? driverProfiles[result.best.captainId] : undefined
+  const heroProfile = result ? driverProfiles[result.best.boostDriverId] : undefined
 
   if (showEditor) {
     return (
@@ -129,7 +129,7 @@ export function OpenAdvisor({
 
       {heroProfile ? (
         <div className={cn(isPending && "opacity-60")}>
-          <DrsBoostHero profile={heroProfile} projected={totals[heroProfile.playerId] ?? 0} />
+          <BoostHero profile={heroProfile} projected={totals[heroProfile.playerId] ?? 0} />
         </div>
       ) : (
         !result && !error && <Skeleton className="h-80 w-full rounded-2xl" />
@@ -146,12 +146,12 @@ export function OpenAdvisor({
         />
       )}
 
-      {roster && (
+      {lineup && (
         <TeamOverview
-          roster={roster}
+          lineup={lineup}
           assetsById={assetsById}
           totals={totals}
-          budgetTenths={budgetTenths}
+          remainingCostCapTenths={remainingCostCapTenths}
           freeTransfers={freeTransfers}
           onEdit={() => setShowEditor(true)}
         />

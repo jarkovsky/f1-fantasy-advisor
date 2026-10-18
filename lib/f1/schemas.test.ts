@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { INITIAL_BUDGET_TENTHS } from "@/lib/constants"
+import { INITIAL_COST_CAP_TENTHS } from "@/lib/constants"
 
 import {
   AssetSchema,
@@ -146,7 +146,7 @@ describe("parseConstraints", () => {
     expect(res.data.lastCompletedRace).toBe(5)
     expect(res.data.seasonEndRace).toBe(22)
     // cross-check the rulebook constant against the live feed
-    expect(res.data.budgetCapTenths).toBe(INITIAL_BUDGET_TENTHS)
+    expect(res.data.initialCostCapTenths).toBe(INITIAL_COST_CAP_TENTHS)
   })
 
   it("carries DeadlineDate as advisory only", () => {

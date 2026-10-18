@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     template: "%s · Fantasy F1 Advisor",
   },
   description:
-    "Optimal F1 Fantasy transfers and DRS Boost pick for the upcoming Grand Prix — free, no login, with the math shown.",
+    "Optimal F1 Fantasy transfers and Boost pick for the upcoming Grand Prix — free, no login, with the math shown.",
 }
 
 export default function RootLayout({

@@ -17,10 +17,10 @@ export type OptimizerMode = "normal" | "wildcard" | "limitless"
 
 export type OptimizerInput = {
   assets: OptimizerAsset[]
-  /** The current squad: exactly 5 driver ids + 2 constructor ids. */
-  roster: string[]
-  /** Remaining bank, integer tenths. */
-  budgetTenths: number
+  /** The current team: exactly 5 driver ids + 2 constructor ids. */
+  lineup: string[]
+  /** Remaining Cost Cap, integer tenths. */
+  remainingCostCapTenths: number
   freeTransfers: number | "unlimited"
   mode?: OptimizerMode
 }
@@ -28,24 +28,24 @@ export type OptimizerInput = {
 export type TeamPlan = {
   driverIds: string[]
   constructorIds: string[]
-  /** The DRS-boosted driver (max projection; ties → lower id). */
-  captainId: string
-  /** Raw points including the DRS Boost bonus, before any transfer penalty. */
+  /** The Boosted driver (max projection; ties → lower id). */
+  boostDriverId: string
+  /** Raw points including the Boost bonus, before any transfer penalty. */
   projectedTotal: number
   /** projectedTotal + penaltyPoints. */
   score: number
-  /** Net swaps vs the roster, 0..7. */
+  /** Net swaps vs the lineup, 0..7. */
   transfers: number
-  /** EXTRA_TRANSFER_PENALTY · max(0, transfers − freeTransfers); 0 when unlimited. */
+  /** ADDITIONAL_TRANSFER_PENALTY · max(0, transfers − freeTransfers); 0 when unlimited. */
   penaltyPoints: number
   costTenths: number
-  /** purse − cost; negative when a limitless-mode squad overspends. */
-  budgetLeftTenths: number
+  /** cost cap − cost; negative when a limitless-mode team overspends. */
+  remainingCostCapTenths: number
 }
 
 export type OptimizerResult = {
   /** Global argmax of penalty-folded score. */
   best: TeamPlan
-  /** [t] = best squad at exactly t net transfers (raw points), or null. */
+  /** [t] = best team at exactly t net transfers (raw points), or null. */
   byTransferCount: (TeamPlan | null)[]
 }

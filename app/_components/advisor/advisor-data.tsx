@@ -89,7 +89,7 @@ export async function AdvisorData() {
     priceTenths: a.priceTenths,
     prevPriceTenths: a.prevPriceTenths,
     selectedPercent: a.selectedPercent,
-    captainSelectedPercent: a.captainSelectedPercent,
+    boostedPercent: a.boostedPercent,
     constructorId: a.kind === "driver" ? a.constructorId : null,
     teamName: a.teamName,
     seasonPoints: seasonByPlayerId[a.playerId]?.cumulativePoints ?? 0,
@@ -102,7 +102,7 @@ export async function AdvisorData() {
   }))
 
   // Ships the whole grid (~33 numbers, <1KB) even though the client reads only
-  // the ~7 roster ids. We cannot pre-filter to the roster here: the roster is
+  // the ~7 lineup ids. We cannot pre-filter to the lineup here: the lineup is
   // localStorage-only client state and must never leak into this cacheable RSC.
   const lastRacePoints: Record<string, number | null> = {}
   if (lastRaceDrivers) {

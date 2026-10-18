@@ -201,7 +201,7 @@ export const AssetSchema = z
       priceTenths: r.Value,
       prevPriceTenths: r.OldPlayerValue,
       selectedPercent: r.SelectedPercentage,
-      captainSelectedPercent: r.CaptainSelectedPercentage,
+      boostedPercent: r.CaptainSelectedPercentage,
       /** false for the feed's stale leftovers; absent flag ⇒ active. */
       active: r.IsActive !== "0",
       /** Whole-race-weekend fantasy points (feed: GamedayPoints). */
@@ -282,7 +282,7 @@ const RawConstraints = z
     raceNumber: r.GamedayId,
     lastCompletedRace: r.LPTourGamedayId,
     seasonEndRace: r.TREndGamedayId,
-    budgetCapTenths: Math.round(r.MaxTeamValue * 10),
+    initialCostCapTenths: Math.round(r.MaxTeamValue * 10),
     rolloverArmedRaces: r.ARRGamedayId,
     subScenario: r.GMCSubScenario,
     advisoryDeadlineRaw: r.DeadlineDate,

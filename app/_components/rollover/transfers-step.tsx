@@ -34,7 +34,7 @@ export function TransfersStep({
             Standard (2 free)
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <RadioGroupItem value="banked" />I banked a transfer (3 free)
+            <RadioGroupItem value="carriedOver" />A free transfer carried over (3 free)
           </label>
           <label className="flex items-center gap-2 text-sm">
             <RadioGroupItem value="chip" />I played a chip
@@ -54,7 +54,8 @@ export function TransfersStep({
             </label>
             <label className="flex items-center gap-2 text-sm">
               <RadioGroupItem value="limitless" />
-              Limitless — unlimited + budget ignored; your pre-chip roster comes back next week
+              Limitless — unlimited transfers, no cost cap; your pre-chip team returns after this
+              race week
             </label>
           </RadioGroup>
         )}

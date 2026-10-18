@@ -2,12 +2,12 @@ import type { OptimizerAsset, OptimizerInput, OptimizerResult, TeamPlan } from "
 
 import { describe, expect, it } from "vitest"
 
-import { DRS_BOOST_MULTIPLIER, EXTRA_TRANSFER_PENALTY } from "@/lib/constants"
+import { BOOST_MULTIPLIER, ADDITIONAL_TRANSFER_PENALTY } from "@/lib/constants"
 
 import { OptimizerInputError, optimize } from "./optimize"
 
 // ---------------------------------------------------------------------------
-// Brute-force oracle: enumerate every squad with no pruning, straight from the
+// Brute-force oracle: enumerate every team with no pruning, straight from the
 // scoring formula — the ground truth optimize() must match field-for-field.
 // ---------------------------------------------------------------------------
 
@@ -26,53 +26,54 @@ function combinations<T>(items: T[], k: number): T[][] {
 
 function bruteForce(input: OptimizerInput): OptimizerResult {
   const mode = input.mode ?? "normal"
-  const budgetEnforced = mode !== "limitless"
+  const costCapEnforced = mode !== "limitless"
   const unlimited =
     mode === "wildcard" || mode === "limitless" || input.freeTransfers === "unlimited"
   const f = unlimited ? Number.POSITIVE_INFINITY : (input.freeTransfers as number)
-  const rosterSet = new Set(input.roster)
+  const lineupSet = new Set(input.lineup)
   const byId = new Map(input.assets.map((a) => [a.id, a]))
-  const purse =
-    input.budgetTenths + input.roster.reduce((sum, id) => sum + (byId.get(id)?.priceTenths ?? 0), 0)
+  const costCap =
+    input.remainingCostCapTenths +
+    input.lineup.reduce((sum, id) => sum + (byId.get(id)?.priceTenths ?? 0), 0)
 
   const drivers = input.assets.filter((a) => a.kind === "driver")
   const constructors = input.assets.filter((a) => a.kind === "constructor")
 
   const toPlan = (team: OptimizerAsset[]): TeamPlan => {
     const teamDrivers = team.filter((a) => a.kind === "driver")
-    let captain = teamDrivers[0]
+    let boostDriver = teamDrivers[0]
     for (const d of teamDrivers) {
-      if (!captain) {
-        captain = d
+      if (!boostDriver) {
+        boostDriver = d
         continue
       }
       if (
-        d.projected > captain.projected ||
-        (d.projected === captain.projected && d.id < captain.id)
+        d.projected > boostDriver.projected ||
+        (d.projected === boostDriver.projected && d.id < boostDriver.id)
       ) {
-        captain = d
+        boostDriver = d
       }
     }
     const cost = team.reduce((s, a) => s + a.priceTenths, 0)
-    const transfers = team.filter((a) => !rosterSet.has(a.id)).length
+    const transfers = team.filter((a) => !lineupSet.has(a.id)).length
     const raw =
       team.reduce((s, a) => s + a.projected, 0) +
-      (DRS_BOOST_MULTIPLIER - 1) * (captain?.projected ?? 0)
+      (BOOST_MULTIPLIER - 1) * (boostDriver?.projected ?? 0)
     const excess = Math.max(0, transfers - f)
-    const penalty = excess > 0 ? EXTRA_TRANSFER_PENALTY * excess : 0 // avoid -0
+    const penalty = excess > 0 ? ADDITIONAL_TRANSFER_PENALTY * excess : 0 // avoid -0
     return {
       driverIds: teamDrivers.map((a) => a.id).sort(),
       constructorIds: team
         .filter((a) => a.kind === "constructor")
         .map((a) => a.id)
         .sort(),
-      captainId: captain?.id ?? "",
+      boostDriverId: boostDriver?.id ?? "",
       projectedTotal: raw,
       score: raw + penalty,
       transfers,
       penaltyPoints: penalty,
       costTenths: cost,
-      budgetLeftTenths: purse - cost,
+      remainingCostCapTenths: costCap - cost,
     }
   }
 
@@ -93,7 +94,7 @@ function bruteForce(input: OptimizerInput): OptimizerResult {
     for (const cs of combinations(constructors, 2)) {
       const team = [...ds, ...cs]
       const cost = team.reduce((s, a) => s + a.priceTenths, 0)
-      if (budgetEnforced && cost > purse) continue
+      if (costCapEnforced && cost > costCap) continue
       const plan = toPlan(team)
       if (better(plan, best, "score")) best = plan
       if (better(plan, buckets[plan.transfers] ?? null, "projectedTotal")) {
@@ -153,13 +154,13 @@ const GRID_A = makeGrid(
     ["c3", 180, 26],
   ]
 )
-const ROSTER_A = ["d0", "d1", "d2", "d3", "d4", "c0", "c1"] // cost 540
+const LINEUP_A = ["d0", "d1", "d2", "d3", "d4", "c0", "c1"] // cost 540
 
 function inputA(overrides?: Partial<OptimizerInput>): OptimizerInput {
   return {
     assets: GRID_A,
-    roster: ROSTER_A,
-    budgetTenths: 200,
+    lineup: LINEUP_A,
+    remainingCostCapTenths: 200,
     freeTransfers: 2,
     ...overrides,
   }
@@ -168,7 +169,7 @@ function inputA(overrides?: Partial<OptimizerInput>): OptimizerInput {
 /** Deterministic LCG for the full-size synthetic grid. */
 function makeFullGrid(seed: number): {
   assets: OptimizerAsset[]
-  roster: string[]
+  lineup: string[]
 } {
   let state = seed >>> 0
   const next = () => {
@@ -187,7 +188,7 @@ function makeFullGrid(seed: number): {
     const projected = price / 6 + next() * 10
     constructors.push([`c${String(i).padStart(2, "0")}`, price, projected])
   }
-  const roster = [
+  const lineup = [
     drivers[0]?.[0],
     drivers[5]?.[0],
     drivers[10]?.[0],
@@ -196,16 +197,16 @@ function makeFullGrid(seed: number): {
     constructors[2]?.[0],
     constructors[7]?.[0],
   ].filter((x): x is string => x !== undefined)
-  return { assets: makeGrid(drivers, constructors), roster }
+  return { assets: makeGrid(drivers, constructors), lineup }
 }
 
 // ---------------------------------------------------------------------------
 
 describe("optimality vs brute-force oracle", () => {
   const scenarios: [string, OptimizerInput][] = [
-    ["grid A, normal budget", inputA()],
-    ["grid A, tight budget (purse = roster cost)", inputA({ budgetTenths: 0 })],
-    ["grid A, generous budget (everything affordable)", inputA({ budgetTenths: 600 })],
+    ["grid A, normal cost cap", inputA()],
+    ["grid A, tight cost cap (cost cap = lineup cost)", inputA({ remainingCostCapTenths: 0 })],
+    ["grid A, generous cost cap (everything affordable)", inputA({ remainingCostCapTenths: 600 })],
     ["grid A, 3 free transfers", inputA({ freeTransfers: 3 })],
     ["grid A, wildcard", inputA({ mode: "wildcard" })],
     ["grid A, limitless", inputA({ mode: "limitless" })],
@@ -232,8 +233,8 @@ describe("optimality vs brute-force oracle", () => {
     }
     const input: OptimizerInput = {
       assets: makeGrid(drivers, constructors),
-      roster: ["d00", "d03", "d06", "d09", "d12", "c1", "c4"],
-      budgetTenths: 180,
+      lineup: ["d00", "d03", "d06", "d09", "d12", "c1", "c4"],
+      remainingCostCapTenths: 180,
       freeTransfers: 2,
     }
     const fast = optimize(input)
@@ -243,22 +244,22 @@ describe("optimality vs brute-force oracle", () => {
   })
 })
 
-describe("exact budget boundary (integer-tenths semantics)", () => {
+describe("exact cost cap boundary (integer-tenths semantics)", () => {
   // T* = {d3,d4,d5,d6,d7} + {c2,c3}: drivers 650 + pair 320 = 970 exactly.
-  // Roster costs 540, so budget 430 → purse exactly 970.
+  // Lineup costs 540, so Remaining Cost Cap 430 → cost cap exactly 970.
   const T_STAR_DRIVERS = ["d3", "d4", "d5", "d6", "d7"]
   const T_STAR_CONSTRUCTORS = ["c2", "c3"]
 
-  it("a team costing exactly the purse is feasible and wins", () => {
-    const result = optimize(inputA({ budgetTenths: 430, mode: "wildcard" }))
+  it("a team costing exactly the cost cap is feasible and wins", () => {
+    const result = optimize(inputA({ remainingCostCapTenths: 430, mode: "wildcard" }))
     expect(result.best.driverIds).toEqual(T_STAR_DRIVERS)
     expect(result.best.constructorIds).toEqual(T_STAR_CONSTRUCTORS)
     expect(result.best.costTenths).toBe(970)
-    expect(result.best.budgetLeftTenths).toBe(0)
+    expect(result.best.remainingCostCapTenths).toBe(0)
   })
 
   it("one tenth less and the exact-fit team is excluded", () => {
-    const input = inputA({ budgetTenths: 429, mode: "wildcard" })
+    const input = inputA({ remainingCostCapTenths: 429, mode: "wildcard" })
     const result = optimize(input)
     expect(result.best.costTenths).toBeLessThanOrEqual(969)
     expect(
@@ -271,12 +272,12 @@ describe("exact budget boundary (integer-tenths semantics)", () => {
 
 describe("penalty accounting", () => {
   it("bucket t scores raw − 10·(t − f)", () => {
-    const result = optimize(inputA({ budgetTenths: 600 }))
+    const result = optimize(inputA({ remainingCostCapTenths: 600 }))
     for (let t = 0; t < 8; t++) {
       const plan = result.byTransferCount[t]
       if (!plan) continue
       const excess = Math.max(0, t - 2)
-      const expected = excess > 0 ? EXTRA_TRANSFER_PENALTY * excess : 0
+      const expected = excess > 0 ? ADDITIONAL_TRANSFER_PENALTY * excess : 0
       expect(plan.penaltyPoints).toBe(expected)
       expect(plan.score).toBeCloseTo(plan.projectedTotal + expected, 9)
       expect(plan.transfers).toBe(t)
@@ -298,14 +299,14 @@ describe("penalty accounting", () => {
   })
 })
 
-describe("captain co-optimization", () => {
-  it("a superstar-captain team beats a higher-sum team at the same price", () => {
-    // The budget forces an exclusive choice (purse covers exactly 180 of
+describe("Boost co-optimization", () => {
+  it("a superstar-Boost team beats a higher-sum team at the same price", () => {
+    // The cost cap forces an exclusive choice (cost cap covers exactly 180 of
     // drivers + the constructors):
-    //   A: star(30) + four 5s   → cost 180, sum 50, captain 30 → raw 80
-    //   B: five 12s             → cost 180, sum 60, captain 12 → raw 72
-    // Without the captain term B wins on sum (60 > 50); with it A wins —
-    // proving the DRS pick is co-optimized, not bolted on. Any mix
+    //   A: star(30) + four 5s   → cost 180, sum 50, Boost 30 → raw 80
+    //   B: five 12s             → cost 180, sum 60, Boost 12 → raw 72
+    // Without the Boost term B wins on sum (60 > 50); with it A wins —
+    // proving the Boost pick is co-optimized, not bolted on. Any mix
     // (star + a 12) costs ≥ 196 and is unaffordable.
     const grid = makeGrid(
       [
@@ -327,35 +328,35 @@ describe("captain co-optimization", () => {
     )
     const result = optimize({
       assets: grid,
-      roster: ["y1", "y2", "y3", "y4", "y5", "c0", "c1"], // cost 200 = purse
-      budgetTenths: 0,
+      lineup: ["y1", "y2", "y3", "y4", "y5", "c0", "c1"], // cost 200 = cost cap
+      remainingCostCapTenths: 0,
       freeTransfers: "unlimited",
     })
     expect(result.best.driverIds).toEqual(["f1", "f2", "f3", "f4", "star"])
-    expect(result.best.captainId).toBe("star")
+    expect(result.best.boostDriverId).toBe("star")
     expect(result.best.projectedTotal).toBeCloseTo(50 + 30, 9)
     expect(result.best.costTenths).toBe(200)
   })
 })
 
 describe("transfer counting and buckets", () => {
-  it("bucket 0 is the current roster with its best captain", () => {
+  it("bucket 0 is the current lineup with its best Boost driver", () => {
     const result = optimize(inputA())
     const bucket0 = result.byTransferCount[0]
     expect(bucket0?.driverIds).toEqual(["d0", "d1", "d2", "d3", "d4"])
     expect(bucket0?.constructorIds).toEqual(["c0", "c1"])
-    expect(bucket0?.captainId).toBe("d4") // highest-projection roster driver
+    expect(bucket0?.boostDriverId).toBe("d4") // highest-projection lineup driver
     expect(bucket0?.transfers).toBe(0)
     expect(bucket0?.penaltyPoints).toBe(0)
   })
 
   it("bucket index equals net transfers |T \\ R| for every bucket", () => {
-    const result = optimize(inputA({ budgetTenths: 600 }))
-    const rosterSet = new Set(ROSTER_A)
+    const result = optimize(inputA({ remainingCostCapTenths: 600 }))
+    const lineupSet = new Set(LINEUP_A)
     result.byTransferCount.forEach((plan, t) => {
       if (!plan) return
       const netSwaps = [...plan.driverIds, ...plan.constructorIds].filter(
-        (id) => !rosterSet.has(id)
+        (id) => !lineupSet.has(id)
       ).length
       expect(netSwaps).toBe(t)
     })
@@ -380,8 +381,8 @@ describe("transfer counting and buckets", () => {
     )
     const result = optimize({
       assets: grid,
-      roster: ["d0", "d1", "d2", "d3", "d4", "c0", "c1"],
-      budgetTenths: 0, // purse 70: any swap to a 100-tenth asset overflows
+      lineup: ["d0", "d1", "d2", "d3", "d4", "c0", "c1"],
+      remainingCostCapTenths: 0, // cost cap 70: any swap to a 100-tenth asset overflows
       freeTransfers: 2,
     })
     expect(result.byTransferCount[0]).not.toBeNull()
@@ -391,27 +392,27 @@ describe("transfer counting and buckets", () => {
 })
 
 describe("modes", () => {
-  it("wildcard: budget enforced, penalty always 0", () => {
+  it("wildcard: cost cap enforced, penalty always 0", () => {
     const result = optimize(inputA({ mode: "wildcard" }))
     for (const plan of [result.best, ...result.byTransferCount]) {
       if (!plan) continue
       expect(plan.penaltyPoints).toBe(0)
       expect(plan.score).toBe(plan.projectedTotal)
-      expect(plan.costTenths).toBeLessThanOrEqual(740) // purse respected
+      expect(plan.costTenths).toBeLessThanOrEqual(740) // cost cap respected
     }
   })
 
-  it("limitless: budget skipped; the raw-max team wins even if unaffordable", () => {
-    const result = optimize(inputA({ budgetTenths: 0, mode: "limitless" }))
-    // raw max = top-projection team regardless of cost (970 > purse 540)
+  it("limitless: cost cap skipped; the raw-max team wins even if unaffordable", () => {
+    const result = optimize(inputA({ remainingCostCapTenths: 0, mode: "limitless" }))
+    // raw max = top-projection team regardless of cost (970 > cost cap 540)
     expect(result.best.driverIds).toEqual(["d3", "d4", "d5", "d6", "d7"])
     expect(result.best.constructorIds).toEqual(["c2", "c3"])
     expect(result.best.costTenths).toBe(970)
-    expect(result.best.budgetLeftTenths).toBe(540 - 970) // signed-truthful
+    expect(result.best.remainingCostCapTenths).toBe(540 - 970) // signed-truthful
     expect(result.best.penaltyPoints).toBe(0)
   })
 
-  it("first-race unlimited transfers (normal mode): budget yes, penalty no", () => {
+  it("first-race unlimited transfers (normal mode): cost cap yes, penalty no", () => {
     const result = optimize(inputA({ freeTransfers: "unlimited" }))
     expect(result.best.penaltyPoints).toBe(0)
     expect(result.best.costTenths).toBeLessThanOrEqual(740)
@@ -419,22 +420,22 @@ describe("modes", () => {
 })
 
 describe("validation", () => {
-  it("throws on a roster that is not 7 ids", () => {
-    expect(() => optimize(inputA({ roster: ["d0"] }))).toThrow(OptimizerInputError)
-    expect(() => optimize(inputA({ roster: ["d0"] }))).toThrow(/roster must have 7/)
+  it("throws on a lineup that is not 7 ids", () => {
+    expect(() => optimize(inputA({ lineup: ["d0"] }))).toThrow(OptimizerInputError)
+    expect(() => optimize(inputA({ lineup: ["d0"] }))).toThrow(/lineup must have 7/)
   })
 
-  it("throws on a 4+3 roster split", () => {
-    expect(() => optimize(inputA({ roster: ["d0", "d1", "d2", "d3", "c0", "c1", "c2"] }))).toThrow(
+  it("throws on a 4+3 lineup split", () => {
+    expect(() => optimize(inputA({ lineup: ["d0", "d1", "d2", "d3", "c0", "c1", "c2"] }))).toThrow(
       /5 drivers \+ 2 constructors/
     )
   })
 
-  it("throws on unknown roster ids and duplicates", () => {
+  it("throws on unknown lineup ids and duplicates", () => {
     expect(() =>
-      optimize(inputA({ roster: ["nope", "d1", "d2", "d3", "d4", "c0", "c1"] }))
+      optimize(inputA({ lineup: ["nope", "d1", "d2", "d3", "d4", "c0", "c1"] }))
     ).toThrow(/not found/)
-    expect(() => optimize(inputA({ roster: ["d0", "d0", "d2", "d3", "d4", "c0", "c1"] }))).toThrow(
+    expect(() => optimize(inputA({ lineup: ["d0", "d0", "d2", "d3", "d4", "c0", "c1"] }))).toThrow(
       /duplicate/
     )
   })
@@ -449,52 +450,54 @@ describe("validation", () => {
     expect(() =>
       optimize(inputA({ assets: [...GRID_A.filter((a) => a.id !== "d0"), ...floaty] }))
     ).toThrow(/non-integer/)
-    expect(() => optimize(inputA({ budgetTenths: 10.5 }))).toThrow(/budgetTenths/)
+    expect(() => optimize(inputA({ remainingCostCapTenths: 10.5 }))).toThrow(
+      /remainingCostCapTenths/
+    )
     expect(() => optimize(inputA({ freeTransfers: -1 }))).toThrow(/freeTransfers/)
   })
 })
 
 describe("full-size grid (22 drivers / 11 constructors)", () => {
   it("is deterministic (two runs, deep-equal)", () => {
-    const { assets, roster } = makeFullGrid(1)
+    const { assets, lineup } = makeFullGrid(1)
     const input: OptimizerInput = {
       assets,
-      roster,
-      budgetTenths: 150,
+      lineup,
+      remainingCostCapTenths: 150,
       freeTransfers: 2,
     }
     expect(optimize(input)).toEqual(optimize(input))
   })
 
   it("completes well under the CI tripwire (real numbers come from pnpm bench)", () => {
-    const { assets, roster } = makeFullGrid(2)
+    const { assets, lineup } = makeFullGrid(2)
     const start = performance.now()
     optimize({
       assets,
-      roster,
-      budgetTenths: 150,
+      lineup,
+      remainingCostCapTenths: 150,
       freeTransfers: 2,
       mode: "limitless",
     })
-    // Smoke, not a benchmark: limitless skips the budget prune, so every one of
-    // the ~1.45M squads is scored. Unloaded this is ~7ms (pnpm bench is the
+    // Smoke, not a benchmark: limitless skips the cost cap prune, so every one of
+    // the ~1.45M teams is scored. Unloaded this is ~7ms (pnpm bench is the
     // record), but with the full suite saturating every core it has measured
     // 300ms+. 1s still catches an algorithmic regression without flaking.
     expect(performance.now() - start).toBeLessThan(1_000)
   })
 
   it("all money fields are integers across every returned plan", () => {
-    const { assets, roster } = makeFullGrid(3)
+    const { assets, lineup } = makeFullGrid(3)
     const result = optimize({
       assets,
-      roster,
-      budgetTenths: 137,
+      lineup,
+      remainingCostCapTenths: 137,
       freeTransfers: 3,
     })
     for (const plan of [result.best, ...result.byTransferCount]) {
       if (!plan) continue
       expect(Number.isInteger(plan.costTenths)).toBe(true)
-      expect(Number.isInteger(plan.budgetLeftTenths)).toBe(true)
+      expect(Number.isInteger(plan.remainingCostCapTenths)).toBe(true)
     }
   })
 })

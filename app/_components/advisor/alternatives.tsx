@@ -5,8 +5,8 @@ import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { PRESET_REGISTRY } from "@/lib/projections/engine"
-import { diffSquad } from "@/lib/team/squad-diff"
 import { formatPriceTenths } from "@/lib/format"
+import { diffTeam } from "@/lib/team/team-diff"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
@@ -79,7 +79,7 @@ export function Alternatives({ result, baseline, assetsById, projection }: Alter
       <CollapsibleContent className="flex flex-col gap-2 px-4 pb-4">
         {rows.map(({ plan, t }) => {
           const gain = plan.projectedTotal - baselineTotal
-          const { drivers, constructors } = diffSquad(baseline, plan)
+          const { drivers, constructors } = diffTeam(baseline, plan)
 
           return (
             <Collapsible key={t} className="rounded-md border border-grid-line/60">

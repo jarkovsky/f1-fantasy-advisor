@@ -1,4 +1,4 @@
-import type { SquadChoice } from "@/hooks/use-rollover-form"
+import type { TeamChoice } from "@/hooks/use-rollover-form"
 
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { formatPriceTenths } from "@/lib/format"
@@ -9,14 +9,14 @@ import { Card } from "@/components/ui/card"
 
 import { UnavailableAssetTile } from "@/app/_components/shared/unavailable-asset-tile"
 import { TeamPicker } from "@/app/_components/team-picker/team-picker"
-import { RosterRow } from "@/app/_components/shared/roster-row"
+import { LineupRow } from "@/app/_components/shared/lineup-row"
 import { Delta } from "@/app/_components/shared/delta"
 
-/** Step 1: confirm the squad at new prices, or open the picker to edit it. */
-export function SquadStep({
+/** Step 1: confirm the team at new prices, or open the picker to edit it. */
+export function TeamStep({
   resolved,
   unresolvedIds,
-  squadChoice,
+  teamChoice,
   onKeep,
   onEdit,
   editing,
@@ -26,7 +26,7 @@ export function SquadStep({
 }: {
   resolved: AssetLite[]
   unresolvedIds: string[]
-  squadChoice: SquadChoice | null
+  teamChoice: TeamChoice | null
   onKeep: () => void
   onEdit: () => void
   editing: boolean
@@ -38,11 +38,11 @@ export function SquadStep({
     <>
       <Card className="gap-3 bg-surface-1 p-4">
         <fieldset className="flex flex-col gap-3">
-          <legend className="text-sm font-semibold">Did your squad change?</legend>
+          <legend className="text-sm font-semibold">Did your team change?</legend>
 
           <ul className="flex flex-col gap-0.5">
             {resolved.map((a) => (
-              <RosterRow key={a.playerId} color={teamColor(assetColorKey(a))} name={a.displayName}>
+              <LineupRow key={a.playerId} color={teamColor(assetColorKey(a))} name={a.displayName}>
                 <span className="font-mono text-xs text-muted-foreground tabular-nums">
                   {formatPriceTenths(a.priceTenths)}
                 </span>
@@ -51,7 +51,7 @@ export function SquadStep({
                   tenths
                   className="font-mono text-xs"
                 />
-              </RosterRow>
+              </LineupRow>
             ))}
           </ul>
 
@@ -64,9 +64,9 @@ export function SquadStep({
           )}
 
           <RadioGroup
-            aria-label="Did your squad change?"
+            aria-label="Did your team change?"
             className="flex flex-col gap-1.5"
-            value={squadChoice ?? ""}
+            value={teamChoice ?? ""}
             onValueChange={(v) => (v === "kept" ? onKeep() : onEdit())}
           >
             <label className="flex items-center gap-2 text-sm">

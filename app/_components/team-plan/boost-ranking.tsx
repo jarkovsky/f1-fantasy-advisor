@@ -3,19 +3,19 @@ import { cn } from "@/lib/utils"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
-/** Collapsible list of the plan's drivers by projection desc, starring the captain. */
-export function DrsBoostRanking({
+/** Collapsible list of the plan's drivers by projection desc, starring the Boost driver. */
+export function BoostRanking({
   ranked,
-  captainId,
+  boostDriverId,
 }: {
   ranked: { id: string; name: string; projected: number }[]
-  captainId: string
+  boostDriverId: string
 }) {
   return (
     <Collapsible className="rounded-lg border border-grid-line bg-surface-2/40">
       <h3 className="text-sm font-semibold">
         <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
-          DRS Boost ranking
+          Boost ranking
           <span aria-hidden="true" className="font-normal text-muted-foreground">
             ⌄
           </span>
@@ -24,17 +24,17 @@ export function DrsBoostRanking({
       <CollapsibleContent className="px-3 pb-3">
         <ul className="flex flex-col gap-1">
           {ranked.map((d) => {
-            const isCaptain = d.id === captainId
+            const isBoostDriver = d.id === boostDriverId
             return (
               <li
                 key={d.id}
                 className={cn(
                   "flex items-center justify-between rounded-md px-2 py-1 text-sm",
-                  isCaptain && "bg-accent-f1-quiet"
+                  isBoostDriver && "bg-accent-f1-quiet"
                 )}
               >
-                <span className={cn("truncate", isCaptain && "font-medium")}>
-                  {isCaptain && (
+                <span className={cn("truncate", isBoostDriver && "font-medium")}>
+                  {isBoostDriver && (
                     <span className="mr-1.5 text-accent-f1" aria-hidden="true">
                       ★
                     </span>

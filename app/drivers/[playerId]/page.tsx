@@ -83,7 +83,7 @@ export default async function DriverPage({ params }: PageProps<"/drivers/[player
             { label: "Form (last 5)", value: fmt1(form5(hist)) },
             { label: "Points per $M", value: fmt1(ppm) },
             { label: "Selected by", value: `${profile.sentiment.selectedPercent}%` },
-            { label: "DRS Boosted by", value: `${profile.captainSelectedPercent}%` },
+            { label: "Boosted by", value: `${profile.boostedPercent}%` },
           ]}
         />
         <StatCard

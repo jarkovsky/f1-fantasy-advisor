@@ -4,7 +4,7 @@ import type { AssetLite } from "@/lib/asset-lite"
 
 import { useId, useMemo, useState } from "react"
 
-import { SQUAD_CONSTRUCTORS, SQUAD_DRIVERS } from "@/lib/constants"
+import { TEAM_CONSTRUCTORS, TEAM_DRIVERS } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
 import { useTeamStore } from "@/lib/team/store"
 
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 
 import { useTeamDraft } from "@/hooks/use-team-draft"
 
-import { BankInput } from "@/app/_components/shared/bank-input"
+import { CostCapInput } from "@/app/_components/shared/cost-cap-input"
 
 import { FreeTransfersField } from "./free-transfers-field"
 import { StartOverDialog } from "./start-over-dialog"
@@ -23,14 +23,14 @@ import { PickerTable } from "./picker-table"
 /**
  * The team-setup flow as one Card: Drivers and Constructors tables on the left,
  * filtered by a shared search box, and a control column on the right (selection
- * summary, remaining budget, free transfers, status, Save). Selection is a local
+ * summary, Remaining Cost Cap, free transfers, status, Save). Selection is a local
  * draft (useTeamDraft); nothing touches the store until Save.
  *
  * This container owns selection and validation; <PickerTable> only renders.
- * The only blockers are an incomplete squad (exactly 5 drivers + 2
- * constructors) and a bank that hasn't been entered. Spending over the $100M
+ * The only blockers are an incomplete team (exactly 5 drivers + 2
+ * constructors) and a Remaining Cost Cap that hasn't been entered. Spending over the $100M
  * starting cap is deliberately not blocked: mid-season price changes make the
- * real limit team value + bank, not the starting cap.
+ * real limit team value + Remaining Cost Cap, not the starting cap.
  */
 
 type TeamPickerProps = {
@@ -42,8 +42,8 @@ type TeamPickerProps = {
 
 export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps) {
   const { setTeam, reset } = useTeamStore()
-  const { selected, setSelected, bank, freeTransfers, setFreeTransfers } = useTeamDraft(mode)
-  const bankId = useId()
+  const { selected, setSelected, costCap, freeTransfers, setFreeTransfers } = useTeamDraft(mode)
+  const costCapId = useId()
 
   const byId = useMemo(() => new Map(assets.map((a) => [a.playerId, a])), [assets])
 
@@ -51,7 +51,7 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
   const drivers = useMemo(() => assets.filter((a) => a.kind === "driver"), [assets])
   const constructors = useMemo(() => assets.filter((a) => a.kind === "constructor"), [assets])
 
-  // Ids are sorted so the saved roster order is deterministic: drivers then
+  // Ids are sorted so the saved lineup order is deterministic: drivers then
   // constructors, each ascending by id.
   const { driverIds, constructorIds, teamValueTenths } = useMemo(() => {
     const pickedDrivers: string[] = []
@@ -73,12 +73,12 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
 
   const driverCount = driverIds.length
   const constructorCount = constructorIds.length
-  const driversFull = driverCount >= SQUAD_DRIVERS
-  const constructorsFull = constructorCount >= SQUAD_CONSTRUCTORS
+  const driversFull = driverCount >= TEAM_DRIVERS
+  const constructorsFull = constructorCount >= TEAM_CONSTRUCTORS
 
-  const squadComplete = driverCount === SQUAD_DRIVERS && constructorCount === SQUAD_CONSTRUCTORS
-  const blocked = !squadComplete || !bank.entered
-  const liveMessage = statusMessage(squadComplete, bank.entered, driverCount, constructorCount)
+  const teamComplete = driverCount === TEAM_DRIVERS && constructorCount === TEAM_CONSTRUCTORS
+  const blocked = !teamComplete || !costCap.entered
+  const liveMessage = statusMessage(teamComplete, costCap.entered, driverCount, constructorCount)
 
   function toggle(id: string): void {
     setSelected((prev) => {
@@ -100,7 +100,7 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
 
   function handleSave(): void {
     if (blocked) return
-    setTeam([...driverIds, ...constructorIds], bank.tenths, freeTransfers, raceNumber)
+    setTeam([...driverIds, ...constructorIds], costCap.tenths, freeTransfers, raceNumber)
     onDone?.()
   }
 
@@ -147,22 +147,22 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
 
           <div className="flex flex-col gap-5 lg:border-l lg:border-grid-line lg:pl-6">
             <p className="font-mono text-sm tabular-nums">
-              Drivers {driverCount}/{SQUAD_DRIVERS} · Constructors {constructorCount}/
-              {SQUAD_CONSTRUCTORS} · Spent {formatPriceTenths(teamValueTenths)}
+              Drivers {driverCount}/{TEAM_DRIVERS} · Constructors {constructorCount}/
+              {TEAM_CONSTRUCTORS} · Spent {formatPriceTenths(teamValueTenths)}
             </p>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor={bankId} className="text-sm font-medium">
-                Remaining budget
+              <label htmlFor={costCapId} className="text-sm font-medium">
+                Remaining Cost Cap
               </label>
-              <BankInput
-                id={bankId}
-                value={bank.value}
-                onChange={bank.setValue}
-                onBlur={bank.normalize}
+              <CostCapInput
+                id={costCapId}
+                value={costCap.value}
+                onChange={costCap.setValue}
+                onBlur={costCap.normalize}
               />
               <p className="text-xs text-muted-foreground">
-                Your bank from F1 Fantasy — after any transfers you already made.
+                Your Remaining Cost Cap in F1 Fantasy, after any transfers you already made.
               </p>
             </div>
 
@@ -171,7 +171,7 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
             <div className="flex items-center gap-2">
               {blocked ? (
                 <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted-foreground">
-                  {squadComplete ? "Enter budget" : "Squad incomplete"}
+                  {teamComplete ? "Enter Remaining Cost Cap" : "Team incomplete"}
                 </span>
               ) : (
                 <span className="rounded-full bg-accent-f1-quiet px-2 py-0.5 text-xs text-accent-f1">
@@ -203,14 +203,14 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
 
 /** The polite live-region copy: what still blocks Save, or that the team is ready. */
 function statusMessage(
-  squadComplete: boolean,
-  bankEntered: boolean,
+  teamComplete: boolean,
+  costCapEntered: boolean,
   driverCount: number,
   constructorCount: number
 ): string {
-  if (!squadComplete) {
-    return `${SQUAD_DRIVERS} drivers and ${SQUAD_CONSTRUCTORS} constructors required — you have ${driverCount} drivers and ${constructorCount} constructors.`
+  if (!teamComplete) {
+    return `${TEAM_DRIVERS} drivers and ${TEAM_CONSTRUCTORS} constructors required — you have ${driverCount} drivers and ${constructorCount} constructors.`
   }
-  if (!bankEntered) return "Squad complete — enter your remaining budget."
+  if (!costCapEntered) return "Team complete — enter your Remaining Cost Cap."
   return "Team valid — recommendations ready."
 }

@@ -11,8 +11,8 @@ import { installMatchMediaStub } from "@/test/stubs/dom"
 
 // ---------------------------------------------------------------------------
 // Deterministic grid (mirrors team-picker.test.tsx). LockedView is read-only:
-// it sums the stored roster's projections directly (no optimizer). We feed a
-// hand-rolled ProjectionResult so the projected total and DRS Boost pick are
+// it sums the stored lineup's projections directly (no optimizer). We feed a
+// hand-rolled ProjectionResult so the projected total and Boost pick are
 // exact, and assert no transfer/apply CTA exists.
 // ---------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 10 + n,
-    captainSelectedPercent: n,
+    boostedPercent: n,
     constructorId: ["c1", "c2", "c3"][n % 3] ?? "c1",
     teamName: "Team",
     seasonPoints: 100 + n,
@@ -44,7 +44,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 5 + n,
-    captainSelectedPercent: 0,
+    boostedPercent: 0,
     constructorId: null,
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
@@ -62,11 +62,11 @@ const ASSETS_BY_ID: Record<string, AssetLite> = Object.fromEntries(
   ASSETS.map((a) => [a.playerId, a])
 )
 
-const ROSTER = ["d1", "d2", "d3", "d4", "d5", "c1", "c2"]
+const LINEUP = ["d1", "d2", "d3", "d4", "d5", "c1", "c2"]
 
-// Per-roster projection totals: d1 is the clear top driver (the DRS pick).
-// Σ = 20+15+12+10+8+30+25 = 120; DRS bonus = projOf(d1) * (2-1) = 20.
-// Projected = 120 + 20 = 140.0 pts; DRS Boost = Driver 1.
+// Per-lineup projection totals: d1 is the clear top driver (the Boost pick).
+// Σ = 20+15+12+10+8+30+25 = 120; Boost bonus = projOf(d1) * (2-1) = 20.
+// Projected = 120 + 20 = 140.0 pts; Boost = Driver 1.
 const TOTALS: Record<string, number> = {
   d1: 20,
   d2: 15,
@@ -120,7 +120,7 @@ function renderView(props?: Partial<Parameters<typeof LockedView>[0]>) {
     <LockedView
       gpName="Monaco Grand Prix"
       live={false}
-      roster={ROSTER}
+      lineup={LINEUP}
       assetsById={ASSETS_BY_ID}
       projection={makeProjection(TOTALS)}
       nextLockAtMs={null}
@@ -145,10 +145,10 @@ describe("LockedView", () => {
     expect(dot).not.toBeNull()
   })
 
-  it("renders the projected score and DRS pick from the stored roster's projection (no optimizer)", () => {
+  it("renders the projected score and Boost pick from the stored lineup's projection (no optimizer)", () => {
     renderView()
-    // Σ totals 120 + captain bonus 20 (d1) = 140.0; DRS Boost = Driver 1.
-    expect(screen.getByText(/Projected 140\.0 pts · DRS Boost Driver 1/)).toBeInTheDocument()
+    // Σ totals 120 + Boost bonus 20 (d1) = 140.0; Boost = Driver 1.
+    expect(screen.getByText(/Projected 140\.0 pts · Boost Driver 1/)).toBeInTheDocument()
   })
 
   it("renders no transfer / apply CTA anywhere", () => {

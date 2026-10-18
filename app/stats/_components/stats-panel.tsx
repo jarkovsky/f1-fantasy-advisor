@@ -31,7 +31,7 @@ type SortKey =
   | "raceAvg"
   | "sprintAvg"
   | "selectedPercent"
-  | "captainSelectedPercent"
+  | "boostedPercent"
 
 const DEFAULT_SORT: SortState<SortKey> = { key: "seasonPoints", dir: "desc" }
 
@@ -44,8 +44,8 @@ const COLUMNS: SortableColumn<SortKey, StatsRow>[] = [
   { key: "qualiAvg", label: "Quali avg", value: (r) => r.qualiAvg },
   { key: "raceAvg", label: "Race avg", value: (r) => r.raceAvg },
   { key: "sprintAvg", label: "Sprint avg", value: (r) => r.sprintAvg },
-  { key: "selectedPercent", label: "Sel%", value: (r) => r.selectedPercent },
-  { key: "captainSelectedPercent", label: "Capt%", value: (r) => r.captainSelectedPercent },
+  { key: "selectedPercent", label: "% Picked", value: (r) => r.selectedPercent },
+  { key: "boostedPercent", label: "% Boosted", value: (r) => r.boostedPercent },
 ]
 
 export function StatsPanel({ rows, caption }: { rows: StatsRow[]; caption: string }) {

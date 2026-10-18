@@ -1,7 +1,7 @@
 /**
  * The race-week lifecycle state machine — the product's backbone. Without it,
  * by week two the advisor would confidently recommend transfers from a
- * roster, budget, and transfer count the user no longer has.
+ * lineup, Remaining Cost Cap, and transfer count the user no longer has.
  *
  * Pure: no Date.now(), no I/O. `now` is injected, so every boundary instant
  * is unit-testable.

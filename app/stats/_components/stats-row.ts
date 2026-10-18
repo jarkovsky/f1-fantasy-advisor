@@ -23,6 +23,6 @@ export type StatsRow = {
   raceAvg: number | null
   sprintAvg: number | null
   selectedPercent: number
-  captainSelectedPercent: number
+  boostedPercent: number
   spark: number[]
 }

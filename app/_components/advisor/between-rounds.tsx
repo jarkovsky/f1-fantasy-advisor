@@ -1,6 +1,6 @@
 "use client"
 
-import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import type { TeamStateV2 } from "@/lib/team/types/team-state"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { formatPoints } from "@/lib/format"
@@ -22,10 +22,10 @@ type BetweenRoundsProps = {
   lastCompleted: number
   /** Which race the lastRacePoints map belongs to (server-side pointer). */
   pointsRace: number | null
-  roster: string[]
+  lineup: string[]
   assetsById: Record<string, AssetLite>
   lastRacePoints: Record<string, number | null>
-  savedProjection: TeamStateV1["savedProjection"]
+  savedProjection: TeamStateV2["savedProjection"]
 }
 
 /**
@@ -45,14 +45,14 @@ type BetweenRoundsProps = {
 export function BetweenRounds({
   lastCompleted,
   pointsRace,
-  roster,
+  lineup,
   assetsById,
   lastRacePoints,
   savedProjection,
 }: BetweenRoundsProps) {
-  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
+  const resolved = lineup.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
 
-  const scored = roster.reduce((sum, id) => sum + (lastRacePoints[id] ?? 0), 0)
+  const scored = lineup.reduce((sum, id) => sum + (lastRacePoints[id] ?? 0), 0)
   const pointsMatch = pointsRace === lastCompleted
 
   if (!pointsMatch) {

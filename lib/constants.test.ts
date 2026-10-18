@@ -1,23 +1,23 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  DRS_BOOST_MULTIPLIER,
+  BOOST_MULTIPLIER,
   EWMA_HALF_LIFE,
-  EXTRA_TRANSFER_PENALTY,
+  ADDITIONAL_TRANSFER_PENALTY,
   FORM_WINDOW,
   FREE_TRANSFERS,
   GRID,
   HISTORY_PRESET_MIN_RACES,
-  INITIAL_BUDGET_TENTHS,
+  INITIAL_COST_CAP_TENTHS,
   SPRINT_PRIOR_SHRINKAGE_K,
-  SQUAD_CONSTRUCTORS,
-  SQUAD_DRIVERS,
+  TEAM_CONSTRUCTORS,
+  TEAM_DRIVERS,
 } from "@/lib/constants"
 
 describe("2026 rule constants", () => {
-  it("encodes the squad shape (5 drivers + 2 constructors)", () => {
-    expect(SQUAD_DRIVERS).toBe(5)
-    expect(SQUAD_CONSTRUCTORS).toBe(2)
+  it("encodes the team shape (5 drivers + 2 constructors)", () => {
+    expect(TEAM_DRIVERS).toBe(5)
+    expect(TEAM_CONSTRUCTORS).toBe(2)
   })
 
   it("encodes the 2026 grid (22 drivers, 11 constructors)", () => {
@@ -25,19 +25,19 @@ describe("2026 rule constants", () => {
     expect(GRID.constructors).toBe(11)
   })
 
-  it("encodes the transfer rules (2-3 free, -10 per extra)", () => {
+  it("encodes the transfer rules (2-3 free, -10 per additional)", () => {
     expect(FREE_TRANSFERS.min).toBe(2)
     expect(FREE_TRANSFERS.max).toBe(3)
-    expect(EXTRA_TRANSFER_PENALTY).toBe(-10)
+    expect(ADDITIONAL_TRANSFER_PENALTY).toBe(-10)
   })
 
   it("encodes money as integer tenths of a million", () => {
-    expect(INITIAL_BUDGET_TENTHS).toBe(1000)
-    expect(Number.isInteger(INITIAL_BUDGET_TENTHS)).toBe(true)
+    expect(INITIAL_COST_CAP_TENTHS).toBe(1000)
+    expect(Number.isInteger(INITIAL_COST_CAP_TENTHS)).toBe(true)
   })
 
-  it("encodes the DRS Boost multiplier", () => {
-    expect(DRS_BOOST_MULTIPLIER).toBe(2)
+  it("encodes the Boost multiplier", () => {
+    expect(BOOST_MULTIPLIER).toBe(2)
   })
 
   it("encodes the projection tuning", () => {

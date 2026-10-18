@@ -121,7 +121,7 @@ export default async function OpengraphImage() {
               maxWidth: 940,
             }}
           >
-            Optimal transfers and DRS Boost for the upcoming Grand Prix — free, with the math shown.
+            Optimal transfers and Boost for the upcoming Grand Prix — free, with the math shown.
           </div>
         </div>
 
@@ -152,7 +152,7 @@ export default async function OpengraphImage() {
               color: MUTED,
             }}
           >
-            1,448,370 squads searched · exact optimum · ~6 ms
+            1,448,370 teams searched · exact optimum · ~6 ms
           </div>
         </div>
       </div>

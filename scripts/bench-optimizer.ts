@@ -2,7 +2,7 @@
  * Optimizer benchmark. Run via `pnpm bench`.
  *
  * Measures optimize() on deterministic full-size grids (22 drivers / 11
- * constructors ≈ 1.45M candidate squads). Standalone tsx script (not vitest
+ * constructors ≈ 1.45M candidate teams). Standalone tsx script (not vitest
  * bench): framework-free single-digit-ms measurements, explicit warmup,
  * min/median/p95 reporting, machine info — a copy-paste-ready record for the
  * README. Never exits non-zero: it is a measurement, not a gate.
@@ -47,8 +47,8 @@ function makeInput(seed: number, mode: (typeof MODES)[number]): OptimizerInput {
   }
   return {
     assets,
-    roster: ["d00", "d05", "d10", "d15", "d20", "c02", "c07"],
-    budgetTenths: 150,
+    lineup: ["d00", "d05", "d10", "d15", "d20", "c02", "c07"],
+    remainingCostCapTenths: 150,
     freeTransfers: 2,
     mode,
   }
@@ -59,7 +59,7 @@ function quantile(sorted: number[], q: number): number {
   return sorted[idx] ?? 0
 }
 
-console.log("Optimizer benchmark — C(22,5) × C(11,2) = 1,448,370 candidate squads")
+console.log("Optimizer benchmark — C(22,5) × C(11,2) = 1,448,370 candidate teams")
 console.log(
   `machine: ${os.cpus()[0]?.model ?? "unknown CPU"} ×${os.cpus().length}, ` +
     `${Math.round(os.totalmem() / 2 ** 30)}GB, node ${process.version}, ${process.platform}/${process.arch}`

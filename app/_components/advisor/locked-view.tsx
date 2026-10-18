@@ -3,20 +3,20 @@
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
-import { pickDrsCaptainId } from "@/lib/optimizer/drs-boost"
-import { DRS_BOOST_MULTIPLIER } from "@/lib/constants"
+import { pickBoostDriverId } from "@/lib/optimizer/boost"
+import { BOOST_MULTIPLIER } from "@/lib/constants"
 import { formatPriceTenths } from "@/lib/format"
 import { teamColor } from "@/lib/team-colors"
 
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 
-import { RosterRow } from "@/app/_components/shared/roster-row"
+import { LineupRow } from "@/app/_components/shared/lineup-row"
 
 type LockedViewProps = {
   gpName: string
   live: boolean
-  roster: string[]
+  lineup: string[]
   assetsById: Record<string, AssetLite>
   projection: ProjectionResult
   nextLockAtMs: number | null
@@ -33,29 +33,29 @@ const lockFmt = new Intl.DateTimeFormat(undefined, {
 
 /**
  * LOCKED: the team is locked for the current weekend, so the advisor is
- * read-only. Projected points and the DRS Boost pick come straight from the
- * stored roster's projections (a plain sum plus the best-driver bonus — no
+ * read-only. Projected points and the Boost pick come straight from the
+ * stored lineup's projections (a plain sum plus the best-driver bonus — no
  * optimizer search, since nothing can change). When a later weekend exists,
  * the next lock time is shown.
  */
 export function LockedView({
   gpName,
   live,
-  roster,
+  lineup,
   assetsById,
   projection,
   nextLockAtMs,
 }: LockedViewProps) {
-  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
+  const resolved = lineup.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
   const projOf = (id: string): number => projection.byPlayerId[id]?.totalPoints ?? 0
 
-  const captainId = pickDrsCaptainId(
+  const boostDriverId = pickBoostDriverId(
     resolved.filter((a) => a.kind === "driver").map((d) => d.playerId),
     projOf
   )
-  const captain = captainId ? assetsById[captainId] : undefined
+  const boostDriver = boostDriverId ? assetsById[boostDriverId] : undefined
   const projectedSum = resolved.reduce((s, a) => s + projOf(a.playerId), 0)
-  const captainBonus = captain ? projOf(captain.playerId) * (DRS_BOOST_MULTIPLIER - 1) : 0
+  const boostBonus = boostDriver ? projOf(boostDriver.playerId) * (BOOST_MULTIPLIER - 1) : 0
 
   return (
     <div className="flex flex-col gap-4">
@@ -75,7 +75,7 @@ export function LockedView({
       <Card className="gap-3 bg-surface-1 p-4">
         <ul className="flex flex-col gap-0.5">
           {resolved.map((a) => (
-            <RosterRow
+            <LineupRow
               key={a.playerId}
               color={teamColor(assetColorKey(a))}
               tla={a.tla}
@@ -87,12 +87,12 @@ export function LockedView({
               <span className="w-12 shrink-0 text-right font-mono tabular-nums">
                 {projOf(a.playerId).toFixed(1)}
               </span>
-            </RosterRow>
+            </LineupRow>
           ))}
         </ul>
         <p className="border-t border-grid-line pt-2 font-mono text-sm tabular-nums">
-          Projected {(projectedSum + captainBonus).toFixed(1)} pts · DRS Boost{" "}
-          {captain?.displayName ?? "—"}
+          Projected {(projectedSum + boostBonus).toFixed(1)} pts · Boost{" "}
+          {boostDriver?.displayName ?? "—"}
         </p>
       </Card>
 

@@ -5,7 +5,7 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import userEvent from "@testing-library/user-event"
 
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
+import { reconcileLineup, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import { optimize } from "@/lib/optimizer/optimize"
 import { formatSignedPoints } from "@/lib/format"
 
@@ -28,7 +28,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 10 + n,
-    captainSelectedPercent: n,
+    boostedPercent: n,
     constructorId: `c${((n - 1) % 3) + 1}`,
     teamName: `Team ${((n - 1) % 3) + 1}`,
     seasonPoints: 100 + n,
@@ -45,7 +45,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 5 + n,
-    captainSelectedPercent: 0,
+    boostedPercent: 0,
     constructorId: null,
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
@@ -58,7 +58,7 @@ const CONSTRUCTORS = [constructor(1, 250), constructor(2, 200), constructor(3, 1
 const GRID: AssetLite[] = [...DRIVERS, ...CONSTRUCTORS]
 const ASSETS_BY_ID = Object.fromEntries(GRID.map((a) => [a.playerId, a]))
 
-// d1 best → captain; roster holds the cheaper d4–d8 so an upgrade is optimal.
+// d1 best → Boost driver; lineup holds the cheaper d4–d8 so an upgrade is optimal.
 const TOTALS: Record<string, number> = {
   d1: 100,
   d2: 90,
@@ -72,15 +72,18 @@ const TOTALS: Record<string, number> = {
   c2: 35,
   c3: 25,
 }
-const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
+const LINEUP = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
 
-function plan(bank: number, free: number): { result: OptimizerResult; baseline: TeamPlan | null } {
+function plan(
+  costCap: number,
+  free: number
+): { result: OptimizerResult; baseline: TeamPlan | null } {
   const grid = toOptimizerAssets(GRID, TOTALS)
-  const { assets } = reconcileRoster(ROSTER, grid)
+  const { assets } = reconcileLineup(LINEUP, grid)
   const result = optimize({
     assets,
-    roster: ROSTER,
-    budgetTenths: bank,
+    lineup: LINEUP,
+    remainingCostCapTenths: costCap,
     freeTransfers: free,
     mode: "normal",
   })
@@ -118,7 +121,7 @@ afterEach(() => {
 })
 
 describe("TeamPlanCard", () => {
-  it("renders the headline delta and DRS captain from the optimizer result", () => {
+  it("renders the headline delta and Boost driver from the optimizer result", () => {
     const { props } = renderCard()
     const best = props.result.best
     const baselineTotal = props.baseline?.projectedTotal ?? 0
@@ -128,11 +131,11 @@ describe("TeamPlanCard", () => {
       within(block).getByText(formatSignedPoints(best.score - baselineTotal))
     ).toBeInTheDocument()
 
-    // The captain chip sits on the captain's row (its accessible label).
-    const chip = screen.getByLabelText("DRS Boost captain")
+    // The Boost badge sits on the Boost driver's row (its accessible label).
+    const chip = screen.getByLabelText("x2 Boost driver")
     expect(chip).toBeInTheDocument()
     expect(
-      screen.getByText(`DRS Boost → ${ASSETS_BY_ID[best.captainId]?.displayName}`, { exact: false })
+      screen.getByText(`Boost → ${ASSETS_BY_ID[best.boostDriverId]?.displayName}`, { exact: false })
     ).toBeInTheDocument()
   })
 
@@ -143,7 +146,7 @@ describe("TeamPlanCard", () => {
   })
 
   it("shows the no-changes copy when the current team is already optimal", () => {
-    // Baseline == best: make the roster the optimal squad by ranking it top.
+    // Baseline == best: make the lineup the optimal team by ranking it top.
     const optimalTotals: Record<string, number> = {
       d4: 100,
       d5: 90,
@@ -158,11 +161,11 @@ describe("TeamPlanCard", () => {
       c1: 1,
     }
     const grid = toOptimizerAssets(GRID, optimalTotals)
-    const { assets } = reconcileRoster(ROSTER, grid)
+    const { assets } = reconcileLineup(LINEUP, grid)
     const result = optimize({
       assets,
-      roster: ROSTER,
-      budgetTenths: 0,
+      lineup: LINEUP,
+      remainingCostCapTenths: 0,
       freeTransfers: 2,
       mode: "normal",
     })
@@ -176,7 +179,7 @@ describe("TeamPlanCard", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders unavailable tiles for unresolved roster ids wired to onEdit", async () => {
+  it("renders unavailable tiles for unresolved lineup ids wired to onEdit", async () => {
     const user = userEvent.setup()
     const { props } = renderCard({ unresolvedIds: ["dGONE"] })
     expect(screen.getByText(/no longer available\./)).toBeInTheDocument()
@@ -190,13 +193,13 @@ describe("TeamPlanCard", () => {
     expect(screen.queryByRole("button", { name: /apply this plan/i })).not.toBeInTheDocument()
   })
 
-  it("shows a disabled applied state and the Limitless budget note", () => {
+  it("shows a disabled applied state and the Limitless cost cap note", () => {
     renderCard({ applied: true })
     expect(screen.getByRole("button", { name: /plan applied/i })).toBeDisabled()
 
     cleanup()
     renderCard({ whatIf: "limitless" })
-    expect(screen.getByText(/\(Limitless ignores budget\)/)).toBeInTheDocument()
+    expect(screen.getByText(/\(Limitless: no cost cap\)/)).toBeInTheDocument()
   })
 
   it("fires onApply", async () => {
@@ -206,10 +209,10 @@ describe("TeamPlanCard", () => {
     expect(props.onApply).toHaveBeenCalled()
   })
 
-  it("the DRS Boost ranking lists drivers by projection desc and stars the captain", async () => {
+  it("the Boost ranking lists drivers by projection desc and stars the Boost driver", async () => {
     const user = userEvent.setup()
     const { props } = renderCard()
-    await user.click(screen.getByRole("button", { name: /DRS Boost ranking/i }))
+    await user.click(screen.getByRole("button", { name: /Boost ranking/i }))
     const best = props.result.best
     const names = best.driverIds
       .map((id) => ({ name: ASSETS_BY_ID[id]?.displayName ?? id, p: TOTALS[id] ?? 0 }))

@@ -6,7 +6,7 @@ import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
 import userEvent from "@testing-library/user-event"
 
-import { reconcileRoster, toOptimizerAssets } from "@/lib/optimizer/adapter"
+import { reconcileLineup, toOptimizerAssets } from "@/lib/optimizer/adapter"
 import { optimize } from "@/lib/optimizer/optimize"
 
 import { Alternatives } from "./alternatives"
@@ -21,7 +21,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 10,
-    captainSelectedPercent: n,
+    boostedPercent: n,
     constructorId: `c${((n - 1) % 3) + 1}`,
     teamName: "Team",
     seasonPoints: 100,
@@ -38,7 +38,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 5,
-    captainSelectedPercent: 0,
+    boostedPercent: 0,
     constructorId: null,
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200,
@@ -66,7 +66,7 @@ const TOTALS: Record<string, number> = {
   c2: 35,
   c3: 25,
 }
-const ROSTER = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
+const LINEUP = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
 
 function makeProjection(): ProjectionResult {
   const byPlayerId: Record<string, AssetProjection> = {}
@@ -96,11 +96,11 @@ function makeProjection(): ProjectionResult {
 
 function build(): { result: OptimizerResult; baseline: TeamPlan | null } {
   const grid = toOptimizerAssets(GRID, TOTALS)
-  const { assets } = reconcileRoster(ROSTER, grid)
+  const { assets } = reconcileLineup(LINEUP, grid)
   const result = optimize({
     assets,
-    roster: ROSTER,
-    budgetTenths: 500,
+    lineup: LINEUP,
+    remainingCostCapTenths: 500,
     freeTransfers: 2,
     mode: "normal",
   })

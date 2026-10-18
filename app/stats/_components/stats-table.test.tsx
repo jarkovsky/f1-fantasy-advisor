@@ -32,7 +32,7 @@ function row(over: Partial<StatsRow> & Pick<StatsRow, "playerId" | "tla">): Stat
     raceAvg: 8,
     sprintAvg: 2,
     selectedPercent: 50,
-    captainSelectedPercent: 10,
+    boostedPercent: 10,
     spark: [10, 30, 60],
     ...over,
   }

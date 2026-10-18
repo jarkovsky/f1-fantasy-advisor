@@ -12,7 +12,7 @@ import { TeamPicker } from "./team-picker"
 
 // ---------------------------------------------------------------------------
 // Deterministic set: the shared fixtures carry only 4 assets — too few to fill
-// a 5-driver / 2-constructor squad. We hand-roll 8 drivers + 3 constructors with
+// a 5-driver / 2-constructor team. We hand-roll 8 drivers + 3 constructors with
 // realistic tenths so quota, save and sort assertions are exact.
 // ---------------------------------------------------------------------------
 
@@ -26,7 +26,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 10 + n,
-    captainSelectedPercent: n,
+    boostedPercent: n,
     constructorId: "c1",
     teamName: "Team One",
     seasonPoints: 100 + n,
@@ -44,7 +44,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     priceTenths,
     prevPriceTenths: priceTenths,
     selectedPercent: 5 + n,
-    captainSelectedPercent: 0,
+    boostedPercent: 0,
     constructorId: null,
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
@@ -146,7 +146,7 @@ describe("TeamPicker", () => {
   it("ARIA live region exists at first render and updates after a selection", async () => {
     const user = userEvent.setup()
     renderPicker()
-    // The container's polite live region (a role=status) carries the squad-state
+    // The container's polite live region (a role=status) carries the team-state
     // message; PickerTable also renders a status region, so assert via text.
     expect(screen.getAllByRole("status").length).toBeGreaterThanOrEqual(1)
     expect(
@@ -162,32 +162,32 @@ describe("TeamPicker", () => {
     ).toBeInTheDocument()
   })
 
-  it("CTA disabled while incomplete; enabled exactly at 5+2 with bank entered", async () => {
+  it("CTA disabled while incomplete; enabled exactly at 5+2 with Remaining Cost Cap entered", async () => {
     const user = userEvent.setup()
     renderPicker()
     const cta = screen.getByRole("button", { name: /save team & get advice/i })
     expect(cta).toBeDisabled()
 
     await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
-    // Squad complete but no bank yet → still blocked.
+    // Team complete but no Remaining Cost Cap yet → still blocked.
     expect(cta).toBeDisabled()
 
-    const bank = screen.getByLabelText(/remaining budget/i)
-    await user.clear(bank)
-    await user.type(bank, "5")
+    const costCap = screen.getByLabelText(/remaining cost cap/i)
+    await user.clear(costCap)
+    await user.type(costCap, "5")
     expect(cta).toBeEnabled()
   })
 
-  it("over-initial-budget squad does not block once bank entered (no warn copy)", async () => {
+  it("over-initial-cost-cap team does not block once Remaining Cost Cap entered (no warn copy)", async () => {
     const user = userEvent.setup()
     renderPicker()
-    // 5 priciest drivers (1300) + 2 ctors (450) = 1750 tenths; bank 5 → 1800.
+    // 5 priciest drivers (1300) + 2 ctors (450) = 1750 tenths; Remaining Cost Cap 5 → 1800.
     await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
-    const bank = screen.getByLabelText(/remaining budget/i)
-    await user.type(bank, "5")
+    const costCap = screen.getByLabelText(/remaining cost cap/i)
+    await user.type(costCap, "5")
 
     expect(screen.getByRole("button", { name: /save team & get advice/i })).toBeEnabled()
-    // No over-budget warning is shown.
+    // No over-cost-cap warning is shown.
     expect(screen.queryByText(/Heads up/)).not.toBeInTheDocument()
   })
 
@@ -230,22 +230,22 @@ describe("TeamPicker", () => {
     expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
   })
 
-  it("first-run flow writes the store with sorted roster, bank, transfers, raceNumber", async () => {
+  it("first-run flow writes the store with sorted lineup, Remaining Cost Cap, transfers, raceNumber", async () => {
     const user = userEvent.setup()
     const onDone = vi.fn()
     renderPicker({ onDone })
 
     await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
 
-    const bank = screen.getByLabelText(/remaining budget/i)
-    await user.clear(bank)
-    await user.type(bank, "2.5")
+    const costCap = screen.getByLabelText(/remaining cost cap/i)
+    await user.clear(costCap)
+    await user.type(costCap, "2.5")
     await user.click(screen.getByRole("radio", { name: "3" }))
     await user.click(screen.getByRole("button", { name: /save team & get advice/i }))
 
     const snap = teamStore.getSnapshot()
-    expect(snap.roster).toEqual(["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
-    expect(snap.budgetTenths).toBe(25)
+    expect(snap.lineup).toEqual(["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
+    expect(snap.remainingCostCapTenths).toBe(25)
     expect(snap.freeTransfers).toBe(3)
     expect(snap.raceNumber).toBe(6)
     expect(onDone).toHaveBeenCalledTimes(1)
@@ -261,14 +261,14 @@ describe("TeamPicker", () => {
 
     // Selected drivers pre-checked.
     expect(checkboxFor("Firstname Lastname1")).toBeChecked()
-    // Bank input prefilled to 2.5.
-    const bank = screen.getByLabelText(/remaining budget/i) as HTMLInputElement
-    expect(bank.value).toBe("2.5")
+    // Remaining Cost Cap input prefilled to 2.5.
+    const costCap = screen.getByLabelText(/remaining cost cap/i) as HTMLInputElement
+    expect(costCap.value).toBe("2.5")
 
     // Cancel: no store write, onDone called.
     await user.click(screen.getByRole("button", { name: /cancel/i }))
     expect(onDone).toHaveBeenCalledTimes(1)
-    expect(teamStore.getSnapshot().budgetTenths).toBe(25) // unchanged
+    expect(teamStore.getSnapshot().remainingCostCapTenths).toBe(25) // unchanged
   })
 
   it("Start over dialog resets the store to its default state and calls onDone", async () => {
@@ -284,7 +284,7 @@ describe("TeamPicker", () => {
     const dialog = screen.getByRole("dialog")
     await user.click(within(dialog).getByRole("button", { name: /^start over$/i }))
 
-    expect(teamStore.getSnapshot().roster).toBeNull()
+    expect(teamStore.getSnapshot().lineup).toBeNull()
     expect(onDone).toHaveBeenCalledTimes(1)
   })
 
@@ -293,9 +293,9 @@ describe("TeamPicker", () => {
     renderPicker()
     await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
 
-    const bank = screen.getByLabelText(/remaining budget/i)
-    await user.clear(bank)
-    await user.type(bank, "2.5")
+    const costCap = screen.getByLabelText(/remaining cost cap/i)
+    await user.clear(costCap)
+    await user.type(costCap, "2.5")
     await user.click(screen.getByRole("radio", { name: "3" }))
     await user.click(screen.getByRole("radio", { name: "Unlimited" }))
     await user.click(screen.getByRole("button", { name: /save team & get advice/i }))

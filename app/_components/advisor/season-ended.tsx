@@ -9,20 +9,20 @@ import { teamColor } from "@/lib/team-colors"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
-import { RosterRow } from "@/app/_components/shared/roster-row"
+import { LineupRow } from "@/app/_components/shared/lineup-row"
 
 type SeasonEndedProps = {
-  roster: string[]
+  lineup: string[]
   assetsById: Record<string, AssetLite>
 }
 
 /**
  * SEASON_ENDED: the final round is scored and there is no next race. Read-only
- * final squad, season points summary, and a link into the stats explorer for
+ * final team, season points summary, and a link into the stats explorer for
  * the full review.
  */
-export function SeasonEnded({ roster, assetsById }: SeasonEndedProps) {
-  const resolved = roster.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
+export function SeasonEnded({ lineup, assetsById }: SeasonEndedProps) {
+  const resolved = lineup.map((id) => assetsById[id]).filter((a): a is AssetLite => a !== undefined)
 
   const seasonPoints = resolved.reduce((s, a) => s + a.seasonPoints, 0)
 
@@ -31,10 +31,10 @@ export function SeasonEnded({ roster, assetsById }: SeasonEndedProps) {
       <h1 className="text-2xl font-semibold">That&apos;s a wrap on the 2026 season.</h1>
 
       <Card className="gap-3 bg-surface-1 p-4">
-        <h2 className="text-sm font-semibold">Your final squad</h2>
+        <h2 className="text-sm font-semibold">Your final team</h2>
         <ul className="flex flex-col gap-0.5">
           {resolved.map((a) => (
-            <RosterRow
+            <LineupRow
               key={a.playerId}
               color={teamColor(assetColorKey(a))}
               tla={a.tla}
@@ -46,7 +46,7 @@ export function SeasonEnded({ roster, assetsById }: SeasonEndedProps) {
               <span className="w-14 shrink-0 text-right font-mono tabular-nums">
                 {a.seasonPoints}
               </span>
-            </RosterRow>
+            </LineupRow>
           ))}
         </ul>
         <p className="border-t border-grid-line pt-2 font-mono text-sm tabular-nums">

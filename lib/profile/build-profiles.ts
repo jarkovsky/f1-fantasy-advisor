@@ -76,7 +76,7 @@ export function buildDriverProfiles(
       quali: sessionRating(qualiRanks[d.playerId], qualiAvg[d.playerId] ?? null),
       race: sessionRating(raceRanks[d.playerId], raceAvg[d.playerId] ?? null),
       sentiment: selectionTrend(hist?.perRace ?? []),
-      captainSelectedPercent: d.captainSelectedPercent,
+      boostedPercent: d.boostedPercent,
     }
   }
   return out

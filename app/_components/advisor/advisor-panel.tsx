@@ -86,7 +86,7 @@ function AdvisorPanelInner({
   if (raceState === null) return <AdvisorSkeleton />
 
   const currentWeekend = raceWeekends.find((w) => w.raceNumber === constraints.raceNumber)
-  const roster = team.roster ?? []
+  const lineup = team.lineup ?? []
 
   switch (raceState.kind) {
     case "FIRST_VISIT": {
@@ -119,7 +119,7 @@ function AdvisorPanelInner({
         <LockedView
           gpName={raceState.gpName}
           live={raceState.live}
-          roster={roster}
+          lineup={lineup}
           assetsById={assetsById}
           projection={projection}
           nextLockAtMs={later?.lockAtMs ?? null}
@@ -132,7 +132,7 @@ function AdvisorPanelInner({
         <BetweenRounds
           lastCompleted={raceState.lastCompleted}
           pointsRace={constraints.lastCompletedRace >= 1 ? constraints.lastCompletedRace : null}
-          roster={roster}
+          lineup={lineup}
           assetsById={assetsById}
           lastRacePoints={lastRacePoints}
           savedProjection={team.savedProjection}
@@ -141,7 +141,7 @@ function AdvisorPanelInner({
     }
 
     case "SEASON_ENDED": {
-      return <SeasonEnded roster={roster} assetsById={assetsById} />
+      return <SeasonEnded lineup={lineup} assetsById={assetsById} />
     }
 
     case "OPEN": {

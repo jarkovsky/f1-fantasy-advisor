@@ -52,7 +52,7 @@ export async function AssetTable() {
       raceAvg: sessionAvg(hist, "Race"),
       sprintAvg: sessionAvg(hist, "Sprint Qualifying"),
       selectedPercent: asset.selectedPercent,
-      captainSelectedPercent: asset.captainSelectedPercent,
+      boostedPercent: asset.boostedPercent,
       spark,
     }
   })

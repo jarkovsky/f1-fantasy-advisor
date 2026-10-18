@@ -1,6 +1,6 @@
 "use client"
 
-import type { TeamStateV1 } from "@/lib/team/types/team-state"
+import type { TeamStateV2 } from "@/lib/team/types/team-state"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { Pencil } from "lucide-react"
@@ -13,12 +13,12 @@ import { teamColor } from "@/lib/team-colors"
 import { Button } from "@/components/ui/button"
 
 type TeamOverviewProps = {
-  roster: string[]
+  lineup: string[]
   assetsById: Record<string, AssetLite>
   /** Projected race-week points per asset under the active model. */
   totals: Record<string, number>
-  budgetTenths: number
-  freeTransfers: TeamStateV1["freeTransfers"]
+  remainingCostCapTenths: number
+  freeTransfers: TeamStateV2["freeTransfers"]
   onEdit: () => void
 }
 
@@ -75,19 +75,19 @@ function Tile({ asset, projected }: { asset: AssetLite; projected: number }) {
 
 /**
  * "Your team" at a glance: the seven picks the user saved (drivers by price,
- * then constructors) with team value, bank, and free transfers, and the Edit
+ * then constructors) with team value, Remaining Cost Cap, and free transfers, and the Edit
  * team entry point. It shows the team as it is; the recommendation card
  * below shows what to change.
  */
 export function TeamOverview({
-  roster,
+  lineup,
   assetsById,
   totals,
-  budgetTenths,
+  remainingCostCapTenths,
   freeTransfers,
   onEdit,
 }: TeamOverviewProps) {
-  const picks = roster
+  const picks = lineup
     .map((id) => assetsById[id])
     .filter((a): a is AssetLite => a !== undefined)
     .sort(
@@ -95,7 +95,7 @@ export function TeamOverview({
         (a.kind === b.kind ? 0 : a.kind === "driver" ? -1 : 1) || b.priceTenths - a.priceTenths
     )
   const valueTenths = picks.reduce((sum, a) => sum + a.priceTenths, 0)
-  const missing = roster.length - picks.length
+  const missing = lineup.length - picks.length
 
   return (
     <section
@@ -110,8 +110,10 @@ export function TeamOverview({
           <p className="text-xs text-muted-foreground">
             Team value{" "}
             <span className="font-mono text-foreground">{formatPriceTenths(valueTenths)}</span>
-            {" · "}Bank{" "}
-            <span className="font-mono text-foreground">{formatPriceTenths(budgetTenths)}</span>
+            {" · "}Remaining Cost Cap{" "}
+            <span className="font-mono text-foreground">
+              {formatPriceTenths(remainingCostCapTenths)}
+            </span>
             {" · "}
             {freeTransfers === "unlimited" ? (
               "Unlimited transfers"

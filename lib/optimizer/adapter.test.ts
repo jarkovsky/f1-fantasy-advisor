@@ -13,7 +13,7 @@ import { projectAssets } from "@/lib/projections/engine"
 import { parseDriversFeed } from "@/lib/f1/schemas"
 import { assembleHistory } from "@/lib/f1/history"
 
-import { reconcileRoster, toOptimizerAssets } from "./adapter"
+import { reconcileLineup, toOptimizerAssets } from "./adapter"
 import { optimize } from "./optimize"
 
 // ---------------------------------------------------------------------------
@@ -86,17 +86,17 @@ const OPT_GRID: OptimizerAsset[] = [
   { id: "c2", kind: "constructor", priceTenths: 120, projected: 20 },
 ]
 
-describe("reconcileRoster", () => {
-  it("fully resolvable roster → no placeholders, empty unresolvedIds", () => {
-    const roster = ["d0", "d1", "d2", "d3", "d4", "c0", "c1"]
-    const { assets, unresolvedIds } = reconcileRoster(roster, OPT_GRID)
+describe("reconcileLineup", () => {
+  it("fully resolvable lineup → no placeholders, empty unresolvedIds", () => {
+    const lineup = ["d0", "d1", "d2", "d3", "d4", "c0", "c1"]
+    const { assets, unresolvedIds } = reconcileLineup(lineup, OPT_GRID)
     expect(unresolvedIds).toEqual([])
     expect(assets).toEqual(OPT_GRID)
   })
 
   it("one missing driver → one driver-kind placeholder (price 0, projected 0)", () => {
-    const roster = ["gone", "d1", "d2", "d3", "d4", "c0", "c1"]
-    const { assets, unresolvedIds } = reconcileRoster(roster, OPT_GRID)
+    const lineup = ["gone", "d1", "d2", "d3", "d4", "c0", "c1"]
+    const { assets, unresolvedIds } = reconcileLineup(lineup, OPT_GRID)
     expect(unresolvedIds).toEqual(["gone"])
     const placeholder = assets.find((a) => a.id === "gone")
     expect(placeholder).toEqual({
@@ -110,8 +110,8 @@ describe("reconcileRoster", () => {
 
   it("one missing of each kind → kinds inferred by deficit", () => {
     // 4 resolved drivers + 1 resolved constructor → deficits 1 driver, 1 con.
-    const roster = ["d0", "d1", "d2", "d3", "goneD", "c0", "goneC"]
-    const { assets, unresolvedIds } = reconcileRoster(roster, OPT_GRID)
+    const lineup = ["d0", "d1", "d2", "d3", "goneD", "c0", "goneC"]
+    const { assets, unresolvedIds } = reconcileLineup(lineup, OPT_GRID)
     expect(unresolvedIds).toEqual(["goneD", "goneC"])
     expect(assets.find((a) => a.id === "goneD")?.kind).toBe("driver")
     expect(assets.find((a) => a.id === "goneC")?.kind).toBe("constructor")
@@ -162,7 +162,7 @@ describe("integration smoke — fixtures → projections → adapter → optimiz
     const fixtureAssets = toOptimizerAssets(fixtureGrid, totals)
 
     // Synthesize the rest of the grid as plain literals (need ≥5 drivers,
-    // ≥2 constructors). Cheap fillers so a valid roster is affordable.
+    // ≥2 constructors). Cheap fillers so a valid lineup is affordable.
     const padding: OptimizerAsset[] = [
       { id: "fill-d1", kind: "driver", priceTenths: 40, projected: 3 },
       { id: "fill-d2", kind: "driver", priceTenths: 40, projected: 3 },
@@ -171,19 +171,19 @@ describe("integration smoke — fixtures → projections → adapter → optimiz
     ]
     const grid = [...fixtureAssets, ...padding]
 
-    // Pick a valid 5+2 roster from this grid: 2 fixture drivers + 3 fillers,
+    // Pick a valid 5+2 lineup from this grid: 2 fixture drivers + 3 fillers,
     // 1 fixture constructor + 1 filler constructor.
-    const roster = ["18", "131", "fill-d1", "fill-d2", "fill-d3", "28", "fill-c1"]
+    const lineup = ["18", "131", "fill-d1", "fill-d2", "fill-d3", "28", "fill-c1"]
 
-    const rosterCost = roster.reduce((sum, id) => {
+    const lineupCost = lineup.reduce((sum, id) => {
       const a = grid.find((g) => g.id === id)
       return sum + (a?.priceTenths ?? 0)
     }, 0)
 
     const result = optimize({
       assets: grid,
-      roster,
-      budgetTenths: 1000 - rosterCost,
+      lineup,
+      remainingCostCapTenths: 1000 - lineupCost,
       freeTransfers: 2,
     })
 

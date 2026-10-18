@@ -1,10 +1,10 @@
 /**
- * The DRS Boost captain: the driver with the highest projection, ties broken by
- * the lower playerId. optimize() picks its plan captains with this, and the
+ * The x2 Boost driver: the driver with the highest projection, ties broken by
+ * the lower playerId. optimize() picks its plan Boost drivers with this, and the
  * read-only views (locked, between-rounds) call it directly instead of
  * re-running the search, so every screen boosts the same driver.
  */
-export function pickDrsCaptainId(
+export function pickBoostDriverId(
   driverIds: readonly string[],
   projOf: (id: string) => number
 ): string | null {

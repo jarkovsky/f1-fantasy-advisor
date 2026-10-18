@@ -14,7 +14,7 @@ type DriverHeroProps = {
   profile: DriverProfile
   /** h1 on the profile page; h2 in the advisor, whose page hero owns the h1. */
   headingLevel?: "h1" | "h2"
-  /** Top-right callout (the advisor's DRS Boost pill). */
+  /** Top-right callout (the advisor's Boost pill). */
   badge?: React.ReactNode
   /** Trailing link under the name (the advisor's "Driver profile" link). */
   action?: React.ReactNode
@@ -145,8 +145,8 @@ export function DriverHero({
               {formatOrdinal(profile.seasonRank)}{" "}
               <span className="text-muted-foreground">of {profile.gridSize}</span>
             </Meta>
-            <Meta label="DRS Boosted by">
-              <span className="font-mono">{profile.captainSelectedPercent}%</span>
+            <Meta label="Boosted by">
+              <span className="font-mono">{profile.boostedPercent}%</span>
             </Meta>
           </dl>
           {action}

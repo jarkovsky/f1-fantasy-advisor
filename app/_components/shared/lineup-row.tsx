@@ -1,12 +1,12 @@
 import { TeamColorBar } from "./team-color-bar"
 
 /**
- * One roster `<li>`: the team-color spine, an optional TLA column, a truncating
+ * One lineup `<li>`: the team-color spine, an optional TLA column, a truncating
  * name, and caller-supplied right-aligned metric cells (price, projection,
  * points). Shared by the team-plan card's kept rows, the locked view, the
- * season-ended squad, and the rollover squad step.
+ * season-ended team, and the rollover team step.
  */
-export function RosterRow({
+export function LineupRow({
   color,
   tla,
   name,

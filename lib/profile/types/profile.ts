@@ -1,7 +1,7 @@
 /**
  * The driver profile hero's view model. JSON-primitive throughout: the advisor
  * ships one per driver across the RSC ⇄ island boundary (the hero follows the
- * client-side DRS Boost pick), and the /drivers/[playerId] page renders it on
+ * client-side Boost pick), and the /drivers/[playerId] page renders it on
  * the server.
  */
 
@@ -57,5 +57,5 @@ export type DriverProfile = {
   quali: SessionRating | null
   race: SessionRating | null
   sentiment: SelectionTrend
-  captainSelectedPercent: number
+  boostedPercent: number
 }

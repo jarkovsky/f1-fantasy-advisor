@@ -28,7 +28,7 @@ function driver(n: number, priceTenths: number, prevPriceTenths: number): AssetL
     priceTenths,
     prevPriceTenths,
     selectedPercent: 10 + n,
-    captainSelectedPercent: n,
+    boostedPercent: n,
     constructorId: ["c1", "c2", "c3"][n % 3] ?? "c1",
     teamName: "Team",
     seasonPoints: 100 + n,
@@ -46,7 +46,7 @@ function constructor(n: number, priceTenths: number, prevPriceTenths: number): A
     priceTenths,
     prevPriceTenths,
     selectedPercent: 5 + n,
-    captainSelectedPercent: 0,
+    boostedPercent: 0,
     constructorId: null,
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
@@ -75,7 +75,7 @@ const ASSETS_BY_ID: Record<string, AssetLite> = Object.fromEntries(
   ASSETS.map((a) => [a.playerId, a])
 )
 
-const SAVED_ROSTER = ["d1", "d2", "d3", "d4", "d5", "c1", "c2"]
+const SAVED_LINEUP = ["d1", "d2", "d3", "d4", "d5", "c1", "c2"]
 
 let uninstallMatchMedia: () => void
 
@@ -84,7 +84,7 @@ beforeEach(() => {
   teamStore.__resetForTests()
   // Seed a saved team so confirmRollover spreads a sensible base snapshot.
   teamStore.subscribe(() => {})
-  teamStore.setTeam(SAVED_ROSTER, 25, 2, 5)
+  teamStore.setTeam(SAVED_LINEUP, 25, 2, 5)
   uninstallMatchMedia = installMatchMediaStub()
 })
 
@@ -110,7 +110,7 @@ function renderForm(props?: Partial<Parameters<typeof RolloverForm>[0]>) {
 }
 
 describe("RolloverForm", () => {
-  it("renders the new-race-week banner and step 1 with the saved roster at new prices and per-asset price deltas", () => {
+  it("renders the new-race-week banner and step 1 with the saved lineup at new prices and per-asset price deltas", () => {
     renderForm()
 
     // Banner naming both races.
@@ -118,7 +118,7 @@ describe("RolloverForm", () => {
     expect(screen.getByText(/Race 5 is done; race 6 is open\./)).toBeInTheDocument()
 
     // Every saved asset that resolves renders its display name at the new price.
-    for (const id of SAVED_ROSTER) {
+    for (const id of SAVED_LINEUP) {
       const a = ASSETS_BY_ID[id] as AssetLite
       expect(screen.getByText(a.displayName)).toBeInTheDocument()
     }
@@ -133,7 +133,7 @@ describe("RolloverForm", () => {
   it("renders an unavailable tile for a saved id missing from the current feed", () => {
     const team = {
       ...teamStore.getSnapshot(),
-      roster: ["dGONE", "d2", "d3", "d4", "d5", "c1", "c2"],
+      lineup: ["dGONE", "d2", "d3", "d4", "d5", "c1", "c2"],
     }
     renderForm({ team })
 
@@ -146,23 +146,25 @@ describe("RolloverForm", () => {
     renderForm()
 
     await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
-    // Bank is prefilled from the team, so step 3 is reachable immediately.
+    // Remaining Cost Cap is prefilled from the team, so step 3 is reachable immediately.
     await user.click(screen.getByRole("radio", { name: /Standard \(2 free\)/i }))
     await user.click(screen.getByRole("button", { name: /confirm and continue/i }))
 
     const snap = teamStore.getSnapshot()
     expect(snap.raceNumber).toBe(6)
-    expect(snap.roster).toEqual(SAVED_ROSTER)
+    expect(snap.lineup).toEqual(SAVED_LINEUP)
     expect(snap.freeTransfers).toBe(2)
     expect(snap.activeChip).toBe("none")
   })
 
-  it("banked-a-transfer radio confirms with freeTransfers 3", async () => {
+  it("carried-over-transfer radio confirms with freeTransfers 3", async () => {
     const user = userEvent.setup()
     renderForm()
 
     await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
-    await user.click(screen.getByRole("radio", { name: /I banked a transfer \(3 free\)/i }))
+    await user.click(
+      screen.getByRole("radio", { name: /A free transfer carried over \(3 free\)/i })
+    )
     await user.click(screen.getByRole("button", { name: /confirm and continue/i }))
 
     expect(teamStore.getSnapshot().freeTransfers).toBe(3)
@@ -188,14 +190,14 @@ describe("RolloverForm", () => {
     expect(snap.activeChip).toBe("limitless")
   })
 
-  it("cancelling the squad editor withdraws the edit choice", async () => {
+  it("cancelling the team editor withdraws the edit choice", async () => {
     const user = userEvent.setup()
     renderForm()
 
     await user.click(screen.getByRole("radio", { name: /I made transfers/i }))
     await user.click(screen.getByRole("button", { name: /^cancel$/i }))
 
-    // Nothing was edited, so the form must not go on to confirm "your edited squad".
+    // Nothing was edited, so the form must not go on to confirm "your edited team".
     expect(screen.getByRole("radio", { name: /I made transfers/i })).not.toBeChecked()
   })
 
@@ -208,29 +210,29 @@ describe("RolloverForm", () => {
     expect(status).toHaveTextContent("Complete every step to continue.")
   })
 
-  // Focus management: choosing a squad reveals steps 2 and 3 together (bank is
+  // Focus management: choosing a team reveals steps 2 and 3 together (Remaining Cost Cap is
   // prefilled), so focus should land on the step-2 legend and not be stolen by
-  // step 3, including while the user is retyping a cleared bank value.
+  // step 3, including while the user is retyping a cleared Remaining Cost Cap value.
   describe("focus management", () => {
-    it("moves focus to the budget legend after choosing a squad option", async () => {
+    it("moves focus to the cost cap legend after choosing a team option", async () => {
       const user = userEvent.setup()
       renderForm()
 
       await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
 
-      expect(screen.getByText("What's your remaining budget now?")).toHaveFocus()
+      expect(screen.getByText("What's your Remaining Cost Cap now?")).toHaveFocus()
     })
 
-    it("does not steal focus from the bank input while retyping a cleared value", async () => {
+    it("does not steal focus from the Remaining Cost Cap input while retyping a cleared value", async () => {
       const user = userEvent.setup()
       renderForm()
 
       await user.click(screen.getByRole("radio", { name: /I kept this exact team/i }))
-      const bank = screen.getByLabelText("Remaining budget")
-      await user.clear(bank) // step 3 hides (bank empty)
-      await user.type(bank, "3.0") // step 3 re-reveals — focus must stay put
+      const costCap = screen.getByLabelText("Remaining Cost Cap")
+      await user.clear(costCap) // step 3 hides (Remaining Cost Cap empty)
+      await user.type(costCap, "3.0") // step 3 re-reveals — focus must stay put
 
-      expect(bank).toHaveFocus()
+      expect(costCap).toHaveFocus()
     })
   })
 })

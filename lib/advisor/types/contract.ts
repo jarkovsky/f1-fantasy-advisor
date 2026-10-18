@@ -39,7 +39,7 @@ export type AdvisorServerProps = {
   /** Server-computed projections for every concrete preset. */
   projectionsByPreset: Record<ConcretePresetId, ProjectionResult>
   /**
-   * Hero view model per driver. The hero follows the DRS Boost pick, which is
+   * Hero view model per driver. The hero follows the Boost pick, which is
    * only known once the client-side optimizer runs, so every driver ships.
    */
   driverProfiles: Record<string, DriverProfile>

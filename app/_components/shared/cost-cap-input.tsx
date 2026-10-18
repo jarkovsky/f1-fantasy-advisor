@@ -1,12 +1,12 @@
 import { Input } from "@/components/ui/input"
 
 /**
- * The "$ [number] M" remaining-budget row shared by the team picker and the
+ * The "$ [number] M" Remaining Cost Cap row shared by the team picker and the
  * rollover form. Presentational only — the caller owns the value/label/help
- * text and the parsing (useBankInput). Accepts either an `id` (paired with an
+ * text and the parsing (useCostCapInput). Accepts either an `id` (paired with an
  * external <label htmlFor>) or an `aria-label`.
  */
-export function BankInput({
+export function CostCapInput({
   id,
   value,
   onChange,

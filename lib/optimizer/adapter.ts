@@ -4,12 +4,12 @@
  *
  *  1. toOptimizerAssets — field projection from the feed grid + a projections
  *     table. No filtering or rounding happens here.
- *  2. reconcileRoster — heals a saved roster against the live grid, so a driver
+ *  2. reconcileLineup — heals a saved lineup against the live grid, so a driver
  *     dropped mid-season can't make optimize() throw.
  */
 import type { OptimizerAsset } from "./types/optimizer"
 
-import { SQUAD_DRIVERS } from "@/lib/constants"
+import { TEAM_DRIVERS } from "@/lib/constants"
 
 /** Minimal asset shape the adapter needs — a structural subset of AssetLite. */
 type GridAsset = {
@@ -41,37 +41,37 @@ export function toOptimizerAssets<T extends GridAsset>(
 }
 
 /**
- * Append a placeholder row for each saved roster id missing from the grid, so
- * optimize() accepts the roster ("roster id not found" otherwise). The store
+ * Append a placeholder row for each saved lineup id missing from the grid, so
+ * optimize() accepts the lineup ("lineup id not found" otherwise). The store
  * persists only ids, so a driver dropped mid-season leaves exactly this gap;
  * the UI renders "no longer available" tiles from the returned unresolvedIds.
  *
  * Placeholders project 0 points at price 0. The store keeps no last-known
- * price, and 0 understates the purse (bank + Σ roster prices) rather than
+ * price, and 0 understates the cost cap (Remaining Cost Cap + Σ lineup prices) rather than
  * overstating it, so every recommended team genuinely fits. Swapping a
  * placeholder out counts as a normal transfer.
  *
- * Kind is inferred by deficit: count the roster ids that did resolve, then give
+ * Kind is inferred by deficit: count the lineup ids that did resolve, then give
  * each missing id whichever class is short of its quota. For a well-formed 5+2
- * roster the deficits sum to the number of unresolved ids. Missing ids are
- * filled drivers-first, which matches the store's roster order (drivers, then
+ * lineup the deficits sum to the number of unresolved ids. Missing ids are
+ * filled drivers-first, which matches the store's lineup order (drivers, then
  * constructors).
  */
-export function reconcileRoster(
-  roster: readonly string[],
+export function reconcileLineup(
+  lineup: readonly string[],
   grid: readonly OptimizerAsset[]
 ): { assets: OptimizerAsset[]; unresolvedIds: string[] } {
   const byId = new Map(grid.map((a) => [a.id, a]))
 
   let resolvedDrivers = 0
   const unresolvedIds: string[] = []
-  for (const id of roster) {
+  for (const id of lineup) {
     const asset = byId.get(id)
     if (!asset) unresolvedIds.push(id)
     else if (asset.kind === "driver") resolvedDrivers += 1
   }
 
-  let driverDeficit = SQUAD_DRIVERS - resolvedDrivers
+  let driverDeficit = TEAM_DRIVERS - resolvedDrivers
   const assets = [...grid]
   for (const id of unresolvedIds) {
     const kind: OptimizerAsset["kind"] = driverDeficit > 0 ? "driver" : "constructor"
