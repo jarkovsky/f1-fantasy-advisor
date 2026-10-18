@@ -69,7 +69,7 @@ export default async function DriverPage({ params }: PageProps<"/drivers/[player
 
       {meta.source === "snapshot" && <StaleDataNotice asOf={meta.asOf} />}
 
-      <DriverHero profile={profile} headingLevel="h1" />
+      <DriverHero profile={profile} />
 
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard

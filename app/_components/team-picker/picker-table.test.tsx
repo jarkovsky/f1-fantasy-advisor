@@ -28,6 +28,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     teamName: "Team One",
     seasonPoints: 100 + n,
     headshotPath: null,
+    logo: null,
   }
 }
 
@@ -46,6 +47,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
     headshotPath: null,
+    logo: null,
   }
 }
 

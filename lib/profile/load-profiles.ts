@@ -13,6 +13,7 @@ import type { FeedMeta } from "@/lib/f1/types/feed"
 
 import { getConstraints, getDrivers, getHistory, getRaceday } from "@/lib/f1/feed"
 import { carNumber, headshotPath } from "@/lib/headshots"
+import { teamLogo } from "@/lib/team-logos"
 
 import { buildDriverProfiles } from "./build-profiles"
 
@@ -34,9 +35,10 @@ export async function loadProfiles(): Promise<ProfileSeason> {
     getRaceday(),
   ])
   return {
-    profiles: buildDriverProfiles(feed.data, history.data, (id) => ({
-      headshotPath: headshotPath(id),
-      carNumber: carNumber(id),
+    profiles: buildDriverProfiles(feed.data, history.data, (d) => ({
+      headshotPath: headshotPath(d.playerId),
+      carNumber: carNumber(d.playerId),
+      teamLogo: teamLogo(d.constructorId),
     })),
     history: history.data,
     weekends: raceday.data,

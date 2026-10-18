@@ -11,7 +11,7 @@ import { formatSignedPoints } from "@/lib/format"
 
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
 
-import { TeamPlanCard } from "./team-plan-card"
+import { TeamComparison } from "./team-comparison"
 
 // ---------------------------------------------------------------------------
 // Deterministic grid (mirrors advisor-panel.test): 8 drivers + 3 constructors,
@@ -33,6 +33,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     teamName: `Team ${((n - 1) % 3) + 1}`,
     seasonPoints: 100 + n,
     headshotPath: null,
+    logo: null,
   }
 }
 function constructor(n: number, priceTenths: number): AssetLite {
@@ -50,6 +51,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
     headshotPath: null,
+    logo: null,
   }
 }
 
@@ -90,13 +92,15 @@ function plan(
   return { result, baseline: result.byTransferCount[0] ?? null }
 }
 
-function renderCard(over: Partial<Parameters<typeof TeamPlanCard>[0]> = {}) {
+function renderCard(over: Partial<Parameters<typeof TeamComparison>[0]> = {}) {
   const { result, baseline } = plan(500, 3)
   const props = {
     result,
     baseline,
     assetsById: ASSETS_BY_ID,
+    driverProfiles: {},
     totals: TOTALS,
+    remainingCostCapTenths: 500,
     freeTransfers: 3 as number | "unlimited",
     whatIf: "none" as const,
     unresolvedIds: [] as string[],
@@ -105,7 +109,7 @@ function renderCard(over: Partial<Parameters<typeof TeamPlanCard>[0]> = {}) {
     onEdit: vi.fn(),
     ...over,
   }
-  return { ...render(<TeamPlanCard {...props} />), props }
+  return { ...render(<TeamComparison {...props} />), props }
 }
 
 let uninstallMatchMedia: () => void
@@ -120,8 +124,11 @@ afterEach(() => {
   uninstallResizeObserver()
 })
 
-describe("TeamPlanCard", () => {
-  it("renders the headline delta and Boost driver from the optimizer result", () => {
+const recommended = () => screen.getByRole("region", { name: "Recommended team" })
+const current = () => screen.getByRole("region", { name: "Your team" })
+
+describe("TeamComparison", () => {
+  it("renders the headline delta and leads with the Boost driver's featured card", () => {
     const { props } = renderCard()
     const best = props.result.best
     const baselineTotal = props.baseline?.projectedTotal ?? 0
@@ -131,12 +138,40 @@ describe("TeamPlanCard", () => {
       within(block).getByText(formatSignedPoints(best.score - baselineTotal))
     ).toBeInTheDocument()
 
-    // The Boost badge sits on the Boost driver's row (its accessible label).
-    const chip = screen.getByLabelText("x2 Boost driver")
-    expect(chip).toBeInTheDocument()
-    expect(
-      screen.getByText(`Boost → ${ASSETS_BY_ID[best.boostDriverId]?.displayName}`, { exact: false })
-    ).toBeInTheDocument()
+    // The recommended column opens on the Boost driver, badged x2.
+    const [featured] = within(recommended()).getAllByRole("listitem")
+    const boost = ASSETS_BY_ID[best.boostDriverId] as AssetLite
+    expect(featured?.textContent).toContain(boost.fullName.split(" ").at(-1))
+    expect(within(featured as HTMLElement).getByLabelText("x2 Boost driver")).toBeInTheDocument()
+  })
+
+  it("lines up each transfer: out on the left, in on the right", () => {
+    const { props } = renderCard()
+    const best = props.result.best
+    expect(best.transfers).toBeGreaterThan(0)
+
+    // One OUT tag per transfer on the left, one IN tag per transfer on the right.
+    expect(within(current()).getAllByText("Out")).toHaveLength(best.transfers)
+    expect(within(recommended()).getAllByText("In")).toHaveLength(best.transfers)
+
+    // Both columns list the same seven slots.
+    expect(within(current()).getAllByRole("listitem")).toHaveLength(7)
+    expect(within(recommended()).getAllByRole("listitem")).toHaveLength(7)
+
+    // A dropped driver is struck through in the current column (compact rows
+    // show the display name; the featured slot shows the surname instead).
+    const outNames = LINEUP.filter((id) => id.startsWith("d") && !best.driverIds.includes(id))
+      .map((id) => within(current()).queryByText(ASSETS_BY_ID[id]?.displayName ?? ""))
+      .filter((el): el is HTMLElement => el !== null)
+    expect(outNames.length).toBeGreaterThan(0)
+    for (const el of outNames) expect(el.className).toContain("line-through")
+  })
+
+  it("opens the editor from Edit team", async () => {
+    const user = userEvent.setup()
+    const { props } = renderCard()
+    await user.click(within(current()).getByRole("button", { name: "Edit team" }))
+    expect(props.onEdit).toHaveBeenCalled()
   })
 
   it("shows a transfer penalty line when transfers exceed free", () => {
@@ -207,24 +242,5 @@ describe("TeamPlanCard", () => {
     const { props } = renderCard()
     await user.click(screen.getByRole("button", { name: /apply this plan/i }))
     expect(props.onApply).toHaveBeenCalled()
-  })
-
-  it("the Boost ranking lists drivers by projection desc and stars the Boost driver", async () => {
-    const user = userEvent.setup()
-    const { props } = renderCard()
-    await user.click(screen.getByRole("button", { name: /Boost ranking/i }))
-    const best = props.result.best
-    const names = best.driverIds
-      .map((id) => ({ name: ASSETS_BY_ID[id]?.displayName ?? id, p: TOTALS[id] ?? 0 }))
-      .sort((a, b) => b.p - a.p)
-      .map((x) => x.name)
-    // The rendered order matches projection-desc.
-    const rendered = screen.getAllByRole("listitem").map((li) => li.textContent ?? "")
-    const rankedText = rendered.filter((t) => names.some((n) => t.includes(n)))
-    for (let i = 0; i < names.length - 1; i++) {
-      const a = rankedText.findIndex((t) => t.includes(names[i] as string))
-      const b = rankedText.findIndex((t) => t.includes(names[i + 1] as string))
-      expect(a).toBeLessThan(b)
-    }
   })
 })

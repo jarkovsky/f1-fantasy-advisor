@@ -1,12 +1,13 @@
 /**
  * Global footer: the unofficial-app disclaimer and data credits. The OpenF1
  * credit is a CC BY-NC-SA license obligation for the bundled driver headshots —
- * it must stay as long as public/headshots/ ships.
+ * it must stay as long as public/headshots/ ships. Team logos (public/logos/)
+ * are the teams' trademarks, shown only to identify them.
  */
 export function Footer() {
   return (
     <footer className="mt-12 border-t border-grid-line">
-      <div className="mx-auto flex max-w-5xl flex-col gap-1 px-6 py-6 text-xs text-muted-foreground">
+      <div className="mx-auto flex max-w-7xl flex-col gap-1 px-6 py-6 text-xs text-muted-foreground">
         <p>
           Unofficial fan project — not affiliated with Formula One Group, the FIA, or F1 Fantasy. No
           accounts, no tracking; your team stays in your browser.
@@ -20,7 +21,8 @@ export function Footer() {
           >
             OpenF1
           </a>{" "}
-          (CC BY-NC-SA) · schedule cross-checks via{" "}
+          (CC BY-NC-SA) · team logos via formula1.com, trademarks of their teams · schedule
+          cross-checks via{" "}
           <a
             className="underline underline-offset-2 hover:text-foreground"
             href="https://jolpi.ca"

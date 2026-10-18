@@ -61,6 +61,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     teamName: `Team ${((n - 1) % 3) + 1}`,
     seasonPoints: 100 + n,
     headshotPath: null,
+    logo: null,
   }
 }
 
@@ -79,6 +80,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     teamName: `Constructor ${n} Full`,
     seasonPoints: 200 + n,
     headshotPath: null,
+    logo: null,
   }
 }
 
@@ -299,6 +301,7 @@ function profileOf(a: AssetLite): DriverProfile {
     birthplace: null,
     carNumber: null,
     headshotPath: null,
+    teamLogo: null,
     priceTenths: a.priceTenths,
     seasonPriceDeltaTenths: 0,
     lastPriceDeltaTenths: 0,
@@ -313,8 +316,8 @@ function profileOf(a: AssetLite): DriverProfile {
   }
 }
 
-describe("OPEN — Boost hero and team overview", () => {
-  it("headlines the optimizer's Boost pick with a link to the driver profile", async () => {
+describe("OPEN — team comparison", () => {
+  it("leads the recommended team with the Boost driver, linked to the driver profile", async () => {
     seedDevNow(BEFORE_LOCK)
     seedTeam(DEFAULT_LINEUP, 500, 3, 6)
     const driverProfiles = Object.fromEntries(DRIVERS.map((a) => [a.playerId, profileOf(a)]))
@@ -329,12 +332,13 @@ describe("OPEN — Boost hero and team overview", () => {
     })
     const pick = profileOf(GRID.find((a) => a.playerId === exp.best.boostDriverId) as AssetLite)
 
-    const hero = screen.getByRole("region", { name: `${pick.firstName} ${pick.lastName}` })
-    expect(within(hero).getByText(/x2 Boost/)).toBeInTheDocument()
-    expect(within(hero).getByRole("link", { name: /Driver profile/ })).toHaveAttribute(
-      "href",
-      `/drivers/${pick.playerId}`
-    )
+    const recommended = screen.getByRole("region", { name: "Recommended team" })
+    const [featured] = within(recommended).getAllByRole("listitem")
+    expect(featured?.textContent).toContain(pick.lastName)
+    expect(within(featured as HTMLElement).getByLabelText("x2 Boost driver")).toBeInTheDocument()
+    expect(
+      within(featured as HTMLElement).getByRole("link", { name: /Driver profile/ })
+    ).toHaveAttribute("href", `/drivers/${pick.playerId}`)
   })
 
   it("shows the saved team and opens the editor from Edit team", async () => {
@@ -344,11 +348,10 @@ describe("OPEN — Boost hero and team overview", () => {
     render(<AdvisorPanel {...makeProps()} />)
 
     await findPlanHeadline()
-    const overview = screen.getByRole("region", { name: "Your team" })
-    expect(within(overview).getAllByRole("listitem")).toHaveLength(DEFAULT_LINEUP.length)
-    expect(within(overview).getByText("3")).toBeInTheDocument() // free transfers
+    const yours = screen.getByRole("region", { name: "Your team" })
+    expect(within(yours).getAllByRole("listitem")).toHaveLength(DEFAULT_LINEUP.length)
 
-    await user.click(within(overview).getByRole("button", { name: "Edit team" }))
+    await user.click(within(yours).getByRole("button", { name: "Edit team" }))
     expect(screen.queryByRole("region", { name: "Your team" })).not.toBeInTheDocument()
     expect(screen.getByRole("searchbox", { name: "Search drivers and constructors" })).toBeVisible()
   })
@@ -379,14 +382,12 @@ describe("OPEN — oracle equality", () => {
     const tLabel = `${exp.best.transfers} transfer${exp.best.transfers === 1 ? "" : "s"}`
     expect(screen.getByText(tLabel)).toBeInTheDocument()
 
-    // Boost pick = the optimizer's Boost driver.
-    const boostDriverName =
-      GRID.find((a) => a.playerId === exp.best.boostDriverId)?.displayName ?? "?"
-    const boostLine = screen.getByText(
-      (_, el) =>
-        el?.tagName === "P" && Boolean(el.textContent?.startsWith(`Boost → ${boostDriverName} `))
-    )
-    expect(boostLine).toBeInTheDocument()
+    // Boost pick = the optimizer's Boost driver, featured first and badged x2.
+    const boostDriver = GRID.find((a) => a.playerId === exp.best.boostDriverId) as AssetLite
+    const recommended = screen.getByRole("region", { name: "Recommended team" })
+    const [featured] = within(recommended).getAllByRole("listitem")
+    expect(featured?.textContent).toContain(boostDriver.fullName.split(" ").at(-1))
+    expect(within(featured as HTMLElement).getByLabelText("x2 Boost driver")).toBeInTheDocument()
 
     // Headline gain = best.score − byTransferCount[0].projectedTotal, via
     // formatSignedPoints. Scope to the "vs keeping your current team" block.
@@ -680,10 +681,9 @@ describe("OPEN — preset switch", () => {
 
     await findPlanHeadline()
 
-    // The merged "Recommended team" card renders each kept asset's projected total.
+    // The recommended column renders each kept asset's projected total.
     // d4's season-average total (65.0) differs from its weighted-recent (70.0).
-    const heading = screen.getByRole("heading", { name: "Recommended team" })
-    const card = heading.closest("[data-slot=card]") as HTMLElement
+    const card = screen.getByRole("region", { name: "Recommended team" })
     const d4Row = within(card).getByText("Driver 4").closest("li") as HTMLElement
     expect(within(d4Row).getByText("65.0")).toBeInTheDocument()
     expect(within(d4Row).queryByText("70.0")).not.toBeInTheDocument()
@@ -739,12 +739,12 @@ describe("OPEN — cold start", () => {
 })
 
 // ---------------------------------------------------------------------------
-// Merged card rows — kept slots render plain (no strikethrough); swapped slots
-// strike the out-asset and bold the in-asset; the Boost badge lands on the
-// recommended Boost driver's row.
+// Comparison rows — kept slots render plain (no strikethrough) on both sides;
+// a swapped slot strikes the out-asset on the left and bolds the in-asset on
+// the right; the x2 Boost badge lands on the recommended Boost driver.
 // ---------------------------------------------------------------------------
-describe("OPEN — merged card rows", () => {
-  it("distinguishes kept vs swapped rows and badges the Boost driver", async () => {
+describe("OPEN — comparison rows", () => {
+  it("distinguishes kept vs swapped slots and badges the Boost driver", async () => {
     seedDevNow(BEFORE_LOCK)
     seedTeam(DEFAULT_LINEUP, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
@@ -758,39 +758,38 @@ describe("OPEN — merged card rows", () => {
       freeTransfers: 3,
     })
 
-    const heading = screen.getByRole("heading", { name: "Recommended team" })
-    const card = heading.closest("[data-slot=card]") as HTMLElement
-
+    const yours = screen.getByRole("region", { name: "Your team" })
+    const recommended = screen.getByRole("region", { name: "Recommended team" })
     const nameOf = (id: string) => GRID.find((a) => a.playerId === id)?.displayName ?? id
 
-    // A kept driver (in both the lineup and the recommended plan) renders
-    // without a strikethrough. d4 and d5 survive under weighted-recent.
+    // A kept driver (in both the lineup and the plan, not the featured Boost
+    // slot) renders without a strikethrough in both columns.
     const keptId = exp.best.driverIds.find(
       (id) => DEFAULT_LINEUP.includes(id) && id !== exp.best.boostDriverId
     )
     expect(keptId).toBeDefined()
-    const keptName = within(card).getByText(nameOf(keptId as string))
-    expect(keptName.className).not.toContain("line-through")
+    for (const column of [yours, recommended]) {
+      expect(within(column).getByText(nameOf(keptId as string)).className).not.toContain(
+        "line-through"
+      )
+    }
 
-    // A swapped slot: the out-asset is struck through, the in-asset is bold.
-    // Pick a non-Boost in-asset so its name span carries no nested Boost badge.
+    // A swapped slot: struck through on the left, bold on the right.
     const inId = exp.best.driverIds.find(
       (id) => !DEFAULT_LINEUP.includes(id) && id !== exp.best.boostDriverId
     )
-    const outId = DEFAULT_LINEUP.filter(
-      (id) => id.startsWith("d") && !exp.best.driverIds.includes(id)
-    )[0]
     expect(inId).toBeDefined()
-    expect(outId).toBeDefined()
-    const outName = within(card).getByText(nameOf(outId as string))
-    expect(outName.className).toContain("line-through")
-    const inName = within(card).getByText(nameOf(inId as string))
-    expect(inName.className).toContain("font-medium")
+    expect(within(recommended).getByText(nameOf(inId as string)).className).toContain("font-medium")
+    const planIds = [...exp.best.driverIds, ...exp.best.constructorIds]
+    const struck = DEFAULT_LINEUP.filter((id) => !planIds.includes(id))
+      .map((id) => within(yours).queryByText(nameOf(id)))
+      .filter((el): el is HTMLElement => el !== null)
+    expect(struck.length).toBeGreaterThan(0)
+    for (const el of struck) expect(el.className).toContain("line-through")
 
-    // The Boost badge sits on the recommended Boost driver's row (walk up from the
-    // chip; the name span nests the chip, so match by the chip's own label).
-    const chip = within(card).getByLabelText("x2 Boost driver")
-    const boostDriverRow = chip.closest("li") as HTMLElement
-    expect(boostDriverRow.textContent).toContain(nameOf(exp.best.boostDriverId))
+    // The x2 Boost badge sits on the recommended Boost driver's slot.
+    const badge = within(recommended).getByLabelText("x2 Boost driver")
+    const boostDriver = GRID.find((a) => a.playerId === exp.best.boostDriverId) as AssetLite
+    expect(badge.closest("li")?.textContent).toContain(boostDriver.fullName.split(" ").at(-1))
   })
 })

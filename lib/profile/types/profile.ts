@@ -4,6 +4,7 @@
  * client-side Boost pick), and the /drivers/[playerId] page renders it on
  * the server.
  */
+import type { TeamLogo } from "@/lib/asset-lite"
 
 /** 1 = bottom band of the grid … 5 = top band (RATING_STEPS bands). */
 export type Rating = 1 | 2 | 3 | 4 | 5
@@ -43,6 +44,7 @@ export type DriverProfile = {
   /** Race number painted on the car (OpenF1); null when unmatched. */
   carNumber: number | null
   headshotPath: string | null
+  teamLogo: TeamLogo | null
   priceTenths: number
   /** Latest price − first price this season. */
   seasonPriceDeltaTenths: number

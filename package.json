@@ -15,7 +15,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,mjs,css,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,mjs,css,md,json}\"",
     "typecheck": "next typegen && tsc --noEmit",
-    "assets": "tsx scripts/assets.ts",
+    "assets": "tsx scripts/assets.ts && tsx scripts/team-logos.ts",
     "pattern": "tsx scripts/dot-pattern.ts"
   },
   "dependencies": {

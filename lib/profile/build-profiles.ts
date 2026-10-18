@@ -4,18 +4,20 @@ import type { DriverProfile, SessionRating } from "./types/profile"
  * season history. Ratings and the season rank are relative to the grid, so
  * they are built for all drivers at once; the feed's inactive leftovers (a
  * driver's stale pre-swap entry) are not part of the grid. Pure: the server-only
- * headshot/car-number lookup is injected.
+ * headshot/car-number/logo lookup is injected.
  */
 import type { SeasonHistory } from "@/lib/f1/types/history"
 import type { Asset, Driver } from "@/lib/f1/schemas"
+import type { TeamLogo } from "@/lib/asset-lite"
 
 import { scoredPoints, sessionAvg } from "./season-stats"
 import { type Ranked, rankIntoBands } from "./ratings"
 import { selectionTrend } from "./sentiment"
 
-export type DriverExtras = (playerId: string) => {
+export type DriverExtras = (driver: Driver) => {
   headshotPath: string | null
   carNumber: number | null
+  teamLogo: TeamLogo | null
 }
 
 /** "Max Verstappen" → { first: "Max", last: "Verstappen" } (the last word is the surname). */
@@ -55,7 +57,7 @@ export function buildDriverProfiles(
   for (const d of drivers) {
     const hist = history.byPlayerId[d.playerId]
     const split = splitFullName(d.fullName)
-    const { headshotPath, carNumber } = extras(d.playerId)
+    const { headshotPath, carNumber, teamLogo } = extras(d)
     out[d.playerId] = {
       playerId: d.playerId,
       firstName: d.firstName ?? split.first,
@@ -66,6 +68,7 @@ export function buildDriverProfiles(
       birthplace: d.countryName,
       carNumber,
       headshotPath,
+      teamLogo,
       priceTenths: d.priceTenths,
       seasonPriceDeltaTenths: hist?.priceDeltaTenths ?? 0,
       lastPriceDeltaTenths: d.priceTenths - d.prevPriceTenths,

@@ -1,3 +1,6 @@
+import type { TeamPlan } from "@/lib/optimizer/types/optimizer"
+import type { AssetLite } from "@/lib/asset-lite"
+
 import { formatSignedPoints } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
@@ -5,12 +8,22 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 /** Collapsible list of the plan's drivers by projection desc, starring the Boost driver. */
 export function BoostRanking({
-  ranked,
-  boostDriverId,
+  plan,
+  assetsById,
+  totals,
 }: {
-  ranked: { id: string; name: string; projected: number }[]
-  boostDriverId: string
+  plan: TeamPlan
+  assetsById: Record<string, AssetLite>
+  totals: Record<string, number>
 }) {
+  const boostDriverId = plan.boostDriverId
+  const ranked = plan.driverIds
+    .map((id) => ({
+      id,
+      name: assetsById[id]?.displayName ?? `Asset ${id}`,
+      projected: totals[id] ?? 0,
+    }))
+    .sort((a, b) => b.projected - a.projected)
   return (
     <Collapsible className="rounded-lg border border-grid-line bg-surface-2/40">
       <h3 className="text-sm font-semibold">

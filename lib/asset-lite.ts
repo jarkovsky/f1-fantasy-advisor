@@ -11,6 +11,9 @@
  * or a "use client" island alike.
  */
 
+/** A team's two logo marks: full color for light surfaces, white for carbon ones. */
+export type TeamLogo = { color: string; white: string }
+
 export type AssetLite = {
   playerId: string
   kind: "driver" | "constructor"
@@ -28,6 +31,8 @@ export type AssetLite = {
   seasonPoints: number
   /** `/headshots/{playerId}.{ext}` when bundled, else null → monogram fallback. */
   headshotPath: string | null
+  /** The team's logo (a constructor's own, a driver's constructor's); null → monogram. */
+  logo: TeamLogo | null
 }
 
 /**

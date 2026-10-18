@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 
-import { AppSidebar, MobileTopBar, ModeToggle } from "@/app/_components/chrome/app-sidebar"
 import { ThemeProvider } from "@/app/_components/chrome/theme-provider"
+import { ModeToggle, TopNav } from "@/app/_components/chrome/top-nav"
 
 import { installMatchMediaStub } from "@/test/stubs/dom"
 
@@ -28,10 +28,10 @@ afterEach(() => {
   document.documentElement.classList.remove("light", "dark")
 })
 
-describe("AppSidebar", () => {
-  it("renders brand + Advisor/Stats links with the active route marked", () => {
+describe("TopNav", () => {
+  it("renders the brand and labelled Advisor/Stats tabs with the active route marked", () => {
     pathnameMock = "/stats"
-    render(<AppSidebar />)
+    render(<TopNav />)
 
     expect(
       screen.getByRole("link", {
@@ -46,25 +46,20 @@ describe("AppSidebar", () => {
     expect(stats).toHaveAttribute("aria-current", "page")
     expect(advisor).not.toHaveAttribute("aria-current")
   })
-})
 
-describe("AppSidebar — driver profiles", () => {
+  it("marks the advisor tab on the home route", () => {
+    render(<TopNav />)
+
+    expect(screen.getByRole("link", { name: "Advisor" })).toHaveAttribute("aria-current", "page")
+    expect(screen.getByRole("link", { name: "Stats" })).not.toHaveAttribute("aria-current")
+  })
+
   it("marks Stats as the current section on a driver profile", () => {
     pathnameMock = "/drivers/131"
-    render(<AppSidebar />)
+    render(<TopNav />)
 
     expect(screen.getByRole("link", { name: "Stats" })).toHaveAttribute("aria-current", "true")
     expect(screen.getByRole("link", { name: "Advisor" })).not.toHaveAttribute("aria-current")
-  })
-})
-
-describe("MobileTopBar", () => {
-  it("renders the same primary nav with active state on the advisor route", () => {
-    render(<MobileTopBar />)
-
-    const advisor = screen.getByRole("link", { name: "Advisor" })
-    expect(advisor).toHaveAttribute("aria-current", "page")
-    expect(screen.getByRole("link", { name: "Stats" })).not.toHaveAttribute("aria-current")
   })
 })
 

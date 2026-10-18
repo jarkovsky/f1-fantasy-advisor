@@ -6,9 +6,10 @@ import { buildDriverProfiles, splitFullName } from "./build-profiles"
 
 // Fixtures: Gasly (18) and Verstappen (131) plus two constructors, races 1–5
 // scored and race 6 pending.
-const profiles = buildDriverProfiles(fixtureAssets(6), fixtureHistory(), (id) => ({
-  headshotPath: id === "131" ? "/headshots/131.png" : null,
-  carNumber: id === "131" ? 3 : null,
+const profiles = buildDriverProfiles(fixtureAssets(6), fixtureHistory(), (d) => ({
+  headshotPath: d.playerId === "131" ? "/headshots/131.png" : null,
+  carNumber: d.playerId === "131" ? 3 : null,
+  teamLogo: null,
 }))
 
 describe("buildDriverProfiles", () => {
@@ -20,7 +21,9 @@ describe("buildDriverProfiles", () => {
     const assets = fixtureAssets(6).map((a) => (a.playerId === "18" ? { ...a, active: false } : a))
     const out = buildDriverProfiles(assets, fixtureHistory(), () => ({
       headshotPath: null,
+      logo: null,
       carNumber: null,
+      teamLogo: null,
     }))
     expect(Object.keys(out)).toEqual(["131"])
     expect(out["131"]).toMatchObject({ seasonRank: 1, gridSize: 1 })

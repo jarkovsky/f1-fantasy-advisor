@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 
 import { Archivo, Geist_Mono, Inter } from "next/font/google"
 
-import { AppSidebar, MobileTopBar } from "@/app/_components/chrome/app-sidebar"
 import { ThemeProvider } from "@/app/_components/chrome/theme-provider"
+import { TopNav } from "@/app/_components/chrome/top-nav"
 import { Footer } from "@/app/_components/chrome/footer"
 
 import "./globals.css"
@@ -51,14 +51,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${fontSans.variable} ${fontMono.variable} ${fontDisplay.variable} font-sans antialiased`}
     >
-      <body className="flex min-h-dvh tabular-nums">
+      <body className="flex min-h-dvh flex-col tabular-nums">
         <ThemeProvider>
-          <AppSidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <MobileTopBar />
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </div>
+          <TopNav />
+          <div className="flex-1">{children}</div>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>

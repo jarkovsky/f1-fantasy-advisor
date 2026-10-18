@@ -12,12 +12,6 @@ import { PriceMove } from "./price-move"
 
 type DriverHeroProps = {
   profile: DriverProfile
-  /** h1 on the profile page; h2 in the advisor, whose page hero owns the h1. */
-  headingLevel?: "h1" | "h2"
-  /** Top-right callout (the advisor's Boost pill). */
-  badge?: React.ReactNode
-  /** Trailing link under the name (the advisor's "Driver profile" link). */
-  action?: React.ReactNode
   className?: string
 }
 
@@ -51,16 +45,9 @@ function StripCell({ label, children }: { label: string; children: React.ReactNo
  *
  * Always dark, whatever the page theme: the `dark` class re-scopes every token
  * inside, so text/surface pairs stay the ones designed for the carbon theme.
- * No hooks, so it renders on the server (profile page) and inside the
- * advisor's client island alike.
+ * It owns the profile page's h1.
  */
-export function DriverHero({
-  profile,
-  headingLevel: Heading = "h2",
-  badge,
-  action,
-  className,
-}: DriverHeroProps) {
+export function DriverHero({ profile, className }: DriverHeroProps) {
   const headingId = `driver-hero-${profile.playerId}`
   const color = teamColor(profile.constructorId)
 
@@ -87,10 +74,10 @@ export function DriverHero({
         </span>
       )}
 
-      {badge && <div className="absolute top-4 right-4 z-10 @3xl:top-6 @3xl:right-6">{badge}</div>}
-
-      <div className="grid grid-cols-[34cqi_1fr] items-end gap-x-3 px-4 pt-12 @lg:px-6 @3xl:grid-cols-[15rem_1fr] @3xl:gap-x-8 @3xl:px-8 @3xl:pt-10">
-        <div className="relative aspect-square self-end">
+      {/* Narrow: photo + team line on top, the full-width name below. Wide
+          (@3xl): the photo spans both rows beside the team line and name. */}
+      <div className="grid grid-cols-[30cqi_1fr] gap-x-3 px-4 pt-10 @lg:px-6 @3xl:grid-cols-[15rem_1fr] @3xl:grid-rows-[1fr_auto] @3xl:gap-x-8 @3xl:px-8">
+        <div className="relative aspect-square self-end @3xl:row-span-2">
           <div
             aria-hidden="true"
             className="absolute inset-[4%] rounded-full border border-grid-line-strong"
@@ -104,9 +91,8 @@ export function DriverHero({
               src={profile.headshotPath}
               alt=""
               fill
-              sizes="(min-width: 768px) 15rem, 34vw"
-              // The hero sits above the fold wherever it renders and its
-              // headshot is the LCP element.
+              sizes="(min-width: 768px) 15rem, 30vw"
+              // The hero sits above the fold and its headshot is the LCP element.
               loading="eager"
               className="object-contain object-bottom drop-shadow-[0_18px_28px_oklch(0_0_0/0.55)]"
             />
@@ -120,22 +106,23 @@ export function DriverHero({
           )}
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4 pb-5 @3xl:pb-7">
-          <p className="flex items-center gap-2 text-[0.7rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-            <span aria-hidden="true" className="h-3 w-[3px] rounded-full bg-(--team)" />
-            {profile.teamName ?? "—"}
-            {profile.carNumber !== null && (
-              <span className="text-foreground/80">· No. {profile.carNumber}</span>
-            )}
-          </p>
-          <Heading id={headingId} className="font-display leading-[0.92]">
+        <p className="flex flex-wrap items-center gap-x-2 gap-y-1 self-end pb-4 text-[0.7rem] font-semibold tracking-[0.18em] text-muted-foreground uppercase @3xl:pb-0">
+          <span aria-hidden="true" className="h-3 w-[3px] rounded-full bg-(--team)" />
+          {profile.teamName ?? "—"}
+          {profile.carNumber !== null && (
+            <span className="text-foreground/80">· No. {profile.carNumber}</span>
+          )}
+        </p>
+
+        <div className="col-span-2 flex min-w-0 flex-col gap-4 pt-3 pb-5 @3xl:col-span-1 @3xl:col-start-2 @3xl:pb-7">
+          <h1 id={headingId} className="font-display leading-[0.92]">
             <span className="block text-[7cqi] font-light [font-stretch:110%] @3xl:text-[4.6cqi]">
               {profile.firstName}
             </span>{" "}
-            <span className="block text-[8.6cqi] font-extrabold tracking-tight wrap-anywhere [font-stretch:125%] @3xl:text-[6.2cqi]">
+            <span className="block text-[9.5cqi] font-extrabold tracking-tight wrap-anywhere [font-stretch:125%] @3xl:text-[6.2cqi]">
               {profile.lastName}
             </span>
-          </Heading>
+          </h1>
           <dl className="hidden grid-cols-2 gap-x-5 gap-y-3 @lg:grid @3xl:grid-cols-[minmax(0,1.7fr)_repeat(3,minmax(0,1fr))]">
             <Meta label="Born">{profile.birthplace ?? "—"}</Meta>
             <Meta label="Season">
@@ -149,7 +136,6 @@ export function DriverHero({
               <span className="font-mono">{profile.boostedPercent}%</span>
             </Meta>
           </dl>
-          {action}
         </div>
       </div>
 

@@ -7,6 +7,7 @@ import { getConstraints, getDrivers, getHistory, getMixapi, getRaceday } from "@
 import { buildDriverProfiles } from "@/lib/profile/build-profiles"
 import { projectAssetsMany } from "@/lib/projections/engine"
 import { carNumber, headshotPath } from "@/lib/headshots"
+import { teamLogo } from "@/lib/team-logos"
 
 import { AdvisorPanel } from "./advisor-panel"
 
@@ -94,11 +95,13 @@ export async function AdvisorData() {
     teamName: a.teamName,
     seasonPoints: seasonByPlayerId[a.playerId]?.cumulativePoints ?? 0,
     headshotPath: headshotPath(a.playerId),
+    logo: teamLogo(a.kind === "constructor" ? a.playerId : a.constructorId),
   }))
 
-  const driverProfiles = buildDriverProfiles(drivers.data, history.data, (id) => ({
-    headshotPath: headshotPath(id),
-    carNumber: carNumber(id),
+  const driverProfiles = buildDriverProfiles(drivers.data, history.data, (d) => ({
+    headshotPath: headshotPath(d.playerId),
+    carNumber: carNumber(d.playerId),
+    teamLogo: teamLogo(d.constructorId),
   }))
 
   // Ships the whole grid (~33 numbers, <1KB) even though the client reads only

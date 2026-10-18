@@ -19,14 +19,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useOptimizer } from "@/hooks/use-optimizer"
 
 import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
+import { TeamComparison } from "@/app/_components/team-plan/team-comparison"
 import { SnapshotBanner } from "@/app/_components/advisor/snapshot-banner"
-import { TeamPlanCard } from "@/app/_components/team-plan/team-plan-card"
+import { BoostRanking } from "@/app/_components/team-plan/boost-ranking"
 import { TeamPicker } from "@/app/_components/team-picker/team-picker"
 import { Alternatives } from "@/app/_components/advisor/alternatives"
 import { HonestyNote } from "@/app/_components/advisor/honesty-note"
-import { TeamOverview } from "@/app/_components/team/team-overview"
 import { RaceHeader } from "@/app/_components/advisor/race-header"
-import { BoostHero } from "@/app/_components/advisor/boost-hero"
 
 type OpenState = Extract<RaceWeekState, { kind: "OPEN" }>
 
@@ -55,10 +54,11 @@ type OpenAdvisorProps = {
 }
 
 /**
- * The OPEN-state screen: a single centered column — Boost hero → Grand
- * Prix widget → your team (with Edit team) → recommended team → alternatives
- * → controls → honesty note. Owns the editor toggle, the optimizer (via useOptimizer, which keeps
- * the search a lazy chunk), the apply flow, and the sr-only status region.
+ * The OPEN-state screen: the race widget, then your team beside the
+ * recommended team (TeamComparison), the projection model that drives it,
+ * the Boost ranking, the other transfer counts, and the honesty note. Owns the editor toggle,
+ * the optimizer (via useOptimizer, which keeps the search a lazy chunk), the
+ * apply flow, and the sr-only status region.
  */
 export function OpenAdvisor({
   raceState,
@@ -107,8 +107,6 @@ export function OpenAdvisor({
     setAppliedResult(result)
   }
 
-  const heroProfile = result ? driverProfiles[result.best.boostDriverId] : undefined
-
   if (showEditor) {
     return (
       <TeamPicker
@@ -121,19 +119,11 @@ export function OpenAdvisor({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       <div role="status" aria-live="polite" className="sr-only">
         {statusMessage}
       </div>
       <SnapshotBanner meta={meta} />
-
-      {heroProfile ? (
-        <div className={cn(isPending && "opacity-60")}>
-          <BoostHero profile={heroProfile} projected={totals[heroProfile.playerId] ?? 0} />
-        </div>
-      ) : (
-        !result && !error && <Skeleton className="h-80 w-full rounded-2xl" />
-      )}
 
       {currentWeekend && (
         <RaceHeader
@@ -146,28 +136,19 @@ export function OpenAdvisor({
         />
       )}
 
-      {lineup && (
-        <TeamOverview
-          lineup={lineup}
-          assetsById={assetsById}
-          totals={totals}
-          remainingCostCapTenths={remainingCostCapTenths}
-          freeTransfers={freeTransfers}
-          onEdit={() => setShowEditor(true)}
-        />
-      )}
-
       <div className={cn(isPending && "opacity-60")}>
         {error ? (
           <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-warn">
             {error}
           </p>
         ) : result ? (
-          <TeamPlanCard
+          <TeamComparison
             result={result}
             baseline={baseline}
             assetsById={assetsById}
+            driverProfiles={driverProfiles}
             totals={totals}
+            remainingCostCapTenths={remainingCostCapTenths}
             freeTransfers={whatIf !== "none" ? "unlimited" : freeTransfers}
             whatIf={whatIf}
             unresolvedIds={unresolvedIds}
@@ -176,18 +157,9 @@ export function OpenAdvisor({
             onEdit={() => setShowEditor(true)}
           />
         ) : (
-          <Skeleton className="h-96 w-full" />
+          <Skeleton className="h-[40rem] w-full rounded-xl" />
         )}
       </div>
-
-      {result && (
-        <Alternatives
-          result={result}
-          baseline={baseline}
-          assetsById={assetsById}
-          projection={projection}
-        />
-      )}
 
       <ProjectionControls
         preset={preset}
@@ -198,6 +170,18 @@ export function OpenAdvisor({
         onWhatIfChange={onWhatIfChange}
         projection={projection}
       />
+
+      {result && <BoostRanking plan={result.best} assetsById={assetsById} totals={totals} />}
+
+      {result && (
+        <Alternatives
+          result={result}
+          baseline={baseline}
+          assetsById={assetsById}
+          projection={projection}
+        />
+      )}
+
       <HonestyNote />
     </div>
   )
