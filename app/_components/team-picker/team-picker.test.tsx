@@ -110,11 +110,7 @@ describe("TeamPicker", () => {
   it("renders one card with a table per kind and exactly one save CTA", () => {
     renderPicker()
     // Exactly one Card wraps the whole flow (one save button, not two).
-    expect(
-      screen.getAllByRole("button", {
-        name: "Pick 5 more drivers and 2 more constructors to continue",
-      })
-    ).toHaveLength(1)
+    expect(screen.getAllByRole("button", { name: /save team & get advice/i })).toHaveLength(1)
     // Two separate kind tables, each counting its own assets.
     expect(screen.getByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Constructors (3)" })).toBeInTheDocument()
@@ -170,28 +166,31 @@ describe("TeamPicker", () => {
     ).toBeInTheDocument()
   })
 
-  it("the disabled CTA names what blocks it; enabled exactly at 5+2 with Remaining Cost Cap entered", async () => {
+  it("a line above the disabled CTA says what blocks it; enabled exactly at 5+2 with Remaining Cost Cap entered", async () => {
     const user = userEvent.setup()
     renderPicker()
-    const cta = screen.getByRole("button", {
-      name: "Pick 5 more drivers and 2 more constructors to continue",
-    })
+    const cta = screen.getByRole("button", { name: "Save team & get advice" })
     expect(cta).toBeDisabled()
+    expect(cta).toHaveAccessibleDescription(
+      "Pick 5 more drivers and 2 more constructors to continue"
+    )
 
     await pick(user, ["d1", "d2", "d3", "d4", "c1", "c2"])
-    expect(cta).toHaveAccessibleName("Pick 1 more driver to continue")
+    expect(cta).toHaveAccessibleDescription("Pick 1 more driver to continue")
     expect(cta).toBeDisabled()
 
     await pick(user, ["d5"])
     // Team complete but no Remaining Cost Cap yet → still blocked.
-    expect(cta).toHaveAccessibleName("Set your Remaining Cost Cap to continue")
+    expect(cta).toHaveAccessibleDescription("Set your Remaining Cost Cap to continue")
     expect(cta).toBeDisabled()
 
     const costCap = screen.getByLabelText(/remaining cost cap/i)
     await user.clear(costCap)
     await user.type(costCap, "5")
+    // The label never changes; once nothing blocks it the reason line goes.
     expect(cta).toHaveAccessibleName("Save team & get advice")
     expect(cta).toBeEnabled()
+    expect(screen.queryByText(/to continue$/)).not.toBeInTheDocument()
   })
 
   it("over-initial-cost-cap team does not block once Remaining Cost Cap entered (no warn copy)", async () => {
@@ -326,7 +325,8 @@ describe("TeamPicker", () => {
     expect(screen.queryByRole("checkbox", { name: /Lastname9/ })).not.toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Drivers 4/5" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Pick 1 more driver to continue" })).toBeDisabled()
+    expect(screen.getByText("Pick 1 more driver to continue")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled()
   })
 
   it("Start over dialog resets the store to its default state and calls onDone", async () => {

@@ -73,9 +73,8 @@ export function TeamPicker({ assets: feedAssets, raceNumber, mode, onDone }: Tea
   const teamComplete = driverCount === TEAM_DRIVERS && constructorCount === TEAM_CONSTRUCTORS
   const blocked = !teamComplete || !costCap.entered
   const liveMessage = statusMessage(teamComplete, costCap.entered, driverCount, constructorCount)
-  const saveLabel =
-    blockedReason(driverCount, constructorCount, costCap.entered) ??
-    (mode === "edit" ? "Save changes" : "Save team & get advice")
+  const reason = blockedReason(driverCount, constructorCount, costCap.entered)
+  const reasonId = useId()
 
   // An empty slot jumps to its table and focuses the first pickable row.
   const driversRef = useRef<HTMLDivElement>(null)
@@ -200,15 +199,22 @@ export function TeamPicker({ assets: feedAssets, raceNumber, mode, onDone }: Tea
             <FreeTransfersField value={freeTransfers} onChange={setFreeTransfers} />
 
             <div className="flex flex-col gap-2">
+              {/* What still blocks Save, kept current as the picks change. */}
+              {reason && (
+                <p id={reasonId} className="text-center text-xs text-pretty text-muted-foreground">
+                  {reason}
+                </p>
+              )}
               <Button
                 type="button"
                 variant="primary-f1"
                 size="lg"
                 disabled={blocked}
                 onClick={handleSave}
-                className="h-auto min-h-11 text-balance whitespace-normal"
+                aria-describedby={reason ? reasonId : undefined}
+                className="h-11"
               >
-                {saveLabel}
+                {mode === "edit" ? "Save changes" : "Save team & get advice"}
               </Button>
 
               {mode === "edit" && (
@@ -228,9 +234,9 @@ export function TeamPicker({ assets: feedAssets, raceNumber, mode, onDone }: Tea
 }
 
 /**
- * Why Save is disabled, as the button's own label: the picks still missing,
- * else the Remaining Cost Cap; null once nothing blocks it. Free transfers
- * always hold a value, so they never block.
+ * Why Save is disabled, shown above the button: the picks still missing, else
+ * the Remaining Cost Cap; null once nothing blocks it. Free transfers always
+ * hold a value, so they never block.
  */
 function blockedReason(
   driverCount: number,

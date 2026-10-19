@@ -62,14 +62,9 @@ export function PickedList({
             <button
               type="button"
               onClick={onPickMore}
-              className="flex h-8 w-full items-center gap-2 rounded-md border border-dashed border-grid-line-strong px-2 text-sm text-muted-foreground outline-none hover:border-foreground/40 hover:bg-surface-2 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent-f1"
+              className="flex h-8 w-full items-center gap-1.5 rounded-md border border-dashed border-grid-line px-2 text-xs text-muted-foreground/70 outline-none hover:border-grid-line-strong hover:text-muted-foreground focus-visible:ring-2 focus-visible:ring-accent-f1"
             >
-              <span
-                aria-hidden="true"
-                className="flex size-4 items-center justify-center rounded-full border border-dashed border-current"
-              >
-                <Plus className="size-3" />
-              </span>
+              <Plus aria-hidden="true" className="size-3" />
               {slotLabel}
             </button>
           </li>
