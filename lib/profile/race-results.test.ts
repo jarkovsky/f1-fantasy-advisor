@@ -21,6 +21,7 @@ describe("raceResults", () => {
     expect(rows[1]).toEqual({
       raceNumber: 5,
       gpName: "Canadian Grand Prix",
+      country: "Canada",
       priceTenths: 283,
       quali: 5,
       sprint: 2,

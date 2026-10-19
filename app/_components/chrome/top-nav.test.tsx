@@ -29,16 +29,11 @@ afterEach(() => {
 })
 
 describe("TopNav", () => {
-  it("renders the brand and labelled Advisor/Stats tabs with the active route marked", () => {
+  it("renders only the labelled Advisor/Stats tabs, with the active route marked", () => {
     pathnameMock = "/stats"
     render(<TopNav />)
 
-    expect(
-      screen.getByRole("link", {
-        name: "Fantasy F1 Race-Weekend Advisor — home",
-      })
-    ).toHaveAttribute("href", "/")
-
+    expect(screen.getAllByRole("link")).toHaveLength(2)
     const advisor = screen.getByRole("link", { name: "Advisor" })
     const stats = screen.getByRole("link", { name: "Stats" })
     expect(advisor).toHaveAttribute("href", "/")

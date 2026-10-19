@@ -316,6 +316,8 @@ const RawSessionRow = z
     SessionEndDateISO8601: isoToEpochMs,
     MeetingName: z.string(),
     CircuitLocation: z.string(),
+    // Host country ("United States" for Miami, Austin and Las Vegas alike).
+    CountryName: z.string().optional(),
   })
   .transform((r) => ({
     raceNumber: r.GamedayId,
@@ -325,6 +327,7 @@ const RawSessionRow = z
     endsAtMs: r.SessionEndDateISO8601,
     gpName: r.MeetingName,
     circuitLocation: r.CircuitLocation,
+    country: r.CountryName || null,
   }))
 
 export type RaceSession = {
@@ -339,6 +342,8 @@ export type RaceWeekend = {
   status: number
   gpName: string
   circuitLocation: string
+  /** Host country name as the feed spells it; null when the feed omits it. */
+  country: string | null
   isSprint: boolean
   sessions: RaceSession[]
   /** First session start = the team lock (the real deadline, not DeadlineDate). */
@@ -381,6 +386,7 @@ export function parseRaceday(raw: unknown): ParseResult<RaceWeekend[]> {
       status: meta.status,
       gpName: meta.gpName,
       circuitLocation: meta.circuitLocation,
+      country: meta.country,
       isSprint: sessions.some((s) => s.session === SPRINT_LABEL),
       sessions,
       lockAtMs: first.startsAtMs,

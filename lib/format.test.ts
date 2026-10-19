@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  formatDateISO,
   formatDeltaTenths,
   formatOrdinal,
   formatPoints,
@@ -76,17 +75,6 @@ describe("formatSignedPoints", () => {
   it("collapses near-zero to the middle dot (incl. -0)", () => {
     expect(formatSignedPoints(0.04)).toBe("·")
     expect(formatSignedPoints(-0.04)).toBe("·")
-  })
-})
-
-describe("formatDateISO", () => {
-  it("renders a TZ-stable YYYY-MM-DD slice", () => {
-    expect(formatDateISO(Date.UTC(2026, 5, 5))).toBe("2026-06-05")
-  })
-
-  it("takes the UTC date even near a day boundary", () => {
-    // 23:30 UTC stays on the same UTC day regardless of the runner's TZ.
-    expect(formatDateISO(Date.UTC(2026, 0, 1, 23, 30))).toBe("2026-01-01")
   })
 })
 

@@ -1,10 +1,10 @@
 "use client"
 
-import type { FeedProvenance, WhatIfMode } from "@/lib/advisor/types/contract"
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { OptimizerResult } from "@/lib/optimizer/types/optimizer"
 import type { DriverProfile } from "@/lib/profile/types/profile"
 import type { PresetId } from "@/lib/projections/types/presets"
+import type { WhatIfMode } from "@/lib/advisor/types/contract"
 import type { TeamStateV2 } from "@/lib/team/types/team-state"
 import type { RaceWeekState } from "@/lib/f1/raceweek"
 import type { RaceWeekend } from "@/lib/f1/schemas"
@@ -20,10 +20,10 @@ import { useOptimizer } from "@/hooks/use-optimizer"
 
 import { ProjectionControls } from "@/app/_components/advisor/projection-controls"
 import { TeamComparison } from "@/app/_components/team-plan/team-comparison"
-import { SnapshotBanner } from "@/app/_components/advisor/snapshot-banner"
 import { BoostRanking } from "@/app/_components/team-plan/boost-ranking"
 import { TeamPicker } from "@/app/_components/team-picker/team-picker"
 import { Alternatives } from "@/app/_components/advisor/alternatives"
+import { ChipPreview } from "@/app/_components/advisor/chip-preview"
 import { HonestyNote } from "@/app/_components/advisor/honesty-note"
 import { RaceHeader } from "@/app/_components/advisor/race-header"
 
@@ -36,7 +36,6 @@ type OpenAdvisorProps = {
   assetsById: Record<string, AssetLite>
   driverProfiles: Record<string, DriverProfile>
   raceNumber: number
-  meta: FeedProvenance
   projection: ProjectionResult
   totals: Record<string, number>
   preset: PresetId
@@ -54,9 +53,10 @@ type OpenAdvisorProps = {
 }
 
 /**
- * The OPEN-state screen: the race widget, then your team beside the
- * recommended team (TeamComparison), the projection model that drives it,
- * the Boost ranking, the other transfer counts, and the honesty note. Owns the editor toggle,
+ * The OPEN-state screen: your team beside the recommended team
+ * (TeamComparison) first, then one row of widgets that drive or frame it (the
+ * projection model, the chip previews, the race weekend), the Boost ranking,
+ * the other transfer counts, and the honesty note. Owns the editor toggle,
  * the optimizer (via useOptimizer, which keeps the search a lazy chunk), the
  * apply flow, and the sr-only status region.
  */
@@ -67,7 +67,6 @@ export function OpenAdvisor({
   assetsById,
   driverProfiles,
   raceNumber,
-  meta,
   projection,
   totals,
   preset,
@@ -123,19 +122,6 @@ export function OpenAdvisor({
       <div role="status" aria-live="polite" className="sr-only">
         {statusMessage}
       </div>
-      <SnapshotBanner meta={meta} />
-
-      {currentWeekend && (
-        <RaceHeader
-          raceNumber={raceState.race}
-          gpName={raceState.gpName}
-          circuitLocation={currentWeekend.circuitLocation}
-          isSprint={raceState.isSprint}
-          sessions={currentWeekend.sessions}
-          lockAtMs={raceState.lockAtMs}
-        />
-      )}
-
       <div className={cn(isPending && "opacity-60")}>
         {error ? (
           <p className="rounded-md border border-border bg-muted px-3 py-2 text-sm text-warn">
@@ -161,15 +147,28 @@ export function OpenAdvisor({
         )}
       </div>
 
-      <ProjectionControls
-        preset={preset}
-        onPresetChange={onPresetChange}
-        blendWeight={blendWeight}
-        onBlendWeightChange={onBlendWeightChange}
-        whatIf={whatIf}
-        onWhatIfChange={onWhatIfChange}
-        projection={projection}
-      />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ProjectionControls
+          preset={preset}
+          onPresetChange={onPresetChange}
+          blendWeight={blendWeight}
+          onBlendWeightChange={onBlendWeightChange}
+          projection={projection}
+        />
+        <ChipPreview whatIf={whatIf} onWhatIfChange={onWhatIfChange} />
+        {currentWeekend && (
+          <RaceHeader
+            raceNumber={raceState.race}
+            gpName={raceState.gpName}
+            circuitLocation={currentWeekend.circuitLocation}
+            country={currentWeekend.country}
+            isSprint={raceState.isSprint}
+            sessions={currentWeekend.sessions}
+            lockAtMs={raceState.lockAtMs}
+            className="md:col-span-2 xl:col-span-1"
+          />
+        )}
+      </div>
 
       {result && <BoostRanking plan={result.best} assetsById={assetsById} totals={totals} />}
 

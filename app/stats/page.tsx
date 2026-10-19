@@ -27,10 +27,6 @@ export default function StatsPage() {
         <h1 className="font-display text-3xl leading-none font-extrabold tracking-tight text-balance uppercase [font-stretch:80%] md:text-5xl">
           Stats explorer
         </h1>
-        <p className="max-w-2xl text-sm text-pretty text-muted-foreground md:text-base">
-          All 33 assets from the official F1 Fantasy feed, parsed through the typed boundary —
-          prices, season form, per-session splits, selection.
-        </p>
       </header>
       <Suspense fallback={<TableSkeleton />}>
         <AssetTable />

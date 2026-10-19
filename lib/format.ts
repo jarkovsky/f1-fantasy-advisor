@@ -1,5 +1,5 @@
 /**
- * Display formatting for money / points / dates, shared by the advisor and the
+ * Display formatting for money / points / ranks, shared by the advisor and the
  * /stats explorer. No wall-clock reads and no locale dependence, so server and
  * client render identical strings.
  *
@@ -40,11 +40,6 @@ export function formatSignedPoints(p: number): string {
   if (rounded === 0) return "·"
   const magnitude = Math.abs(rounded)
   return `${rounded > 0 ? "+" : "−"}${magnitude}`
-}
-
-/** Epoch ms → TZ-stable `YYYY-MM-DD` (UTC slice of the ISO string). */
-export function formatDateISO(ms: number): string {
-  return new Date(ms).toISOString().slice(0, 10)
 }
 
 /** 1 → `1st`, 2 → `2nd`, 11 → `11th`, 22 → `22nd` (English ordinal suffixes). */

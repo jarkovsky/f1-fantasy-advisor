@@ -9,7 +9,7 @@ import { TEAM_COLORS } from "@/lib/team-colors"
 // demand (ƒ in the build output), so keeping the render offline and
 // deterministic means every request produces the same card.
 
-export const alt = "Fantasy F1 Race-Weekend Advisor"
+export const alt = "F1 Fantasy Advisor"
 
 export const size = { width: 1200, height: 630 }
 
@@ -94,7 +94,7 @@ export default async function OpengraphImage() {
                 color: MUTED,
               }}
             >
-              RACE WEEK ADVISOR
+              UNOFFICIAL FAN PROJECT
             </div>
           </div>
 
@@ -108,7 +108,7 @@ export default async function OpengraphImage() {
               color: WHITE,
             }}
           >
-            Fantasy F1 Race-Weekend Advisor
+            F1 Fantasy Advisor
           </div>
 
           <div
@@ -121,7 +121,7 @@ export default async function OpengraphImage() {
               maxWidth: 940,
             }}
           >
-            Optimal transfers and Boost for the upcoming Grand Prix — free, with the math shown.
+            Optimal transfers and the x2 Boost pick for the upcoming Grand Prix.
           </div>
         </div>
 

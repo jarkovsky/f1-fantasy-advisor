@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 
 import { Archivo, Geist_Mono, Inter } from "next/font/google"
 
+import { FloatingModeToggle, TopNav } from "@/app/_components/chrome/top-nav"
 import { ThemeProvider } from "@/app/_components/chrome/theme-provider"
-import { TopNav } from "@/app/_components/chrome/top-nav"
 import { Footer } from "@/app/_components/chrome/footer"
 
 import "./globals.css"
@@ -31,11 +31,10 @@ export const metadata: Metadata = {
   // the env override keeps this honest (deploy sets NEXT_PUBLIC_SITE_URL).
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Fantasy F1 Race-Weekend Advisor",
-    template: "%s · Fantasy F1 Advisor",
+    default: "F1 Fantasy Advisor",
+    template: "%s · F1 Fantasy Advisor",
   },
-  description:
-    "Optimal F1 Fantasy transfers and Boost pick for the upcoming Grand Prix — free, no login, with the math shown.",
+  description: "Optimal F1 Fantasy transfers and the x2 Boost pick for the upcoming Grand Prix.",
 }
 
 export default function RootLayout({
@@ -56,6 +55,7 @@ export default function RootLayout({
           <TopNav />
           <div className="flex-1">{children}</div>
           <Footer />
+          <FloatingModeToggle />
         </ThemeProvider>
       </body>
     </html>

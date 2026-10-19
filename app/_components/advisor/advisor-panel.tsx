@@ -22,17 +22,6 @@ import { LockedView } from "@/app/_components/advisor/locked-view"
 
 const POLL_MS = 30_000
 
-const firstVisitLockFmt = new Intl.DateTimeFormat(undefined, {
-  weekday: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-})
-
-function firstVisitIntro(gpName: string | undefined, lockAtMs: number | null): string {
-  if (lockAtMs === null) return "Next race — schedule pending."
-  return `Building your team for the ${gpName ?? "next race"} · locks ${firstVisitLockFmt.format(lockAtMs)}`
-}
-
 export function AdvisorPanel(props: AdvisorServerProps) {
   return (
     <Suspense fallback={<AdvisorSkeleton />}>
@@ -56,7 +45,6 @@ function AdvisorPanelInner({
   projectionsByPreset,
   driverProfiles,
   lastRacePoints,
-  meta,
 }: AdvisorServerProps) {
   const { state: team, hydrated, applyPlan, confirmRollover } = useTeamStore()
 
@@ -90,14 +78,7 @@ function AdvisorPanelInner({
 
   switch (raceState.kind) {
     case "FIRST_VISIT": {
-      return (
-        <div className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            {firstVisitIntro(currentWeekend?.gpName, raceState.lockAtMs)}
-          </p>
-          <TeamPicker assets={assets} raceNumber={constraints.raceNumber} mode="first-run" />
-        </div>
-      )
+      return <TeamPicker assets={assets} raceNumber={constraints.raceNumber} mode="first-run" />
     }
 
     case "ROLLOVER": {
@@ -153,7 +134,6 @@ function AdvisorPanelInner({
           assetsById={assetsById}
           driverProfiles={driverProfiles}
           raceNumber={constraints.raceNumber}
-          meta={meta}
           projection={projection}
           totals={totals}
           preset={preset}

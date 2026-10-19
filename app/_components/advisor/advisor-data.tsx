@@ -1,6 +1,4 @@
 import type { ConcretePresetId } from "@/lib/projections/types/presets"
-import type { FeedProvenance } from "@/lib/advisor/types/contract"
-import type { FeedMeta } from "@/lib/f1/types/feed"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { getConstraints, getDrivers, getHistory, getMixapi, getRaceday } from "@/lib/f1/feed"
@@ -18,28 +16,6 @@ const CONCRETE_PRESETS: readonly ConcretePresetId[] = [
   "season-average",
   "equal-ppm",
 ]
-
-/**
- * Worst-of provenance across the feeds this page consumed. If any feed served
- * a snapshot, the page is degraded: report "snapshot" with the earliest asOf
- * among the snapshot feeds (the staleness the user is actually exposed to).
- * Otherwise live, stamped with the current drivers feed's asOf.
- */
-function worstOfMeta(feeds: readonly { meta: FeedMeta }[], liveAsOf: string): FeedProvenance {
-  const snapshots = feeds.filter((f) => f.meta.source === "snapshot")
-  if (snapshots.length === 0) return { source: "live", asOf: liveAsOf }
-
-  // Earliest non-empty asOf; '' (unknown) sorts last so a known date wins.
-  let earliest = ""
-  for (const f of snapshots) {
-    const asOf = f.meta.asOf
-    if (!asOf) continue
-    if (earliest === "" || Date.parse(asOf) < Date.parse(earliest)) {
-      earliest = asOf
-    }
-  }
-  return { source: "snapshot", asOf: earliest }
-}
 
 /**
  * The advisor's single streamed data hole: a fully cacheable async RSC — no
@@ -114,10 +90,6 @@ export async function AdvisorData() {
     }
   }
 
-  const consumed: { meta: FeedMeta }[] = [constraints, raceday, drivers, history, mixapi]
-  if (lastRaceDrivers) consumed.push(lastRaceDrivers)
-  const meta = worstOfMeta(consumed, drivers.meta.asOf)
-
   return (
     <AdvisorPanel
       constraints={constraints.data}
@@ -127,7 +99,6 @@ export async function AdvisorData() {
       projectionsByPreset={projectionsByPreset}
       driverProfiles={driverProfiles}
       lastRacePoints={lastRacePoints}
-      meta={meta}
     />
   )
 }

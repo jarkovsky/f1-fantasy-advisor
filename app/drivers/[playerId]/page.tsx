@@ -9,7 +9,6 @@ import { loadProfiles } from "@/lib/profile/load-profiles"
 import { form5 } from "@/lib/profile/season-stats"
 import { formatOrdinal } from "@/lib/format"
 
-import { StaleDataNotice } from "@/app/_components/shared/stale-data-notice"
 import { DriverHero } from "@/app/_components/driver/driver-hero"
 
 import { HeadToHeadCard } from "./_components/head-to-head-card"
@@ -41,7 +40,7 @@ function fmt1(v: number | null): string {
 
 export default async function DriverPage({ params }: PageProps<"/drivers/[playerId]">) {
   const { playerId } = await params
-  const { profiles, history, weekends, meta } = await loadProfiles()
+  const { profiles, history, weekends } = await loadProfiles()
   const profile = profiles[playerId]
   const hist = history.byPlayerId[playerId]
   if (!profile || !hist) notFound()
@@ -67,8 +66,6 @@ export default async function DriverPage({ params }: PageProps<"/drivers/[player
         Stats
       </Link>
 
-      {meta.source === "snapshot" && <StaleDataNotice asOf={meta.asOf} />}
-
       <DriverHero profile={profile} />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -79,15 +76,24 @@ export default async function DriverPage({ params }: PageProps<"/drivers/[player
               label: "Fantasy rank",
               value: `${formatOrdinal(profile.seasonRank)} of ${profile.gridSize}`,
             },
-            { label: "Average points", value: fmt1(avg) },
-            { label: "Form (last 5)", value: fmt1(form5(hist)) },
-            { label: "Points per $M", value: fmt1(ppm) },
+            { label: "Average points", value: fmt1(avg), info: "Per scored race weekend." },
+            {
+              label: "Form (last 5)",
+              value: fmt1(form5(hist)),
+              info: "Average fantasy points over the last five scored race weekends.",
+            },
+            {
+              label: "Points per $M",
+              value: fmt1(ppm),
+              info: "Season points per $1M of the current price: value for money.",
+            },
             { label: "Selected by", value: `${profile.sentiment.selectedPercent}%` },
             { label: "Boosted by", value: `${profile.boostedPercent}%` },
           ]}
         />
         <StatCard
           title="Points breakdown"
+          info="Where this season's fantasy points came from, as tallied by the official game."
           rows={
             stats
               ? [
@@ -116,12 +122,6 @@ export default async function DriverPage({ params }: PageProps<"/drivers/[player
       </div>
 
       <ResultsTable rows={raceResults(hist, weekends)} />
-
-      <p className="text-xs text-muted-foreground">
-        Ratings place the driver&apos;s average qualifying and race points within the grid, in five
-        equal bands. Sentiment is the change in selection % over the last three races. Points
-        breakdown is the feed&apos;s season-to-date tally.
-      </p>
     </main>
   )
 }

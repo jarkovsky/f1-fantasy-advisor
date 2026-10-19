@@ -6,6 +6,7 @@ import {
   Table,
   TableBody,
   TableCaption,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -81,9 +82,18 @@ export function StatsPanel({ rows, caption }: { rows: StatsRow[]; caption: strin
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sorted.map((row) => (
-            <DataRow key={row.playerId} row={row} />
-          ))}
+          {sorted.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={2 + COLUMNS.length}
+                className="py-6 text-center text-sm text-muted-foreground"
+              >
+                No matches.
+              </TableCell>
+            </TableRow>
+          ) : (
+            sorted.map((row) => <DataRow key={row.playerId} row={row} />)
+          )}
         </TableBody>
       </Table>
     </>

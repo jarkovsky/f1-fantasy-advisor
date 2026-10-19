@@ -140,9 +140,9 @@ describe("TeamPicker", () => {
     renderPicker()
     const cb = checkboxFor("Firstname Lastname1")
     await user.click(cb)
-    expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers 1/5" })).toBeInTheDocument()
     await user.click(checkboxFor("Firstname Lastname1"))
-    expect(screen.getByText(/Drivers 0\/5/)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers 0/5" })).toBeInTheDocument()
   })
 
   it("ARIA live region exists at first render and updates after a selection", async () => {
@@ -193,14 +193,22 @@ describe("TeamPicker", () => {
     expect(screen.queryByText(/Heads up/)).not.toBeInTheDocument()
   })
 
-  it("summary panel shows counts and Spent updates with formatPriceTenths", async () => {
+  it("summary lists each pick under its count, and removing one frees the slot", async () => {
     const user = userEvent.setup()
     renderPicker()
-    expect(screen.getByText(/Drivers 0\/5 · Constructors 0\/2/)).toBeInTheDocument()
-    expect(screen.getByText(/Spent \$0\.0M/)).toBeInTheDocument()
-    await user.click(checkboxFor("Firstname Lastname1")) // d1 = 300 tenths
-    expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
-    expect(screen.getByText(/Spent \$30\.0M/)).toBeInTheDocument()
+    const drivers = screen.getByRole("region", { name: "Drivers 0/5" })
+    expect(screen.getByRole("heading", { name: "Constructors 0/2" })).toBeInTheDocument()
+    expect(within(drivers).queryAllByRole("listitem")).toHaveLength(0)
+
+    await user.click(checkboxFor("Firstname Lastname1"))
+    expect(screen.getByRole("heading", { name: "Drivers 1/5" })).toBeInTheDocument()
+    expect(within(drivers).getByText("Driver 1")).toBeInTheDocument()
+    // The summary never totals what the team costs.
+    expect(screen.queryByText(/Spent/)).not.toBeInTheDocument()
+
+    await user.click(within(drivers).getByRole("button", { name: "Remove Driver 1" }))
+    expect(screen.getByRole("heading", { name: "Drivers 0/5" })).toBeInTheDocument()
+    expect(checkboxFor("Firstname Lastname1")).not.toBeChecked()
   })
 
   it("keyboard: Tab reaches a row checkbox and Space toggles it", async () => {
@@ -211,7 +219,7 @@ describe("TeamPicker", () => {
     expect(cb).toHaveFocus()
     await user.keyboard(" ")
     expect(cb).toBeChecked()
-    expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers 1/5" })).toBeInTheDocument()
   })
 
   it("the shared search narrows both tables and preserves selections", async () => {
@@ -225,11 +233,11 @@ describe("TeamPicker", () => {
     await user.type(search, "Constructor")
     expect(screen.getByText("No matches.")).toBeInTheDocument() // drivers table
     await user.click(checkboxFor("Constructor 1 Full")) // c1
-    expect(screen.getByText(/Constructors 1\/2/)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Constructors 1/2" })).toBeInTheDocument()
     // Clear the search — d1 is visible again and still checked.
     await user.clear(search)
     expect(checkboxFor("Firstname Lastname1")).toBeChecked()
-    expect(screen.getByText(/Drivers 1\/5/)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers 1/5" })).toBeInTheDocument()
   })
 
   it("first-run flow writes the store with sorted lineup, Remaining Cost Cap, transfers, raceNumber", async () => {

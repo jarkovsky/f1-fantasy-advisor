@@ -5,7 +5,6 @@ import { form5, sessionAvg } from "@/lib/profile/season-stats"
 import { assetColorKey } from "@/lib/asset-lite"
 
 import { StatsTable } from "./stats-table"
-import { DataAsOf } from "./data-as-of"
 
 /**
  * The /stats data hole: the page's one async RSC. It assembles the full
@@ -62,7 +61,6 @@ export async function AssetTable() {
 
   return (
     <div className="flex flex-col gap-3">
-      <DataAsOf meta={feed.meta} />
       <StatsTable
         rows={rows}
         caption={`Race ${race} · ${driverCount} drivers + ${constructorCount} constructors · season-to-date through race ${lastCompleted}`}

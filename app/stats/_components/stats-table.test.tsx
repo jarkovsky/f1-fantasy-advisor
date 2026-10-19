@@ -248,4 +248,20 @@ describe("StatsTable — driver profile links", () => {
     )
     expect(screen.queryByRole("link", { name: "L. Lawson" })).not.toBeInTheDocument()
   })
+
+  it("search narrows the active tab by name, TLA or team, with an empty state", async () => {
+    const user = userEvent.setup()
+    renderTable()
+    const search = screen.getByRole("searchbox", { name: /search drivers and constructors/i })
+
+    await user.type(search, "cha")
+    expect(tlaOrder()).toEqual(["CHA"])
+
+    await user.clear(search)
+    await user.type(search, "zzz")
+    expect(screen.getByText("No matches.")).toBeInTheDocument()
+
+    await user.clear(search)
+    expect(tlaOrder()).toEqual(["ALF", "CHA", "BRA", "DEL"])
+  })
 })

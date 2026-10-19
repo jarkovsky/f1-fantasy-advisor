@@ -3,7 +3,8 @@ import type { SelectionTrend } from "@/lib/profile/types/profile"
 import { sentimentPosition } from "@/lib/profile/sentiment"
 import { cn } from "@/lib/utils"
 
-function describe({ selectedPercent, change, races }: SelectionTrend): string {
+/** The trend as a sentence: the meter's accessible name and its info tip. */
+export function describeTrend({ selectedPercent, change, races }: SelectionTrend): string {
   const base = `Selected by ${selectedPercent}% of teams`
   if (change === null) return `${base}; no trend yet`
   if (change === 0) return `${base}, unchanged over the last ${races} races`
@@ -14,7 +15,7 @@ function describe({ selectedPercent, change, races }: SelectionTrend): string {
 /**
  * A centered needle: the crowd's selection trend, bullish to the right
  * (green), bearish to the left (red). The bar is decoration; the sentence
- * that drives it is the accessible name and the tooltip, and the current
+ * that drives it is the accessible name and the hero's info tip, and the current
  * selection % stays visible as text, so color never carries it alone.
  */
 export function SentimentMeter({ sentiment }: { sentiment: SelectionTrend }) {
@@ -26,10 +27,10 @@ export function SentimentMeter({ sentiment }: { sentiment: SelectionTrend }) {
       : sentiment.change > 0
         ? "bg-pos"
         : "bg-neg"
-  const label = describe(sentiment)
+  const label = describeTrend(sentiment)
 
   return (
-    <span role="img" aria-label={label} title={label} className="flex items-center gap-2">
+    <span role="img" aria-label={label} className="flex items-center gap-2">
       <span className="relative h-1 w-14 rounded-full bg-grid-line-strong">
         <span className="absolute top-1/2 left-1/2 h-2.5 w-px -translate-y-1/2 bg-muted-foreground/50" />
         <span

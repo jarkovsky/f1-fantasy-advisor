@@ -5,7 +5,6 @@ import type { AssetLite } from "@/lib/asset-lite"
 import { useId, useMemo, useState } from "react"
 
 import { TEAM_CONSTRUCTORS, TEAM_DRIVERS } from "@/lib/constants"
-import { formatPriceTenths } from "@/lib/format"
 import { useTeamStore } from "@/lib/team/store"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -19,12 +18,13 @@ import { CostCapInput } from "@/app/_components/shared/cost-cap-input"
 import { FreeTransfersField } from "./free-transfers-field"
 import { StartOverDialog } from "./start-over-dialog"
 import { PickerTable } from "./picker-table"
+import { PickedList } from "./picked-list"
 
 /**
  * The team-setup flow as one Card: Drivers and Constructors tables on the left,
- * filtered by a shared search box, and a control column on the right (selection
- * summary, Remaining Cost Cap, free transfers, status, Save). Selection is a local
- * draft (useTeamDraft); nothing touches the store until Save.
+ * filtered by a shared search box, and a sticky control column on the right
+ * (the picks so far, Remaining Cost Cap, free transfers, Save). Selection is a
+ * local draft (useTeamDraft); nothing touches the store until Save.
  *
  * This container owns selection and validation; <PickerTable> only renders.
  * The only blockers are an incomplete team (exactly 5 drivers + 2
@@ -51,28 +51,19 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
   const drivers = useMemo(() => assets.filter((a) => a.kind === "driver"), [assets])
   const constructors = useMemo(() => assets.filter((a) => a.kind === "constructor"), [assets])
 
-  // Ids are sorted so the saved lineup order is deterministic: drivers then
-  // constructors, each ascending by id.
-  const { driverIds, constructorIds, teamValueTenths } = useMemo(() => {
-    const pickedDrivers: string[] = []
-    const pickedConstructors: string[] = []
-    let value = 0
-    for (const id of selected) {
-      const asset = byId.get(id)
-      if (!asset) continue
-      value += asset.priceTenths
-      if (asset.kind === "driver") pickedDrivers.push(id)
-      else pickedConstructors.push(id)
-    }
+  // The summary lists picks in the order they were made; the saved lineup
+  // sorts ids so its order is deterministic: drivers then constructors, each
+  // ascending by id.
+  const { pickedDrivers, pickedConstructors } = useMemo(() => {
+    const picked = [...selected].flatMap((id) => byId.get(id) ?? [])
     return {
-      driverIds: pickedDrivers.sort(),
-      constructorIds: pickedConstructors.sort(),
-      teamValueTenths: value,
+      pickedDrivers: picked.filter((a) => a.kind === "driver"),
+      pickedConstructors: picked.filter((a) => a.kind === "constructor"),
     }
   }, [selected, byId])
 
-  const driverCount = driverIds.length
-  const constructorCount = constructorIds.length
+  const driverCount = pickedDrivers.length
+  const constructorCount = pickedConstructors.length
   const driversFull = driverCount >= TEAM_DRIVERS
   const constructorsFull = constructorCount >= TEAM_CONSTRUCTORS
 
@@ -100,7 +91,13 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
 
   function handleSave(): void {
     if (blocked) return
-    setTeam([...driverIds, ...constructorIds], costCap.tenths, freeTransfers, raceNumber)
+    const ids = (assets: AssetLite[]) => assets.map((a) => a.playerId).sort()
+    setTeam(
+      [...ids(pickedDrivers), ...ids(pickedConstructors)],
+      costCap.tenths,
+      freeTransfers,
+      raceNumber
+    )
     onDone?.()
   }
 
@@ -145,11 +142,19 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
             />
           </div>
 
-          <div className="flex flex-col gap-5 lg:border-l lg:border-grid-line lg:pl-6">
-            <p className="font-mono text-sm tabular-nums">
-              Drivers {driverCount}/{TEAM_DRIVERS} · Constructors {constructorCount}/
-              {TEAM_CONSTRUCTORS} · Spent {formatPriceTenths(teamValueTenths)}
-            </p>
+          <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:self-start lg:border-l lg:border-grid-line lg:pl-6">
+            <PickedList
+              heading="Drivers"
+              assets={pickedDrivers}
+              quota={TEAM_DRIVERS}
+              onRemove={toggle}
+            />
+            <PickedList
+              heading="Constructors"
+              assets={pickedConstructors}
+              quota={TEAM_CONSTRUCTORS}
+              onRemove={toggle}
+            />
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor={costCapId} className="text-sm font-medium">
@@ -167,18 +172,6 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
             </div>
 
             <FreeTransfersField value={freeTransfers} onChange={setFreeTransfers} />
-
-            <div className="flex items-center gap-2">
-              {blocked ? (
-                <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted-foreground">
-                  {teamComplete ? "Enter Remaining Cost Cap" : "Team incomplete"}
-                </span>
-              ) : (
-                <span className="rounded-full bg-accent-f1-quiet px-2 py-0.5 text-xs text-accent-f1">
-                  Ready
-                </span>
-              )}
-            </div>
 
             <div className="flex flex-col gap-2">
               <Button type="button" variant="primary-f1" disabled={blocked} onClick={handleSave}>

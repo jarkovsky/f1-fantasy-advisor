@@ -2,6 +2,8 @@ import type { FreeTransfers } from "@/hooks/use-team-draft"
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
+import { InfoTip } from "@/app/_components/shared/info-tip"
+
 const OPTIONS: { value: string; label: string }[] = [
   { value: "2", label: "2" },
   { value: "3", label: "3" },
@@ -22,7 +24,13 @@ export function FreeTransfersField({
 }) {
   return (
     <fieldset className="flex flex-col gap-1.5">
-      <legend className="text-sm font-medium">Free transfers</legend>
+      <legend className="flex items-center gap-1.5 text-sm font-medium">
+        Free transfers
+        <InfoTip label="free transfers">
+          3 only if an unused free transfer carried over from the last race; none carry over after
+          Wildcard or Limitless. Unlimited is for your first race or an active Wildcard.
+        </InfoTip>
+      </legend>
       <ToggleGroup
         type="single"
         variant="outline"
@@ -41,10 +49,6 @@ export function FreeTransfersField({
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
-      <p className="text-xs text-muted-foreground">
-        3 only if an unused free transfer carried over from the last race; none carry over after
-        Wildcard or Limitless. Unlimited = your first race or an active Wildcard.
-      </p>
     </fieldset>
   )
 }

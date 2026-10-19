@@ -67,11 +67,11 @@ export function DeadlineCountdown({ lockAtMs }: { lockAtMs: number }) {
         {remaining === null ? (
           <span className="font-mono text-sm">Locks at —</span>
         ) : (
-          <span className="font-mono text-sm">
+          <span className="flex flex-col font-mono text-sm">
             <span aria-hidden="true" className="font-medium">
               {remaining <= 0 ? "Locked" : `Locks in ${formatRemaining(remaining)}`}
             </span>
-            <span className="opacity-75"> · {lockFmt.format(lockAtMs)}</span>
+            <span className="text-xs opacity-75">{lockFmt.format(lockAtMs)}</span>
           </span>
         )}
       </div>

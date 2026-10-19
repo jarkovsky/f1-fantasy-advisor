@@ -7,6 +7,8 @@ import Link from "next/link"
 
 import { teamColor } from "@/lib/team-colors"
 
+import { InfoTip } from "@/app/_components/shared/info-tip"
+
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
@@ -61,15 +63,15 @@ export function HeadToHeadCard({
         <Stat label="Avg pts">{avg === null ? "—" : avg.toFixed(1)}</Stat>
       </dl>
       <div className="flex w-3/5 flex-col gap-0.5">
-        <p className="text-[0.65rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+        <p className="flex items-center gap-1 text-[0.65rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
           Weekends ahead
+          <InfoTip label="weekends ahead">
+            Race weekends where each driver scored more fantasy points than the other, over{" "}
+            {duel.races} shared race{duel.races === 1 ? "" : "s"}. Ties count for neither.
+          </InfoTip>
         </p>
         <p className="font-mono text-sm tabular-nums">
           {driver.tla} {duel.ahead}–{duel.behind} {teammate.tla}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          By fantasy points over {duel.races} shared race{duel.races === 1 ? "" : "s"}; ties count
-          for neither.
         </p>
       </div>
       {teammate.headshotPath && (

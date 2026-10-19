@@ -9,7 +9,6 @@ import "server-only"
 import type { SeasonHistory } from "@/lib/f1/types/history"
 import type { DriverProfile } from "./types/profile"
 import type { RaceWeekend } from "@/lib/f1/schemas"
-import type { FeedMeta } from "@/lib/f1/types/feed"
 
 import { getConstraints, getDrivers, getHistory, getRaceday } from "@/lib/f1/feed"
 import { carNumber, headshotPath } from "@/lib/headshots"
@@ -21,7 +20,6 @@ export type ProfileSeason = {
   profiles: Record<string, DriverProfile>
   history: SeasonHistory
   weekends: RaceWeekend[]
-  meta: FeedMeta
 }
 
 export async function loadProfiles(): Promise<ProfileSeason> {
@@ -42,6 +40,5 @@ export async function loadProfiles(): Promise<ProfileSeason> {
     })),
     history: history.data,
     weekends: raceday.data,
-    meta: feed.meta,
   }
 }

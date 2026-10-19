@@ -3,11 +3,14 @@ import type { DriverProfile } from "@/lib/profile/types/profile"
 import Image from "next/image"
 
 import { formatOrdinal, formatPriceTenths } from "@/lib/format"
+import { SENTIMENT_WINDOW } from "@/lib/constants"
 import { teamColor } from "@/lib/team-colors"
 import { cn } from "@/lib/utils"
 
-import { SentimentMeter } from "./sentiment-meter"
-import { RatingPips } from "./rating-pips"
+import { InfoTip } from "@/app/_components/shared/info-tip"
+
+import { describeTrend, SentimentMeter } from "./sentiment-meter"
+import { describeRating, RatingPips } from "./rating-pips"
 import { PriceMove } from "./price-move"
 
 type DriverHeroProps = {
@@ -26,11 +29,21 @@ function Meta({ label, children }: { label: string; children: React.ReactNode })
   )
 }
 
-function StripCell({ label, children }: { label: string; children: React.ReactNode }) {
+function StripCell({
+  label,
+  info,
+  children,
+}: {
+  label: string
+  /** Shown behind an "i" beside the label. */
+  info?: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
     <div className="flex flex-col gap-1.5">
-      <dt className="text-[0.65rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+      <dt className="flex items-center gap-1 text-[0.65rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
         {label}
+        {info && <InfoTip label={label.toLowerCase()}>{info}</InfoTip>}
       </dt>
       <dd className="flex h-5 items-center font-mono text-sm">{children}</dd>
     </div>
@@ -140,20 +153,46 @@ export function DriverHero({ profile, className }: DriverHeroProps) {
       </div>
 
       <dl className="grid grid-cols-3 gap-x-4 gap-y-4 border-t border-grid-line-strong bg-surface-1/70 px-4 py-4 backdrop-blur @lg:px-6 @3xl:grid-cols-6 @3xl:px-8">
-        <StripCell label="Qualifying">
+        <StripCell
+          label="Qualifying"
+          info={
+            <>
+              Average fantasy points per qualifying, compared with the rest of the grid: five pips
+              is the top fifth, one pip the bottom fifth.{" "}
+              {describeRating(profile.quali, "qualifying")}
+            </>
+          }
+        >
           <RatingPips rating={profile.quali} session="qualifying" />
         </StripCell>
-        <StripCell label="Race">
+        <StripCell
+          label="Race"
+          info={
+            <>
+              Average fantasy points per race, compared with the rest of the grid: five pips is the
+              top fifth, one pip the bottom fifth. {describeRating(profile.race, "race")}
+            </>
+          }
+        >
           <RatingPips rating={profile.race} session="race" />
         </StripCell>
         <StripCell label="Price">{formatPriceTenths(profile.priceTenths)}</StripCell>
-        <StripCell label="Season">
+        <StripCell label="Season" info="Price change since the first race of the season.">
           <PriceMove tenths={profile.seasonPriceDeltaTenths} />
         </StripCell>
-        <StripCell label="Last race">
+        <StripCell label="Last race" info="Price change after the most recent race.">
           <PriceMove tenths={profile.lastPriceDeltaTenths} />
         </StripCell>
-        <StripCell label="Sentiment">
+        <StripCell
+          label="Sentiment"
+          info={
+            <>
+              Whether more or fewer teams are picking this driver: the change in % Picked over the
+              last {SENTIMENT_WINDOW} races. Right of centre means more, left means fewer.{" "}
+              {describeTrend(profile.sentiment)}.
+            </>
+          }
+        >
           <SentimentMeter sentiment={profile.sentiment} />
         </StripCell>
       </dl>

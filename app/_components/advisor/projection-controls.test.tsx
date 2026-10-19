@@ -1,6 +1,5 @@
 import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { PresetId } from "@/lib/projections/types/presets"
-import type { WhatIfMode } from "@/lib/advisor/types/contract"
 
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -65,20 +64,17 @@ type ControlProps = Parameters<typeof ProjectionControls>[0]
 function renderControls(props?: Partial<ControlProps>) {
   const onPresetChange = vi.fn<(id: PresetId) => void>()
   const onBlendWeightChange = vi.fn<(w: number) => void>()
-  const onWhatIfChange = vi.fn<(mode: WhatIfMode) => void>()
   const utils = render(
     <ProjectionControls
       preset="season-average"
       onPresetChange={onPresetChange}
       blendWeight={0.5}
       onBlendWeightChange={onBlendWeightChange}
-      whatIf="none"
-      onWhatIfChange={onWhatIfChange}
       projection={WARM}
       {...props}
     />
   )
-  return { ...utils, onPresetChange, onBlendWeightChange, onWhatIfChange }
+  return { ...utils, onPresetChange, onBlendWeightChange }
 }
 
 describe("ProjectionControls", () => {
@@ -130,8 +126,6 @@ describe("ProjectionControls", () => {
         onPresetChange={vi.fn()}
         blendWeight={0.5}
         onBlendWeightChange={vi.fn()}
-        whatIf="none"
-        onWhatIfChange={vi.fn()}
         projection={WARM}
       />
     )
@@ -164,21 +158,6 @@ describe("ProjectionControls", () => {
     const listbox = screen.getByRole("listbox")
     await user.click(within(listbox).getByRole("option", { name: /Equal PPM/i }))
     expect(onPresetChange).toHaveBeenCalledWith("equal-ppm")
-  })
-
-  it("Wildcard and Limitless are mutually exclusive via onWhatIfChange", async () => {
-    const user = userEvent.setup({ pointerEventsCheck: 0 })
-    // Wildcard already on → toggling Limitless on must report wildcard off,
-    // i.e. the new mode "limitless" (the switches are exclusive, not additive).
-    const { onWhatIfChange } = renderControls({ whatIf: "wildcard" })
-
-    await user.click(screen.getByRole("switch", { name: /limitless/i }))
-    expect(onWhatIfChange).toHaveBeenCalledWith("limitless")
-
-    onWhatIfChange.mockClear()
-    // Turning the active wildcard off reports "none".
-    await user.click(screen.getByRole("switch", { name: /wildcard/i }))
-    expect(onWhatIfChange).toHaveBeenCalledWith("none")
   })
 
   it("confidence line renders the completed-race / sprint count from props", () => {

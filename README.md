@@ -1,4 +1,4 @@
-# Fantasy F1 Race-Weekend Advisor
+# F1 Fantasy Advisor
 
 **Finds the provably optimal F1 Fantasy team and transfers for the next Grand Prix by checking all 1,448,370 legal teams in ~6 ms, right in the browser.**
 
@@ -116,7 +116,7 @@ Requires Node ≥ 20.9 and pnpm. Run `pnpm install` first.
 | `pnpm format:check` | Prettier check                                                            |
 | `pnpm typecheck`    | `next typegen && tsc --noEmit`                                            |
 
-The build never needs the live feeds. With the feed pointed at an unreachable host, it still succeeds end to end and renders snapshot data with provenance:
+The build never needs the live feeds. With the feed pointed at an unreachable host, it still succeeds end to end and renders the committed snapshot data:
 
 ```sh
 F1_FEED_BASE=http://127.0.0.1:1 pnpm build

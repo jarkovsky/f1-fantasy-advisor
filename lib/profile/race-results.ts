@@ -9,6 +9,8 @@ export type RaceResultRow = {
   raceNumber: number
   /** Grand Prix name from the raceday schedule; null if the schedule lacks the race. */
   gpName: string | null
+  /** Host country (raceday feed spelling), for the flag; null when unknown. */
+  country: string | null
   priceTenths: number
   quali: number | null
   sprint: number | null
@@ -27,11 +29,12 @@ function sessionTotal(point: AssetRacePoint, session: SessionLabelType): number 
 
 /** Most recent race first — the table reads like a results feed. */
 export function raceResults(hist: AssetHistory, weekends: readonly RaceWeekend[]): RaceResultRow[] {
-  const gpByRace = new Map(weekends.map((w) => [w.raceNumber, w.gpName]))
+  const weekendByRace = new Map(weekends.map((w) => [w.raceNumber, w]))
   return hist.perRace
     .map((p) => ({
       raceNumber: p.raceNumber,
-      gpName: gpByRace.get(p.raceNumber) ?? null,
+      gpName: weekendByRace.get(p.raceNumber)?.gpName ?? null,
+      country: weekendByRace.get(p.raceNumber)?.country ?? null,
       priceTenths: p.priceTenths,
       quali: sessionTotal(p, "Qualifying"),
       sprint: sessionTotal(p, "Sprint Qualifying"),

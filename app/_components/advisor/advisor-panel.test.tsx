@@ -192,7 +192,6 @@ function makeProps(over: Partial<AdvisorServerProps> = {}): AdvisorServerProps {
     projectionsByPreset: projectionsByPreset(),
     driverProfiles: {},
     lastRacePoints: {},
-    meta: { source: "live", asOf: "2026-06-05" },
     ...over,
   }
 }
@@ -543,7 +542,7 @@ describe("OPEN — wildcard what-if", () => {
     expect(screen.getByRole("button", { name: /apply this plan/i })).toBeInTheDocument()
 
     const user = userEvent.setup()
-    await user.click(screen.getByRole("switch", { name: "Wildcard (what-if)" }))
+    await user.click(screen.getByRole("switch", { name: "Preview the Wildcard chip" }))
 
     expect(await screen.findByText("Hypothetical — not saved")).toBeInTheDocument()
     expect(screen.getByText(/Within your free transfers — no penalty\./)).toBeInTheDocument()
@@ -568,7 +567,7 @@ describe("OPEN — limitless what-if", () => {
     await findPlanHeadline()
 
     const user = userEvent.setup()
-    await user.click(screen.getByRole("switch", { name: "Limitless (what-if)" }))
+    await user.click(screen.getByRole("switch", { name: "Preview the Limitless chip" }))
 
     expect(await screen.findByText(/Limitless: no cost cap/)).toBeInTheDocument()
 
