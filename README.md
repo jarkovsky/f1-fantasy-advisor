@@ -2,7 +2,7 @@
 
 **The best F1 Fantasy transfers and x2 Boost pick for the next Grand Prix, worked out in your browser.**
 
-**Live:** [f1-fantasy-advisor.jarkovsky.com](https://f1-fantasy-advisor.jarkovsky.com)
+**Live:** [f1.jarkovsky.com](https://f1.jarkovsky.com)
 
 Enter your current team, your Remaining Cost Cap and your free transfers. The advisor projects how many points every driver and constructor will score at the next race. It then checks all 1,448,370 legal teams in about 6 ms and shows which transfers gain you the most points, after any transfer penalty, and who should get the x2 Boost.
 
