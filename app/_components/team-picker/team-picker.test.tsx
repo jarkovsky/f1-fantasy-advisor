@@ -32,6 +32,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     seasonPoints: 100 + n,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 
@@ -51,6 +52,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     seasonPoints: 200 + n,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 
@@ -311,6 +313,20 @@ describe("TeamPicker", () => {
     await user.click(screen.getByRole("button", { name: /cancel/i }))
     expect(onDone).toHaveBeenCalledTimes(1)
     expect(teamStore.getSnapshot().remainingCostCapTenths).toBe(25) // unchanged
+  })
+
+  it("never lists inactive drivers, and a saved team holding one opens a pick short", () => {
+    // d9 is the feed's stale leftover entry (IsActive "0").
+    const stale = { ...driver(9, 151), active: false }
+    teamStore.subscribe(() => {})
+    teamStore.setTeam(["d1", "d2", "d3", "d4", "d9", "c1", "c2"], 25, 3, 6)
+
+    render(<TeamPicker assets={[...ASSETS, stale]} raceNumber={6} mode="edit" />)
+
+    expect(screen.queryByRole("checkbox", { name: /Lastname9/ })).not.toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Drivers 4/5" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Pick 1 more driver to continue" })).toBeDisabled()
   })
 
   it("Start over dialog resets the store to its default state and calls onDone", async () => {

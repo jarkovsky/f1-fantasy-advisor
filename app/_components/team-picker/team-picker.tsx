@@ -40,11 +40,14 @@ type TeamPickerProps = {
   onDone?: () => void
 }
 
-export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps) {
+export function TeamPicker({ assets: feedAssets, raceNumber, mode, onDone }: TeamPickerProps) {
   const { setTeam, reset } = useTeamStore()
   const { selected, setSelected, costCap, freeTransfers, setFreeTransfers } = useTeamDraft(mode)
   const costCapId = useId()
 
+  // Inactive feed entries can't be picked. A saved team still holding one
+  // opens one pick short, so the editor asks for a replacement.
+  const assets = useMemo(() => feedAssets.filter((a) => a.active), [feedAssets])
   const byId = useMemo(() => new Map(assets.map((a) => [a.playerId, a])), [assets])
 
   const [query, setQuery] = useState("")

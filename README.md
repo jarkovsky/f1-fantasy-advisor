@@ -10,7 +10,7 @@ Enter your current team, your Remaining Cost Cap and your free transfers. The ad
 
 ## What you get
 
-- **The payoff up front.** The projected points you gain over keeping your team, with your team and the recommended one side by side and an arrow on every transfer.
+- **The payoff, highlighted.** Your team and the recommended one side by side, an arrow on every transfer, and the projected points you gain over keeping your team.
 - **The true best team, not an estimate.** Every legal team is checked, so for the projection model you picked, no better team exists.
 - **Five projection models.** From the season average to recent form, each explained in plain language in [How the projection models work](docs/projection-models.md).
 - **Chip previews.** See what Wildcard or Limitless would change before you play them.

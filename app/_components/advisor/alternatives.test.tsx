@@ -27,6 +27,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     seasonPoints: 100,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 function constructor(n: number, priceTenths: number): AssetLite {
@@ -45,6 +46,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     seasonPoints: 200,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 

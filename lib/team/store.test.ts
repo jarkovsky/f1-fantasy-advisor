@@ -18,7 +18,6 @@ const VALID_V2: TeamStateV2 = {
   freeTransfers: 3,
   raceNumber: 7,
   activeChip: "wildcard",
-  dismissedHonestyNote: true,
   savedProjection: { totalPoints: 123.5, preset: "form" },
 }
 
@@ -50,7 +49,6 @@ describe("snapshot identity", () => {
       freeTransfers: "unlimited",
       raceNumber: null,
       activeChip: "none",
-      dismissedHonestyNote: false,
       savedProjection: null,
     })
   })
@@ -79,7 +77,7 @@ describe("round-trip", () => {
     unsub()
   })
 
-  it("applyPlan and dismissHonestyNote write their fields to the snapshot", () => {
+  it("applyPlan writes its fields to the snapshot", () => {
     teamStore.subscribe(() => {})
 
     teamStore.applyPlan(LINEUP7, 7, { totalPoints: 99, preset: "ewma" })
@@ -97,15 +95,12 @@ describe("round-trip", () => {
       totalPoints: 99,
       preset: "ewma",
     })
-
-    teamStore.dismissHonestyNote()
-    expect(teamStore.getSnapshot().dismissedHonestyNote).toBe(true)
   })
 
   it("each mutation swaps the snapshot reference (Object.is changes)", () => {
     teamStore.subscribe(() => {})
     const before = teamStore.getSnapshot()
-    teamStore.dismissHonestyNote()
+    teamStore.applyPlan(LINEUP7, 7)
     expect(teamStore.getSnapshot()).not.toBe(before)
   })
 })
@@ -299,9 +294,16 @@ describe("hydration laziness", () => {
 })
 
 describe("v1 → v2 migration", () => {
-  // A v1 save as written before the official-vocabulary renames.
+  // A v1 save as written before the official-vocabulary renames, including
+  // the since-removed honesty-note flag, which loading must ignore.
   const { lineup, remainingCostCapTenths, ...shared } = VALID_V2
-  const V1_SAVE = { ...shared, v: 1, roster: lineup, budgetTenths: remainingCostCapTenths }
+  const V1_SAVE = {
+    ...shared,
+    v: 1,
+    roster: lineup,
+    budgetTenths: remainingCostCapTenths,
+    dismissedHonestyNote: true,
+  }
 
   it("reads a v1 save under the legacy key and renames its fields forward", () => {
     localStorage.setItem(LEGACY_KEY, JSON.stringify(V1_SAVE))
@@ -312,7 +314,7 @@ describe("v1 → v2 migration", () => {
   it("replaces the v1 save with v2 on the next write", () => {
     localStorage.setItem(LEGACY_KEY, JSON.stringify(V1_SAVE))
     teamStore.subscribe(() => {})
-    teamStore.dismissHonestyNote()
+    teamStore.applyPlan(lineup as string[], remainingCostCapTenths)
     expect(localStorage.getItem(LEGACY_KEY)).toBeNull()
     expect(JSON.parse(localStorage.getItem(KEY) as string)).toMatchObject({ v: 2, lineup })
   })

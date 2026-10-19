@@ -164,6 +164,11 @@ export function PickRow({
             {asset.tla}
           </span>
           <StatusTag status={status} />
+          {!asset.active && (
+            <span className="hidden text-[10px] font-semibold tracking-wide text-muted-foreground uppercase @[13rem]:inline">
+              Inactive
+            </span>
+          )}
           {boost && <BoostBadge className="hidden @[11rem]:inline-flex" />}
         </p>
         <p

@@ -53,7 +53,6 @@ export const DEFAULT_STATE: TeamStateV2 = Object.freeze({
   freeTransfers: "unlimited",
   raceNumber: null,
   activeChip: "none",
-  dismissedHonestyNote: false,
   savedProjection: null,
 })
 
@@ -104,7 +103,11 @@ function isSavedProjection(value: unknown): value is TeamStateV2["savedProjectio
   return typeof p.totalPoints === "number" && typeof p.preset === "string"
 }
 
-/** Full shape-guard of a parsed v2 payload. Any miss → DEFAULT_STATE. */
+/**
+ * Full shape-guard of a parsed v2 payload. Any miss → DEFAULT_STATE. Keys it
+ * doesn't know are dropped, so saves from older builds (which also stored a
+ * `dismissedHonestyNote` flag) still load.
+ */
 function validateV2(parsed: Record<string, unknown>): TeamStateV2 {
   if (
     isLineup(parsed.lineup) &&
@@ -112,7 +115,6 @@ function validateV2(parsed: Record<string, unknown>): TeamStateV2 {
     isFreeTransfers(parsed.freeTransfers) &&
     (parsed.raceNumber === null || Number.isInteger(parsed.raceNumber)) &&
     isChip(parsed.activeChip) &&
-    typeof parsed.dismissedHonestyNote === "boolean" &&
     isSavedProjection(parsed.savedProjection)
   ) {
     return {
@@ -122,7 +124,6 @@ function validateV2(parsed: Record<string, unknown>): TeamStateV2 {
       freeTransfers: parsed.freeTransfers,
       raceNumber: parsed.raceNumber as number | null,
       activeChip: parsed.activeChip,
-      dismissedHonestyNote: parsed.dismissedHonestyNote,
       savedProjection: parsed.savedProjection,
     }
   }
@@ -276,10 +277,6 @@ function confirmRollover(args: {
   commit({ ...cache, ...args })
 }
 
-function dismissHonestyNote(): void {
-  commit({ ...cache, dismissedHonestyNote: true })
-}
-
 /** Back to first-visit. Removes the key so a reload re-hydrates DEFAULT. */
 function reset(): void {
   if (typeof window !== "undefined") {
@@ -316,7 +313,6 @@ export const teamStore = {
   setTeam,
   applyPlan,
   confirmRollover,
-  dismissHonestyNote,
   reset,
   __resetForTests,
 }
@@ -332,7 +328,6 @@ export function useTeamStore(): {
   setTeam: typeof setTeam
   applyPlan: typeof applyPlan
   confirmRollover: typeof confirmRollover
-  dismissHonestyNote: typeof dismissHonestyNote
   reset: typeof reset
 } {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
@@ -345,7 +340,6 @@ export function useTeamStore(): {
     setTeam,
     applyPlan,
     confirmRollover,
-    dismissHonestyNote,
     reset,
   }
 }

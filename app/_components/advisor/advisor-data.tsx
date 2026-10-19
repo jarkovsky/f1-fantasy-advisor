@@ -72,6 +72,7 @@ export async function AdvisorData() {
     seasonPoints: seasonByPlayerId[a.playerId]?.cumulativePoints ?? 0,
     headshotPath: headshotPath(a.playerId),
     logo: teamLogo(a.kind === "constructor" ? a.playerId : a.constructorId),
+    active: a.active,
   }))
 
   const driverProfiles = buildDriverProfiles(drivers.data, history.data, (d) => ({

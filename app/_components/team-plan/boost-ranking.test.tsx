@@ -25,6 +25,7 @@ function driver(n: number): AssetLite {
     seasonPoints: 100,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 

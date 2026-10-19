@@ -34,6 +34,7 @@ function driver(n: number, priceTenths: number): AssetLite {
     seasonPoints: 100 + n,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 function constructor(n: number, priceTenths: number): AssetLite {
@@ -52,6 +53,7 @@ function constructor(n: number, priceTenths: number): AssetLite {
     seasonPoints: 200 + n,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 
@@ -137,6 +139,9 @@ describe("TeamComparison", () => {
     expect(
       within(block).getByText(formatSignedPoints(best.score - baselineTotal))
     ).toBeInTheDocument()
+
+    // Opposite the gain, your team shows its own projected total.
+    expect(within(current()).getByText(baselineTotal.toFixed(1))).toBeInTheDocument()
 
     // The recommended column opens on the Boost driver, badged x2.
     const [featured] = within(recommended()).getAllByRole("listitem")

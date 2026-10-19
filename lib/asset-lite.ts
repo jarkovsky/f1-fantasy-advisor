@@ -33,6 +33,12 @@ export type AssetLite = {
   headshotPath: string | null
   /** The team's logo (a constructor's own, a driver's constructor's); null → monogram. */
   logo: TeamLogo | null
+  /**
+   * false for the feed's stale leftovers (e.g. a driver's old team entry after
+   * a seat swap): never offered for picking, and worth 0 points to a team that
+   * still holds one (lib/team/inactive.ts).
+   */
+  active: boolean
 }
 
 /**

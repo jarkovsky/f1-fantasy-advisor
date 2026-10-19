@@ -34,6 +34,7 @@ function driver(n: number, priceTenths: number, prevPriceTenths: number): AssetL
     seasonPoints: 100 + n,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 
@@ -53,6 +54,7 @@ function constructor(n: number, priceTenths: number, prevPriceTenths: number): A
     seasonPoints: 200 + n,
     headshotPath: null,
     logo: null,
+    active: true,
   }
 }
 

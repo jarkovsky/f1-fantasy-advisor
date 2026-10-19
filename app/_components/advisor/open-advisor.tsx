@@ -10,8 +10,9 @@ import type { RaceWeekState } from "@/lib/f1/raceweek"
 import type { RaceWeekend } from "@/lib/f1/schemas"
 import type { AssetLite } from "@/lib/asset-lite"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
+import { retireInactive } from "@/lib/team/inactive"
 import { cn } from "@/lib/utils"
 
 import { Skeleton } from "@/components/ui/skeleton"
@@ -24,7 +25,6 @@ import { BoostRanking } from "@/app/_components/team-plan/boost-ranking"
 import { TeamPicker } from "@/app/_components/team-picker/team-picker"
 import { Alternatives } from "@/app/_components/advisor/alternatives"
 import { ChipPreview } from "@/app/_components/advisor/chip-preview"
-import { HonestyNote } from "@/app/_components/advisor/honesty-note"
 import { RaceHeader } from "@/app/_components/advisor/race-header"
 
 type OpenState = Extract<RaceWeekState, { kind: "OPEN" }>
@@ -56,7 +56,8 @@ type OpenAdvisorProps = {
  * The OPEN-state screen: your team beside the recommended team
  * (TeamComparison) first, then one row of widgets that drive or frame it (the
  * projection model, the chip previews, the race weekend), the Boost ranking,
- * the other transfer counts, and the honesty note. Owns the editor toggle,
+ * and the other transfer counts. Inactive feed entries are retired first
+ * (lib/team/inactive.ts), so they are never recommended. Owns the editor toggle,
  * the optimizer (via useOptimizer, which keeps the search a lazy chunk), the
  * apply flow, and the sr-only status region.
  */
@@ -81,9 +82,12 @@ export function OpenAdvisor({
   const [showEditor, setShowEditor] = useState(false)
   const { lineup, remainingCostCapTenths, freeTransfers } = team
 
+  // `retired` replaces assets/totals for everything that scores or picks.
+  const retired = useMemo(() => retireInactive(assets, totals, lineup), [assets, totals, lineup])
+
   const { result, baseline, unresolvedIds, error, isPending, statusMessage } = useOptimizer({
-    assets,
-    totals,
+    assets: retired.assets,
+    totals: retired.totals,
     lineup,
     remainingCostCapTenths,
     freeTransfers,
@@ -133,7 +137,7 @@ export function OpenAdvisor({
             baseline={baseline}
             assetsById={assetsById}
             driverProfiles={driverProfiles}
-            totals={totals}
+            totals={retired.totals}
             remainingCostCapTenths={remainingCostCapTenths}
             freeTransfers={whatIf !== "none" ? "unlimited" : freeTransfers}
             whatIf={whatIf}
@@ -170,7 +174,9 @@ export function OpenAdvisor({
         )}
       </div>
 
-      {result && <BoostRanking plan={result.best} assetsById={assetsById} totals={totals} />}
+      {result && (
+        <BoostRanking plan={result.best} assetsById={assetsById} totals={retired.totals} />
+      )}
 
       {result && (
         <Alternatives
@@ -180,8 +186,6 @@ export function OpenAdvisor({
           projection={projection}
         />
       )}
-
-      <HonestyNote />
     </div>
   )
 }

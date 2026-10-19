@@ -15,7 +15,6 @@ export type TeamStateV2 = {
   /** Race the team was entered for; null = first visit (never saved). */
   raceNumber: number | null
   activeChip: "none" | "wildcard" | "limitless"
-  dismissedHonestyNote: boolean
   /** Stamped on save; powers "you scored X · we projected Y". */
   savedProjection: { totalPoints: number; preset: string } | null
 }

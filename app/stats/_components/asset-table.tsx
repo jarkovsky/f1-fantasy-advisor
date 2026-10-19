@@ -23,38 +23,42 @@ export async function AssetTable() {
     getHistory(race, lastCompleted),
   ])
 
-  const rows: StatsRow[] = feed.data.map((asset) => {
-    const hist = history.data.byPlayerId[asset.playerId]
-    const seasonPoints = hist?.cumulativePoints ?? 0
-    const priceDeltaTenths = hist?.priceDeltaTenths ?? 0
-    const spark = hist?.cumulativeByRace.map((c) => c.cumulative) ?? []
+  // Inactive entries are the feed's stale leftovers (a driver's old team after
+  // a seat swap), so the explorer lists only the current grid.
+  const rows: StatsRow[] = feed.data
+    .filter((asset) => asset.active)
+    .map((asset) => {
+      const hist = history.data.byPlayerId[asset.playerId]
+      const seasonPoints = hist?.cumulativePoints ?? 0
+      const priceDeltaTenths = hist?.priceDeltaTenths ?? 0
+      const spark = hist?.cumulativeByRace.map((c) => c.cumulative) ?? []
 
-    return {
-      playerId: asset.playerId,
-      kind: asset.kind,
-      displayName: asset.displayName,
-      tla: asset.tla,
-      teamName: asset.teamName,
-      hasProfile: asset.kind === "driver" && asset.active,
-      colorKey: assetColorKey({
-        kind: asset.kind,
+      return {
         playerId: asset.playerId,
-        // Constructors carry no constructorId; they join on their own playerId.
-        constructorId: asset.kind === "driver" ? asset.constructorId : null,
-      }),
-      priceTenths: asset.priceTenths,
-      priceDeltaTenths,
-      seasonPoints,
-      ppm: asset.priceTenths === 0 ? null : seasonPoints / (asset.priceTenths / 10),
-      form5: form5(hist),
-      qualiAvg: sessionAvg(hist, "Qualifying"),
-      raceAvg: sessionAvg(hist, "Race"),
-      sprintAvg: sessionAvg(hist, "Sprint Qualifying"),
-      selectedPercent: asset.selectedPercent,
-      boostedPercent: asset.boostedPercent,
-      spark,
-    }
-  })
+        kind: asset.kind,
+        displayName: asset.displayName,
+        tla: asset.tla,
+        teamName: asset.teamName,
+        hasProfile: asset.kind === "driver",
+        colorKey: assetColorKey({
+          kind: asset.kind,
+          playerId: asset.playerId,
+          // Constructors carry no constructorId; they join on their own playerId.
+          constructorId: asset.kind === "driver" ? asset.constructorId : null,
+        }),
+        priceTenths: asset.priceTenths,
+        priceDeltaTenths,
+        seasonPoints,
+        ppm: asset.priceTenths === 0 ? null : seasonPoints / (asset.priceTenths / 10),
+        form5: form5(hist),
+        qualiAvg: sessionAvg(hist, "Qualifying"),
+        raceAvg: sessionAvg(hist, "Race"),
+        sprintAvg: sessionAvg(hist, "Sprint Qualifying"),
+        selectedPercent: asset.selectedPercent,
+        boostedPercent: asset.boostedPercent,
+        spark,
+      }
+    })
 
   const driverCount = rows.filter((r) => r.kind === "driver").length
   const constructorCount = rows.length - driverCount
