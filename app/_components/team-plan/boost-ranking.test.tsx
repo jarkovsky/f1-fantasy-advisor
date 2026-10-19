@@ -43,7 +43,7 @@ const PLAN: TeamPlan = {
 }
 
 describe("BoostRanking", () => {
-  it("lists the plan's drivers by projection, starring the Boost driver on top", async () => {
+  it("lists the plan's drivers by projection, badging the Boost driver on top", async () => {
     const user = userEvent.setup()
     render(<BoostRanking plan={PLAN} assetsById={ASSETS_BY_ID} totals={TOTALS} />)
 
@@ -60,6 +60,7 @@ describe("BoostRanking", () => {
       "Driver 1",
       "Driver 4",
     ])
-    expect(items[0]).toContain("★")
+    expect(items[0]).toContain("x2 Boost")
+    expect(items.slice(1).join("")).not.toContain("x2 Boost")
   })
 })

@@ -15,6 +15,7 @@ import { optimize } from "@/lib/optimizer/optimize"
 import { formatSignedPoints } from "@/lib/format"
 import { teamStore } from "@/lib/team/store"
 
+import { GAIN_HEADLINE } from "@/app/_components/team-plan/team-comparison"
 import { AdvisorPanel } from "@/app/_components/advisor/advisor-panel"
 
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
@@ -221,7 +222,7 @@ function seedTeam(
 /** The team most tests seed: d4–d8 + c2/c3, so the optimizer has upgrades to find. */
 const DEFAULT_LINEUP = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
 
-const PLAN_HEADLINE = "vs keeping your current team"
+const PLAN_HEADLINE = GAIN_HEADLINE
 
 /** Waits for the optimizer to settle and the recommendation card to render. */
 function findPlanHeadline(): Promise<HTMLElement> {
@@ -389,7 +390,7 @@ describe("OPEN — oracle equality", () => {
     expect(within(featured as HTMLElement).getByLabelText("x2 Boost driver")).toBeInTheDocument()
 
     // Headline gain = best.score − byTransferCount[0].projectedTotal, via
-    // formatSignedPoints. Scope to the "vs keeping your current team" block.
+    // formatSignedPoints. Scope to the banner's headline block.
     const baseline = exp.byTransferCount[0]?.projectedTotal ?? 0
     const gainText = formatSignedPoints(exp.best.score - baseline)
     const block = screen.getByText(PLAN_HEADLINE).parentElement as HTMLElement
@@ -484,10 +485,10 @@ describe("OPEN — transfer penalty", () => {
 
 // ---------------------------------------------------------------------------
 // Boost ranking — collapsed by default; expanding shows five driver rows
-// sorted by projection desc, with the optimizer's Boost driver starred on top.
+// sorted by projection desc, with the optimizer's Boost driver badged on top.
 // ---------------------------------------------------------------------------
 describe("OPEN — Boost ranking", () => {
-  it("orders drivers by projection and stars the optimizer's Boost driver on top", async () => {
+  it("orders drivers by projection and badges the optimizer's Boost driver on top", async () => {
     seedDevNow(BEFORE_LOCK)
     seedTeam(DEFAULT_LINEUP, 500, 3, 6)
     render(<AdvisorPanel {...makeProps()} />)
@@ -516,7 +517,9 @@ describe("OPEN — Boost ranking", () => {
     // The plan's five drivers, sorted by projection desc.
     const sorted = [...exp.best.driverIds].sort((a, b) => (WEIGHTED[b] ?? 0) - (WEIGHTED[a] ?? 0))
     const expectedNames = sorted.map((id) => GRID.find((a) => a.playerId === id)?.displayName)
-    const rowNames = rows.map((r) => r.textContent?.replace("★", "").replace(/\+.*$/, "").trim())
+    const rowNames = rows.map((r) =>
+      r.textContent?.replace("x2 Boost", "").replace(/\+.*$/, "").trim()
+    )
     expect(rowNames).toEqual(expectedNames)
 
     // Top row = the Boost driver.

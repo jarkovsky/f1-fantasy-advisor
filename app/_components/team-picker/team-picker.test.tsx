@@ -1,7 +1,7 @@
 import type { AssetLite } from "@/lib/asset-lite"
 
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest"
 import { cleanup, render, screen, within } from "@testing-library/react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import userEvent from "@testing-library/user-event"
 
 import { teamStore } from "@/lib/team/store"
@@ -108,7 +108,11 @@ describe("TeamPicker", () => {
   it("renders one card with a table per kind and exactly one save CTA", () => {
     renderPicker()
     // Exactly one Card wraps the whole flow (one save button, not two).
-    expect(screen.getAllByRole("button", { name: /save team & get advice/i })).toHaveLength(1)
+    expect(
+      screen.getAllByRole("button", {
+        name: "Pick 5 more drivers and 2 more constructors to continue",
+      })
+    ).toHaveLength(1)
     // Two separate kind tables, each counting its own assets.
     expect(screen.getByRole("heading", { name: "Drivers (8)" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Constructors (3)" })).toBeInTheDocument()
@@ -164,19 +168,27 @@ describe("TeamPicker", () => {
     ).toBeInTheDocument()
   })
 
-  it("CTA disabled while incomplete; enabled exactly at 5+2 with Remaining Cost Cap entered", async () => {
+  it("the disabled CTA names what blocks it; enabled exactly at 5+2 with Remaining Cost Cap entered", async () => {
     const user = userEvent.setup()
     renderPicker()
-    const cta = screen.getByRole("button", { name: /save team & get advice/i })
+    const cta = screen.getByRole("button", {
+      name: "Pick 5 more drivers and 2 more constructors to continue",
+    })
     expect(cta).toBeDisabled()
 
-    await pick(user, ["d1", "d2", "d3", "d4", "d5", "c1", "c2"])
+    await pick(user, ["d1", "d2", "d3", "d4", "c1", "c2"])
+    expect(cta).toHaveAccessibleName("Pick 1 more driver to continue")
+    expect(cta).toBeDisabled()
+
+    await pick(user, ["d5"])
     // Team complete but no Remaining Cost Cap yet → still blocked.
+    expect(cta).toHaveAccessibleName("Set your Remaining Cost Cap to continue")
     expect(cta).toBeDisabled()
 
     const costCap = screen.getByLabelText(/remaining cost cap/i)
     await user.clear(costCap)
     await user.type(costCap, "5")
+    expect(cta).toHaveAccessibleName("Save team & get advice")
     expect(cta).toBeEnabled()
   })
 
@@ -198,17 +210,37 @@ describe("TeamPicker", () => {
     renderPicker()
     const drivers = screen.getByRole("region", { name: "Drivers 0/5" })
     expect(screen.getByRole("heading", { name: "Constructors 0/2" })).toBeInTheDocument()
-    expect(within(drivers).queryAllByRole("listitem")).toHaveLength(0)
+    expect(within(drivers).getAllByRole("button", { name: "Pick a driver" })).toHaveLength(5)
 
     await user.click(checkboxFor("Firstname Lastname1"))
     expect(screen.getByRole("heading", { name: "Drivers 1/5" })).toBeInTheDocument()
     expect(within(drivers).getByText("Driver 1")).toBeInTheDocument()
+    expect(within(drivers).getAllByRole("button", { name: "Pick a driver" })).toHaveLength(4)
     // The summary never totals what the team costs.
     expect(screen.queryByText(/Spent/)).not.toBeInTheDocument()
 
     await user.click(within(drivers).getByRole("button", { name: "Remove Driver 1" }))
     expect(screen.getByRole("heading", { name: "Drivers 0/5" })).toBeInTheDocument()
     expect(checkboxFor("Firstname Lastname1")).not.toBeChecked()
+  })
+
+  it("an empty slot jumps to its table and focuses the first pickable row", async () => {
+    const user = userEvent.setup()
+    const original = Element.prototype.scrollIntoView
+    const scrollIntoView = vi.fn()
+    // jsdom has no scrollIntoView.
+    Element.prototype.scrollIntoView = scrollIntoView
+    onTestFinished(() => {
+      Element.prototype.scrollIntoView = original
+    })
+    renderPicker()
+    await user.click(checkboxFor("Constructor 1 Full"))
+
+    const constructors = screen.getByRole("region", { name: "Constructors 1/2" })
+    await user.click(within(constructors).getByRole("button", { name: "Pick a constructor" }))
+    expect(scrollIntoView).toHaveBeenCalled()
+    // c1 is already picked, so focus lands on the next unchecked constructor.
+    expect(document.activeElement).toBe(checkboxFor("Constructor 2 Full"))
   })
 
   it("keyboard: Tab reaches a row checkbox and Space toggles it", async () => {

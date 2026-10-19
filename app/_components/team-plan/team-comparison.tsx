@@ -38,6 +38,9 @@ type TeamComparisonProps = {
   onEdit: () => void
 }
 
+/** The banner's headline, beside the signed gain. */
+export const GAIN_HEADLINE = "projected points vs keeping your current team"
+
 /** Rows shared by both columns and the gutter: header, 5 drivers, 2 constructors, footer. */
 const GRID_ROWS = "row-span-9 grid grid-rows-subgrid"
 
@@ -70,12 +73,16 @@ function SwapMarker({ delta }: { delta: number | null }) {
 }
 
 /**
- * Where you are vs where the optimizer would take you, side by side. Both
- * columns share one set of rows (CSS subgrid), so each slot's current pick
- * sits level with its recommended pick, and the gutter between them marks
- * every transfer with an arrow and its points swing. The slot holding the
- * recommended Boost driver leads both columns as the featured card; the other
- * drivers and the constructors follow by projection.
+ * Where you are vs where the optimizer would take you. A banner leads with
+ * the payoff: the projected points gained over keeping the current team (net
+ * of any transfer penalty), how the transfers are paid for, and the Apply
+ * button. Below it the two teams sit side by side, the current one flat and
+ * the recommended one raised. Both columns share one set of rows (CSS
+ * subgrid), so each slot's current pick sits level with its recommended pick,
+ * and the gutter between them marks every transfer with an arrow and its
+ * points swing. The slot holding the recommended Boost driver leads both
+ * columns as the featured card; the other drivers and the constructors follow
+ * by projection.
  *
  * The Boost badge follows the optimizer's own picks (baseline.boostDriverId on
  * the left, result.best.boostDriverId on the right), so it never disagrees
@@ -132,13 +139,73 @@ export function TeamComparison({
 
   return (
     <div className="flex flex-col gap-4">
+      <section
+        aria-label="Projected gain"
+        className="flex flex-col gap-4 rounded-xl bg-surface-1 p-4 shadow-xs ring-1 ring-grid-line sm:flex-row sm:items-center sm:justify-between sm:p-5"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <Delta
+              value={netGain}
+              points
+              className="font-display text-5xl leading-none font-extrabold tracking-tight [font-stretch:80%] sm:text-6xl"
+            />
+            <p className="text-base font-medium text-balance">{GAIN_HEADLINE}</p>
+          </div>
+          <div className="flex flex-col gap-0.5 text-sm">
+            {best.transfers === 0 && (
+              <span className="text-muted-foreground">
+                No changes — your current team is already optimal for this model.
+              </span>
+            )}
+            {best.transfers > 0 &&
+              (additional > 0 ? (
+                <span className="text-neg">
+                  {free} free + {additional} additional · −{penaltyPts} pts penalty, already counted
+                </span>
+              ) : (
+                <span className="text-muted-foreground">
+                  Within your free transfers — no penalty.
+                </span>
+              ))}
+          </div>
+        </div>
+        <div className="shrink-0">
+          {isWhatIf ? (
+            <Badge variant="outline" className="h-8 px-3 text-sm text-warn">
+              Hypothetical — not saved
+            </Badge>
+          ) : applied ? (
+            <Button
+              type="button"
+              variant="primary-f1"
+              size="lg"
+              disabled
+              className="h-12 w-full px-6 text-base sm:w-auto"
+            >
+              Plan applied ✓
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="primary-f1"
+              size="lg"
+              onClick={onApply}
+              className="h-12 w-full px-6 text-base sm:w-auto"
+            >
+              Apply this plan
+            </Button>
+          )}
+        </div>
+      </section>
+
       <div className="grid grid-cols-[minmax(0,1fr)_2rem_minmax(0,1fr)] grid-rows-[repeat(9,auto)] gap-y-2 sm:grid-cols-[minmax(0,1fr)_4.5rem_minmax(0,1fr)]">
         {/* Current team */}
         <section
           aria-labelledby="current-team-title"
           className={cn(
             GRID_ROWS,
-            "col-start-1 row-start-1 rounded-xl bg-surface-1 p-2.5 shadow-xs ring-1 ring-grid-line sm:p-4"
+            "col-start-1 row-start-1 rounded-xl bg-surface-1/50 p-2.5 ring-1 ring-grid-line sm:p-4"
           )}
         >
           <header className="flex flex-wrap items-start justify-between gap-2 pb-1">
@@ -207,10 +274,9 @@ export function TeamComparison({
           aria-labelledby="recommended-team-title"
           className={cn(
             GRID_ROWS,
-            "relative col-start-3 row-start-1 overflow-hidden rounded-xl bg-surface-1 p-2.5 shadow-xs ring-1 ring-grid-line sm:p-4"
+            "col-start-3 row-start-1 rounded-xl bg-surface-1 p-2.5 shadow-lg ring-1 ring-grid-line-strong sm:p-4"
           )}
         >
-          <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px] bg-accent-f1" />
           <header className="flex flex-col gap-1 pb-1">
             <Label>After transfers</Label>
             <div className="flex flex-wrap items-center gap-2">
@@ -221,53 +287,29 @@ export function TeamComparison({
                 {best.transfers} transfer{best.transfers === 1 ? "" : "s"}
               </Badge>
             </div>
-            <div className="flex flex-wrap items-baseline gap-x-2">
-              <Delta value={netGain} points className="font-mono text-xl" />
-              <p className="text-xs text-muted-foreground">vs keeping your current team</p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Projected{" "}
+              <span className="font-mono text-foreground">{best.projectedTotal.toFixed(1)}</span>{" "}
+              pts
+            </p>
           </header>
           <ul className="row-span-7 grid grid-rows-subgrid">
             {rows.map((row, i) => cell(row, "recommended", i))}
           </ul>
-          <footer className="flex flex-col gap-2 pt-1">
-            <div className="flex flex-col gap-0.5 text-xs">
-              {best.transfers === 0 && (
-                <span className="text-muted-foreground">
-                  No changes — your current team is already optimal for this model.
-                </span>
-              )}
-              {additional > 0 ? (
-                <span className="text-neg">
-                  {free} free + {additional} additional · −{penaltyPts} pts penalty
-                </span>
-              ) : (
-                <span className="text-muted-foreground">
-                  Within your free transfers — no penalty.
-                </span>
-              )}
-              <span className="text-muted-foreground">
-                Remaining Cost Cap after:{" "}
-                <span className={cn("font-mono text-foreground", overCostCap && "text-neg")}>
-                  {formatPriceTenths(best.remainingCostCapTenths)}
-                </span>
-                {whatIf === "limitless" && " (Limitless: no cost cap)"}
+          <footer className="flex flex-col gap-0.5 pt-1 text-xs text-muted-foreground">
+            <span>
+              Team value{" "}
+              <span className="font-mono text-foreground">
+                {formatPriceTenths(best.costTenths)}
               </span>
-            </div>
-            <div>
-              {isWhatIf ? (
-                <Badge variant="outline" className="text-warn">
-                  Hypothetical — not saved
-                </Badge>
-              ) : applied ? (
-                <Button type="button" variant="primary-f1" disabled>
-                  Plan applied ✓
-                </Button>
-              ) : (
-                <Button type="button" variant="primary-f1" onClick={onApply}>
-                  Apply this plan
-                </Button>
-              )}
-            </div>
+            </span>
+            <span>
+              Remaining Cost Cap after{" "}
+              <span className={cn("font-mono text-foreground", overCostCap && "text-neg")}>
+                {formatPriceTenths(best.remainingCostCapTenths)}
+              </span>
+              {whatIf === "limitless" && " (Limitless: no cost cap)"}
+            </span>
           </footer>
         </section>
       </div>

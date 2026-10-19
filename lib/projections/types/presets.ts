@@ -20,6 +20,8 @@ export type ConcretePresetId = Exclude<PresetId, "custom-blend">
 export type PresetDefinition = {
   id: PresetId
   label: string
+  /** One plain-language sentence for the picker (docs/projection-models.md has the long form). */
+  description: string
   /** History presets need ≥N completed races; equal-ppm works from race 1. */
   minRaces: number
   /** True for presets computed from per-race history (greyed at cold start). */

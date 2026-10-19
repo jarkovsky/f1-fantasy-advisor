@@ -4,11 +4,14 @@ import type { AssetProjection, ProjectionResult } from "@/lib/projections/types/
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
 import type { AssetLite } from "@/lib/asset-lite"
 
+import { ChevronDown } from "lucide-react"
+
 import { PRESET_REGISTRY } from "@/lib/projections/engine"
 import { formatPriceTenths } from "@/lib/format"
 import { diffTeam } from "@/lib/team/team-diff"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Badge } from "@/components/ui/badge"
 
 import { Delta } from "@/app/_components/shared/delta"
 
@@ -69,12 +72,13 @@ export function Alternatives({ result, baseline, assetsById, projection }: Alter
   const { completedRaces, completedSprints } = projection.basis
 
   return (
-    <Collapsible className="rounded-lg border border-grid-line bg-surface-1">
-      <CollapsibleTrigger className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
+    <Collapsible className="rounded-xl bg-surface-1 shadow-xs ring-1 ring-grid-line">
+      <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-accent-f1 [&[data-state=open]>svg]:rotate-180">
         <span>Other transfer counts</span>
-        <span aria-hidden="true" className="text-muted-foreground">
-          ⌄
-        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className="size-4 shrink-0 text-muted-foreground transition-transform"
+        />
       </CollapsibleTrigger>
       <CollapsibleContent className="flex flex-col gap-2 px-4 pb-4">
         {rows.map(({ plan, t }) => {
@@ -82,22 +86,24 @@ export function Alternatives({ result, baseline, assetsById, projection }: Alter
           const { drivers, constructors } = diffTeam(baseline, plan)
 
           return (
-            <Collapsible key={t} className="rounded-md border border-grid-line/60">
-              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
+            <Collapsible key={t} className="rounded-md bg-surface-2">
+              <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 rounded-md px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-accent-f1 [&[data-state=open]>svg]:rotate-180">
                 <span className="flex items-center gap-2">
                   <span>
                     {t} transfer{t === 1 ? "" : "s"}
                   </span>
                   <Delta value={gain} points className="font-mono text-xs" />
-                  {t === result.best.transfers && (
-                    <span className="text-xs text-accent-f1">← recommended</span>
-                  )}
                   {plan.penaltyPoints < 0 && (
                     <span className="text-xs text-neg">
                       (−{Math.abs(plan.penaltyPoints)} penalty)
                     </span>
                   )}
+                  {t === result.best.transfers && <Badge variant="secondary">Recommended</Badge>}
                 </span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 text-muted-foreground transition-transform"
+                />
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-col gap-2 px-3 pb-3">
                 {[...drivers, ...constructors].map(({ outId, inId }) =>
@@ -109,7 +115,9 @@ export function Alternatives({ result, baseline, assetsById, projection }: Alter
                             {nameOf(outId)}{" "}
                           </span>
                         )}
-                        <span aria-hidden="true">→ </span>
+                        <span aria-hidden="true" className="text-muted-foreground">
+                          →{" "}
+                        </span>
                         <span className="font-medium">{nameOf(inId)}</span>
                       </p>
                       <AssetMath proj={projection.byPlayerId[inId]} asset={assetsById[inId]} />

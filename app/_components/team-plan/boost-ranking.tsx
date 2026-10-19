@@ -1,12 +1,16 @@
 import type { TeamPlan } from "@/lib/optimizer/types/optimizer"
 import type { AssetLite } from "@/lib/asset-lite"
 
+import { ChevronDown } from "lucide-react"
+
 import { formatSignedPoints } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
-/** Collapsible list of the plan's drivers by projection desc, starring the Boost driver. */
+import { BoostBadge } from "./pick-card"
+
+/** Collapsible list of the plan's drivers by projection desc, badging the Boost driver. */
 export function BoostRanking({
   plan,
   assetsById,
@@ -25,16 +29,17 @@ export function BoostRanking({
     }))
     .sort((a, b) => b.projected - a.projected)
   return (
-    <Collapsible className="rounded-lg border border-grid-line bg-surface-2/40">
+    <Collapsible className="rounded-xl bg-surface-1 shadow-xs ring-1 ring-grid-line">
       <h3 className="text-sm font-semibold">
-        <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-f1">
+        <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 rounded-xl px-4 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-accent-f1 [&[data-state=open]>svg]:rotate-180">
           Boost ranking
-          <span aria-hidden="true" className="font-normal text-muted-foreground">
-            ⌄
-          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground transition-transform"
+          />
         </CollapsibleTrigger>
       </h3>
-      <CollapsibleContent className="px-3 pb-3">
+      <CollapsibleContent className="px-4 pb-4">
         <ul className="flex flex-col gap-1">
           {ranked.map((d) => {
             const isBoostDriver = d.id === boostDriverId
@@ -42,17 +47,15 @@ export function BoostRanking({
               <li
                 key={d.id}
                 className={cn(
-                  "flex items-center justify-between rounded-md px-2 py-1 text-sm",
-                  isBoostDriver && "bg-accent-f1-quiet"
+                  "flex items-center justify-between gap-3 rounded-md px-2 py-1.5 text-sm",
+                  isBoostDriver && "bg-surface-2"
                 )}
               >
-                <span className={cn("truncate", isBoostDriver && "font-medium")}>
-                  {isBoostDriver && (
-                    <span className="mr-1.5 text-accent-f1" aria-hidden="true">
-                      ★
-                    </span>
-                  )}
-                  {d.name}
+                <span
+                  className={cn("flex min-w-0 items-center gap-2", isBoostDriver && "font-medium")}
+                >
+                  <span className="truncate">{d.name}</span>
+                  {isBoostDriver && <BoostBadge />}
                 </span>
                 <span className="font-mono text-muted-foreground tabular-nums">
                   {formatSignedPoints(d.projected)}

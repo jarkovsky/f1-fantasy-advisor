@@ -2,7 +2,7 @@
 
 import type { AssetLite } from "@/lib/asset-lite"
 
-import { useId, useMemo, useState } from "react"
+import { useId, useMemo, useRef, useState } from "react"
 
 import { TEAM_CONSTRUCTORS, TEAM_DRIVERS } from "@/lib/constants"
 import { useTeamStore } from "@/lib/team/store"
@@ -70,6 +70,19 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
   const teamComplete = driverCount === TEAM_DRIVERS && constructorCount === TEAM_CONSTRUCTORS
   const blocked = !teamComplete || !costCap.entered
   const liveMessage = statusMessage(teamComplete, costCap.entered, driverCount, constructorCount)
+  const saveLabel =
+    blockedReason(driverCount, constructorCount, costCap.entered) ??
+    (mode === "edit" ? "Save changes" : "Save team & get advice")
+
+  // An empty slot jumps to its table and focuses the first pickable row.
+  const driversRef = useRef<HTMLDivElement>(null)
+  const constructorsRef = useRef<HTMLDivElement>(null)
+  function pickFrom(table: React.RefObject<HTMLDivElement | null>): void {
+    table.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    table.current
+      ?.querySelector<HTMLElement>('[role="checkbox"][data-state="unchecked"]:not([disabled])')
+      ?.focus({ preventScroll: true })
+  }
 
   function toggle(id: string): void {
     setSelected((prev) => {
@@ -107,7 +120,9 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
   }
 
   return (
-    <Card>
+    // overflow-visible: the Card's default overflow-hidden would trap the
+    // sticky summary column inside a non-scrolling box.
+    <Card className="overflow-visible">
       <CardContent className="flex flex-col gap-4">
         {/* Live region: present from first render so changes are announced. */}
         <div role="status" aria-live="polite" className="sr-only">
@@ -124,36 +139,44 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
               aria-label="Search drivers and constructors"
               className="sm:max-w-xs"
             />
-            <PickerTable
-              heading="Drivers"
-              assets={drivers}
-              selected={selected}
-              quotaFull={driversFull}
-              query={query}
-              onToggle={toggle}
-            />
-            <PickerTable
-              heading="Constructors"
-              assets={constructors}
-              selected={selected}
-              quotaFull={constructorsFull}
-              query={query}
-              onToggle={toggle}
-            />
+            <div ref={driversRef} className="scroll-mt-24">
+              <PickerTable
+                heading="Drivers"
+                assets={drivers}
+                selected={selected}
+                quotaFull={driversFull}
+                query={query}
+                onToggle={toggle}
+              />
+            </div>
+            <div ref={constructorsRef} className="scroll-mt-24">
+              <PickerTable
+                heading="Constructors"
+                assets={constructors}
+                selected={selected}
+                quotaFull={constructorsFull}
+                query={query}
+                onToggle={toggle}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-5 lg:sticky lg:top-20 lg:self-start lg:border-l lg:border-grid-line lg:pl-6">
             <PickedList
               heading="Drivers"
+              slotLabel="Pick a driver"
               assets={pickedDrivers}
               quota={TEAM_DRIVERS}
               onRemove={toggle}
+              onPickMore={() => pickFrom(driversRef)}
             />
             <PickedList
               heading="Constructors"
+              slotLabel="Pick a constructor"
               assets={pickedConstructors}
               quota={TEAM_CONSTRUCTORS}
               onRemove={toggle}
+              onPickMore={() => pickFrom(constructorsRef)}
             />
 
             <div className="flex flex-col gap-1.5">
@@ -174,8 +197,15 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
             <FreeTransfersField value={freeTransfers} onChange={setFreeTransfers} />
 
             <div className="flex flex-col gap-2">
-              <Button type="button" variant="primary-f1" disabled={blocked} onClick={handleSave}>
-                {mode === "edit" ? "Save changes" : "Save team & get advice"}
+              <Button
+                type="button"
+                variant="primary-f1"
+                size="lg"
+                disabled={blocked}
+                onClick={handleSave}
+                className="h-auto min-h-11 text-balance whitespace-normal"
+              >
+                {saveLabel}
               </Button>
 
               {mode === "edit" && (
@@ -192,6 +222,28 @@ export function TeamPicker({ assets, raceNumber, mode, onDone }: TeamPickerProps
       </CardContent>
     </Card>
   )
+}
+
+/**
+ * Why Save is disabled, as the button's own label: the picks still missing,
+ * else the Remaining Cost Cap; null once nothing blocks it. Free transfers
+ * always hold a value, so they never block.
+ */
+function blockedReason(
+  driverCount: number,
+  constructorCount: number,
+  costCapEntered: boolean
+): string | null {
+  const missing = [
+    [TEAM_DRIVERS - driverCount, "driver"],
+    [TEAM_CONSTRUCTORS - constructorCount, "constructor"],
+  ] as const
+  const parts = missing
+    .filter(([n]) => n > 0)
+    .map(([n, noun]) => `${n} more ${noun}${n === 1 ? "" : "s"}`)
+  if (parts.length > 0) return `Pick ${parts.join(" and ")} to continue`
+  if (!costCapEntered) return "Set your Remaining Cost Cap to continue"
+  return null
 }
 
 /** The polite live-region copy: what still blocks Save, or that the team is ready. */

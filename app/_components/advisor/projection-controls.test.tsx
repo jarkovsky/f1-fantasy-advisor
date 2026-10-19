@@ -167,4 +167,13 @@ describe("ProjectionControls", () => {
     // No cold-start warning when there is history.
     expect(screen.queryByText(/no history yet/i)).not.toBeInTheDocument()
   })
+
+  it("explains the selected model in a sentence and links the full explainer", () => {
+    renderControls({ preset: "form-5" })
+    expect(screen.getByText("Only the last 5 races count, all equally.")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /how the models work/i })).toHaveAttribute(
+      "href",
+      expect.stringContaining("docs/projection-models.md")
+    )
+  })
 })

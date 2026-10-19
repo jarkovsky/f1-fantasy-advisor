@@ -23,7 +23,7 @@ export default function StatsPage() {
   return (
     <main className="mx-auto flex min-h-svh w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 md:py-10">
       {/* Same header treatment as the advisor page (app/page.tsx). */}
-      <header className="flex flex-col gap-2">
+      <header className="flex flex-col items-center gap-2 text-center">
         <h1 className="font-display text-3xl leading-none font-extrabold tracking-tight text-balance uppercase [font-stretch:80%] md:text-5xl">
           Stats explorer
         </h1>

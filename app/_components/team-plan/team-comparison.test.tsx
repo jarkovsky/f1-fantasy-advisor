@@ -11,7 +11,7 @@ import { formatSignedPoints } from "@/lib/format"
 
 import { installMatchMediaStub, installResizeObserverStub } from "@/test/stubs/dom"
 
-import { TeamComparison } from "./team-comparison"
+import { GAIN_HEADLINE, TeamComparison } from "./team-comparison"
 
 // ---------------------------------------------------------------------------
 // Deterministic grid (mirrors advisor-panel.test): 8 drivers + 3 constructors,
@@ -133,7 +133,7 @@ describe("TeamComparison", () => {
     const best = props.result.best
     const baselineTotal = props.baseline?.projectedTotal ?? 0
 
-    const block = screen.getByText("vs keeping your current team").parentElement as HTMLElement
+    const block = screen.getByText(GAIN_HEADLINE).parentElement as HTMLElement
     expect(
       within(block).getByText(formatSignedPoints(best.score - baselineTotal))
     ).toBeInTheDocument()

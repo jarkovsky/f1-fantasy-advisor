@@ -131,7 +131,10 @@ describe("Alternatives", () => {
       const label = `${bucket.transfers} transfer${bucket.transfers === 1 ? "" : "s"}`
       expect(screen.getByText(label)).toBeInTheDocument()
     }
-    expect(screen.getByText("← recommended")).toBeInTheDocument()
+    // Exactly one bucket carries the Recommended badge: the optimizer's pick.
+    const badge = screen.getByText("Recommended")
+    const best = `${result.best.transfers} transfer${result.best.transfers === 1 ? "" : "s"}`
+    expect(badge.closest("button")).toHaveTextContent(best)
   })
 
   it("expands a bucket to show the projection math and states the sample size", async () => {

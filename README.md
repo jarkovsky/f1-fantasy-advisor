@@ -1,133 +1,59 @@
 # F1 Fantasy Advisor
 
-**Finds the provably optimal F1 Fantasy team and transfers for the next Grand Prix by checking all 1,448,370 legal teams in ~6 ms, right in the browser.**
+**The best F1 Fantasy transfers and x2 Boost pick for the next Grand Prix, worked out in your browser.**
 
-Exact, not heuristic: given the projections, no better team exists. It pulls the official F1 Fantasy feeds, projects every driver and constructor under transparent presets, and explains every number. Free, no login; your team lives in `localStorage` only.
+**Live:** [f1-fantasy-advisor.jarkovsky.com](https://f1-fantasy-advisor.jarkovsky.com)
 
-- **Exact search with a proof.** Cost-cap-only pruning with a written optimality proof. Tests check the global optimum _and_ the best team at every transfer count against a brute-force oracle.
-- **Degrades instead of breaking.** Every feed is validated with zod at the boundary and falls back from live to committed snapshot to typed empty. The production build succeeds with the feeds unreachable.
-- **Next.js 16 Cache Components.** A cacheable static shell with one streamed data hole. Lighthouse 100 on Accessibility, Best Practices and SEO; LCP 407 ms at 4× CPU throttle.
-- **Tested and strictly typed.** 350 tests (Vitest + Testing Library), strict TypeScript with `noUncheckedIndexedAccess`.
+Enter your current team, your Remaining Cost Cap and your free transfers. The advisor projects how many points every driver and constructor will score at the next race. It then checks all 1,448,370 legal teams in about 6 ms and shows which transfers gain you the most points, after any transfer penalty, and who should get the x2 Boost.
 
-**Stack:** Next.js 16 (App Router, Cache Components) · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · zod · Vitest
+![The advisor: your team beside the recommended team](docs/screenshots/advisor.png)
+
+## What you get
+
+- **The payoff up front.** The projected points you gain over keeping your team, with your team and the recommended one side by side and an arrow on every transfer.
+- **The true best team, not an estimate.** Every legal team is checked, so for the projection model you picked, no better team exists.
+- **Five projection models.** From the season average to recent form, each explained in plain language in [How the projection models work](docs/projection-models.md).
+- **Chip previews.** See what Wildcard or Limitless would change before you play them.
+- **Stats and driver profiles.** Prices, form, per-session points and selection trends for the whole grid.
+- **No account.** Your team is saved in your browser and nowhere else.
 
 ## Screenshots
 
-Light by default on a dot-pattern paper grey, with a dark "telemetry" theme one toggle away. The advisor puts your team beside the recommended one, slot by slot: an arrow marks every transfer with its points swing, and the x2 Boost driver leads both columns. Every active driver has a profile page.
-
-| The advisor — live US Grand Prix data                                 | Driver profile                                         |
-| --------------------------------------------------------------------- | ------------------------------------------------------ |
-| ![The advisor, live US Grand Prix data](docs/screenshots/advisor.png) | ![Driver profile](docs/screenshots/driver-profile.png) |
-
-| Team setup                                      | Stats                                |
-| ----------------------------------------------- | ------------------------------------ |
-| ![Team setup](docs/screenshots/team-picker.png) | ![Stats](docs/screenshots/stats.png) |
+| Driver profile                                         | Team setup                                      | Stats                                |
+| ------------------------------------------------------ | ----------------------------------------------- | ------------------------------------ |
+| ![Driver profile](docs/screenshots/driver-profile.png) | ![Team setup](docs/screenshots/team-picker.png) | ![Stats](docs/screenshots/stats.png) |
 
 ## How it works
 
-```mermaid
-flowchart TD
-  CDN[fantasy.formula1.com CDN feeds]:::ext --> ZOD
+1. **Data.** It reads the public F1 Fantasy feeds: prices, points per session and how many teams pick each driver. If a feed is down, it uses a saved copy instead of breaking.
+2. **Projection.** The model you choose turns this season's points into an expected score for every driver and constructor at the next race.
+3. **Search.** The optimizer checks every team that fits your Cost Cap and transfer rules, doubles the Boost driver's points, subtracts transfer penalties, and recommends the highest total.
 
-  subgraph server[Server plane — read-only]
-    ZOD[zod boundary<br/>verbatim wire names · verified feed typos normalized]
-    DEG[fetch-or-snapshot degradation core<br/>live → committed snapshot → typed empty · never throws]
-    CACHE['use cache' fetchers<br/>per-feed cacheLife]
-    HIST[season history<br/>cumulatives recomputed per race · regenerated feed files healed]
-    PROJ[projects all four concrete presets]
-    PROPS[serialized props<br/>SeasonHistory never crosses the wire]
-    ZOD --> DEG --> CACHE --> HIST --> PROJ --> PROPS
-  end
+The technical side (data flow, design decisions, benchmarks) is in [Architecture](docs/architecture.md).
 
-  subgraph client[Client island]
-    STORE[localStorage store 'f1:v1']
-    SM[race-week state machine<br/>wall clock + stored race stamp]
-    BLEND[custom-blend = exact lerp of two presets]
-    ADAPT[optimizer adapter]
-    OPT[optimizer behind dynamic import<br/>exhaustive C 22,5 × C 11,2 = 1,448,370<br/>cost-cap-prune w/ optimality proof]
-    UI[recommendation UI]
-    STORE --> SM --> BLEND --> ADAPT --> OPT --> UI
-  end
+**Built with** Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · shadcn/ui · zod · Vitest
 
-  PROPS --> STORE
+## Run it locally
 
-  SNAP[scripts/snapshot.ts]:::side --> DATA[(data/ — offline builds)]:::side
-  ASSET[scripts/assets.ts]:::side --> HEAD[(public/headshots — OpenF1)]:::side
-  DATA -.snapshot fallback.-> DEG
-
-  classDef ext fill:#1d1d1f,color:#fff;
-  classDef side fill:#2a2a2a,color:#bbb,stroke-dasharray:4 3;
-```
-
-The server resolves a single streamed data hole (a fully cacheable async RSC, no `searchParams`, no wall clock), pre-computes the four concrete presets, and ships serializable ingredients. The client island runs the race-week state machine itself, derives `custom-blend` by exact interpolation, and only then lazy-loads the optimizer.
-
-## Key decisions
-
-| Decision                                                                 | Why                                                                                                     |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Exhaustive search, cost-cap-only pruning with a written optimality proof | Score/upper-bound pruning deliberately omitted — it could cut a non-global per-transfer-count optimum   |
-| Oracle-verified optimality                                               | Tested against a brute-force oracle — global optimum and every transfer bucket                          |
-| Boost driver co-optimized for free                                       | Boost driver is the max-projection term folded into the score, not a second pass                        |
-| Money is integer tenths-of-a-million end to end                          | Exact cost-cap-boundary comparisons (cost == cost cap affordable; one tenth more is not)                |
-| Season cumulatives recomputed by summing per-race points                 | Feed totals are contaminated — old race files get regenerated with later-era cumulatives                |
-| Team lock from the raceday ISO8601 first-session start                   | `constraints.DeadlineDate` proven stale/advisory — never trusted                                        |
-| Never recompute scoring from results                                     | The feed's per-race / per-session points suffice; no re-derivation                                      |
-| Committed snapshots feed offline builds                                  | `'use cache'` fetchers fall back to `data/`, so `next build` never needs the live feeds                 |
-| Sprint small-sample prior                                                | Sprint sessions are shrunk toward a prior (few samples per season)                                      |
-| Equal-PPM is per-race calibrated                                         | Divides by completed races so it sits on the single-race scale as a fallback                            |
-| `custom-blend` = exact lerp of season-average and weighted-recent        | The engine's blend is linear in its endpoints, so SeasonHistory never has to ship                       |
-| Race-week state machine runs client-side                                 | It needs wall clock + stored race; nothing time/user-dependent in the PPR shell                         |
-| `localStorage`-only persistence                                          | No accounts, no backend; degrades silently when storage is blocked                                      |
-| Light default via `next-themes` pre-paint script                         | Zero FOUC and PPR-safe: the static shell stays theme-free; the class lands before first paint           |
-| Text and surface tokens are designed as pairs                            | Muted-on-raised-grey and white-on-red-fill each fail AA if tuned alone — found by auditing both themes  |
-| Your team beside the recommended team, on one CSS subgrid                | Each slot's current and recommended pick sit level, so every transfer reads as an arrow across the gap  |
-| Picker = two kind tables + one shared search                             | A checkbox column is the a11y source of truth; sort/announce mechanics shared with the stats table      |
-| Dot-pattern background generated by a seeded PRNG                        | The speckle SVGs are deterministic build inputs (`pnpm pattern`), not random output                     |
-| Vocabulary taken from the game's own UI strings                          | Team, Boost, Cost Cap, % Picked; feed wire names (`CaptainSelectedPercentage`) stop at the zod boundary |
-| Driver profiles prerendered per active driver                            | `generateStaticParams` over the feed; ratings are grid fifths, sentiment is the selection-% trend       |
-
-## Performance
-
-Optimizer microbenchmark — Apple M1 Pro, node 22; 1,448,370 candidate teams; 50 warmup + 500 measured runs × 3 seeds. Reproduce with `pnpm bench`.
-
-| mode      | min ms | median ms | p95 ms |
-| --------- | ------ | --------- | ------ |
-| normal    | 4.826  | 6.267     | 7.246  |
-| wildcard  | 4.724  | 6.061     | 7.053  |
-| limitless | 6.632  | 6.872     | 7.204  |
-
-Production build, measured on the previous single-column layout (to be re-measured after the October 2026 redesign): Lighthouse 100/100/100 (Accessibility / Best Practices / SEO) on `/` (desktop and mobile) and `/stats`, plus 100 Accessibility on the fully expanded advisor in both themes. LCP 407 ms at 4× CPU throttle (the text hero was the LCP element), CLS 0.00. The optimizer runs in ~25 ms even at 4× throttle, so it stays on the main thread inside a `startTransition` — no Web Worker needed.
-
-## Commands
-
-Requires Node ≥ 20.9 and pnpm. Run `pnpm install` first.
-
-| Command             | What it does                                                              |
-| ------------------- | ------------------------------------------------------------------------- |
-| `pnpm dev`          | Start the dev server                                                      |
-| `pnpm build`        | Production build                                                          |
-| `pnpm start`        | Serve the production build                                                |
-| `pnpm test`         | Run the suite (350 tests)                                                 |
-| `pnpm bench`        | Optimizer microbenchmark (the perf record)                                |
-| `pnpm snapshot`     | Refresh committed feed snapshots in `data/`                               |
-| `pnpm assets`       | Download headshots (OpenF1) and team logos (formula1.com); always exits 0 |
-| `pnpm pattern`      | Regenerate the dot-pattern background SVGs (seeded, deterministic)        |
-| `pnpm lint`         | ESLint                                                                    |
-| `pnpm format:check` | Prettier check                                                            |
-| `pnpm typecheck`    | `next typegen && tsc --noEmit`                                            |
-
-The build never needs the live feeds. With the feed pointed at an unreachable host, it still succeeds end to end and renders the committed snapshot data:
+Requires Node ≥ 20.9 and pnpm.
 
 ```sh
-F1_FEED_BASE=http://127.0.0.1:1 pnpm build
+pnpm install
+pnpm dev
 ```
 
-## Honesty notes
-
-- Projections are small-sample means; the optimizer maximizes expected points, it does not predict the future.
-- Per-preset confidence ("based on N completed races") is shown in-app, and history-based presets are greyed at cold start.
-- In the post-race transient window the state machine enters `BETWEEN_ROUNDS`, suppressing stale numbers until the next round's data publishes.
+| Command             | What it does                   |
+| ------------------- | ------------------------------ |
+| `pnpm dev`          | Start the dev server           |
+| `pnpm build`        | Production build               |
+| `pnpm start`        | Serve the production build     |
+| `pnpm test`         | Run the test suite             |
+| `pnpm lint`         | ESLint                         |
+| `pnpm format:check` | Prettier check                 |
+| `pnpm typecheck`    | `next typegen && tsc --noEmit` |
 
 ## Credits & disclaimer
 
-Unofficial fan project. Not affiliated with, endorsed by, or associated with the Formula One group of companies, the FIA, or F1 Fantasy. Driver imagery via [OpenF1](https://openf1.org) (CC BY-NC-SA); team logos via formula1.com, trademarks of their teams, shown only to identify them; schedule cross-checks via [Jolpica F1](https://github.com/jolpica/jolpica-f1); data sourced from the public F1 Fantasy CDN feeds.
+Unofficial fan project. Not affiliated with, endorsed by, or associated with the Formula One group of companies, the FIA, or F1 Fantasy. Driver imagery via [OpenF1](https://openf1.org) (CC BY-NC-SA); team logos via formula1.com, trademarks of their teams, shown only to identify them; schedule cross-checks via [Jolpica F1](https://github.com/jolpica/jolpica-f1); data from the public F1 Fantasy feeds.
+
+The code is [MIT-licensed](LICENSE). The license covers the code only: the driver imagery, team logos, F1 names and marks, and the feed data in `data/` stay with their owners on the terms above.

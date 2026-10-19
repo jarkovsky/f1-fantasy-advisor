@@ -1,4 +1,4 @@
-import { X } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { useId } from "react"
 
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
@@ -8,19 +8,25 @@ import { TeamColorBar } from "@/app/_components/shared/team-color-bar"
 
 /**
  * One half of the picker's selection summary: "Drivers 2/5" over the picks so
- * far, each removable, then a dashed placeholder per open slot, so the count
- * and what fills it read together.
+ * far, each removable, then one empty slot per open place, so the count and
+ * what fills it read together. An empty slot is a button that jumps to the
+ * matching table.
  */
 export function PickedList({
   heading,
+  slotLabel,
   assets,
   quota,
   onRemove,
+  onPickMore,
 }: {
   heading: string
+  /** Empty-slot text, e.g. "Pick a driver". */
+  slotLabel: string
   assets: AssetLite[]
   quota: number
   onRemove: (id: string) => void
+  onPickMore: () => void
 }) {
   const headingId = useId()
   const open = Math.max(0, quota - assets.length)
@@ -52,11 +58,21 @@ export function PickedList({
           </li>
         ))}
         {Array.from({ length: open }, (_, i) => (
-          <li
-            key={`open-${i}`}
-            aria-hidden="true"
-            className="h-8 rounded-md border border-dashed border-grid-line-strong"
-          />
+          <li key={`open-${i}`}>
+            <button
+              type="button"
+              onClick={onPickMore}
+              className="flex h-8 w-full items-center gap-2 rounded-md border border-dashed border-grid-line-strong px-2 text-sm text-muted-foreground outline-none hover:border-foreground/40 hover:bg-surface-2 hover:text-foreground focus-visible:ring-2 focus-visible:ring-accent-f1"
+            >
+              <span
+                aria-hidden="true"
+                className="flex size-4 items-center justify-center rounded-full border border-dashed border-current"
+              >
+                <Plus className="size-3" />
+              </span>
+              {slotLabel}
+            </button>
+          </li>
         ))}
       </ul>
     </section>
