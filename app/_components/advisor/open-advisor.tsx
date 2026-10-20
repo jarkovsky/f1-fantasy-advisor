@@ -138,6 +138,7 @@ export function OpenAdvisor({
             assetsById={assetsById}
             driverProfiles={driverProfiles}
             totals={retired.totals}
+            projection={projection}
             remainingCostCapTenths={remainingCostCapTenths}
             freeTransfers={whatIf !== "none" ? "unlimited" : freeTransfers}
             whatIf={whatIf}

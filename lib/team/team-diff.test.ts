@@ -45,12 +45,18 @@ describe("diffTeam", () => {
 })
 
 describe("slotRows", () => {
-  it("classifies kept vs incoming and pairs the out", () => {
-    const base = plan(["d1", "d2", "d3", "d4", "d5"], ["c1", "c2"])
-    const next = plan(["d1", "d2", "d3", "d4", "d6"], ["c1", "c3"])
-    const rows = slotRows(base, next, diffTeam(base, next))
+  // Ids sort by their number: the current picks by "price" (d1 priciest), the
+  // incoming ones by "projection" (higher number first), so the two orders differ.
+  const byCurrent = (a: string, b: string) => a.localeCompare(b)
+  const byIncoming = (a: string, b: string) => b.localeCompare(a)
+  const order = { byCurrent, byIncoming }
+
+  it("keeps each current pick in its row and fills the leaving rows with the incoming ones", () => {
+    const base = plan(["d5", "d2", "d4", "d1", "d3"], ["c2", "c1"])
+    const next = plan(["d6", "d2", "d7", "d4", "d3"], ["c1", "c3"])
+    const rows = slotRows(base, next, order)
     expect(rows.drivers).toEqual([
-      { inId: "d1", outId: null },
+      { inId: "d7", outId: "d1" },
       { inId: "d2", outId: null },
       { inId: "d3", outId: null },
       { inId: "d4", outId: null },
@@ -62,19 +68,32 @@ describe("slotRows", () => {
     ])
   })
 
+  it("lays the current team out the same way whatever the plan", () => {
+    const base = plan(["d3", "d1", "d2", "d4", "d5"], ["c1", "c2"])
+    const current = (next: TeamPlan) =>
+      slotRows(base, next, order).drivers.map((r) => r.outId ?? r.inId)
+    const a = current(plan(["d1", "d2", "d3", "d4", "d5"], ["c1", "c2"]))
+    const b = current(plan(["d9", "d2", "d8", "d4", "d5"], ["c1", "c2"]))
+    expect(a).toEqual(["d1", "d2", "d3", "d4", "d5"])
+    expect(b).toEqual(a)
+  })
+
   it("every plan id appears exactly once across slot rows", () => {
     const base = plan(["d1", "d2", "d3", "d4", "d5"], ["c1", "c2"])
     const next = plan(["d6", "d2", "d3", "d4", "d5"], ["c1", "c2"])
-    const rows = slotRows(base, next, diffTeam(base, next))
+    const rows = slotRows(base, next, order)
     const ids = [...rows.drivers, ...rows.constructors].map((r) => r.inId)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids.slice().sort()).toEqual([...next.driverIds, ...next.constructorIds].sort())
   })
 
-  it("null baseline → all kept-style rows (no out)", () => {
+  it("null baseline → all kept-style rows (no out), in incoming order", () => {
     const next = plan(["d1", "d2"], ["c1"])
-    const rows = slotRows(null, next, diffTeam(null, next))
-    expect(rows.drivers.every((r) => r.outId === null)).toBe(true)
+    const rows = slotRows(null, next, order)
+    expect(rows.drivers).toEqual([
+      { inId: "d2", outId: null },
+      { inId: "d1", outId: null },
+    ])
     expect(rows.constructors.every((r) => r.outId === null)).toBe(true)
   })
 })

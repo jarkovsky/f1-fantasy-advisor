@@ -6,6 +6,8 @@ export type Swap = { outId: string | null; inId: string | null }
 /** A recommended-team slot: an incoming id, with the out it replaced (or null when kept). */
 export type SlotRow = { inId: string; outId: string | null }
 
+type Compare = (a: string, b: string) => number
+
 /** Symmetric set diff between the current lineup and the plan, by class. */
 export function diffTeam(
   baseline: TeamPlan | null,
@@ -28,35 +30,37 @@ export function diffTeam(
 }
 
 /**
- * Recommended-team rows, by class. A slot is a "kept" row when its in-asset is
- * also in the baseline (no swap); otherwise it carries the matching out→in swap
- * so the same row shows both the departing and arriving asset. When there is no
- * baseline (no valid current team) every plan id is a plain kept-style row.
+ * The comparison's rows, by class, laid out by the current team so its column
+ * never moves when the projection does. The current picks hold the rows in
+ * `byCurrent` order (pass a model-independent key, such as price); a kept pick
+ * sits beside itself, and the incoming picks fill the leaving picks' rows in
+ * `byIncoming` order (best projection first, say). With no baseline (no valid
+ * current team) every plan id is a plain kept-style row, in `byIncoming` order.
  */
 export function slotRows(
   baseline: TeamPlan | null,
   plan: TeamPlan,
-  swaps: { drivers: Swap[]; constructors: Swap[] }
+  order: { byCurrent: Compare; byIncoming: Compare }
 ): { drivers: SlotRow[]; constructors: SlotRow[] } {
-  const build = (
-    planIds: string[],
-    baselineIds: string[] | undefined,
-    classSwaps: Swap[]
-  ): SlotRow[] => {
-    // Incoming ids (in the plan, not in the baseline), each paired with the
-    // matching outgoing id from the symmetric diff so the row can render out→in.
-    const incoming = baselineIds ? planIds.filter((id) => !baselineIds.includes(id)) : []
-    const outsForIn = new Map<string, string | null>()
-    for (const s of classSwaps) {
-      if (s.inId !== null) outsForIn.set(s.inId, s.outId)
+  const build = (planIds: string[], baselineIds: string[] | undefined): SlotRow[] => {
+    if (!baselineIds) {
+      return [...planIds].sort(order.byIncoming).map((id) => ({ inId: id, outId: null }))
     }
-    return planIds.map((id) => ({
-      inId: id,
-      outId: incoming.includes(id) ? (outsForIn.get(id) ?? null) : null,
-    }))
+    const incoming = planIds.filter((id) => !baselineIds.includes(id)).sort(order.byIncoming)
+    const rows: SlotRow[] = []
+    for (const id of [...baselineIds].sort(order.byCurrent)) {
+      if (planIds.includes(id)) rows.push({ inId: id, outId: null })
+      else {
+        const inId = incoming.shift()
+        if (inId !== undefined) rows.push({ inId, outId: id })
+      }
+    }
+    // A plan larger than the team (never for a 5 + 2 line-up) keeps its extras.
+    for (const id of incoming) rows.push({ inId: id, outId: null })
+    return rows
   }
   return {
-    drivers: build(plan.driverIds, baseline?.driverIds, swaps.drivers),
-    constructors: build(plan.constructorIds, baseline?.constructorIds, swaps.constructors),
+    drivers: build(plan.driverIds, baseline?.driverIds),
+    constructors: build(plan.constructorIds, baseline?.constructorIds),
   }
 }

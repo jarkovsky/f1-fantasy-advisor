@@ -1,6 +1,7 @@
 "use client"
 
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { DriverProfile } from "@/lib/profile/types/profile"
 import type { WhatIfMode } from "@/lib/advisor/types/contract"
 import type { SlotRow } from "@/lib/team/team-diff"
@@ -10,8 +11,8 @@ import { ArrowRight, Pencil } from "lucide-react"
 import { useMemo } from "react"
 
 import { ADDITIONAL_TRANSFER_PENALTY } from "@/lib/constants"
-import { diffTeam, slotRows } from "@/lib/team/team-diff"
 import { formatPriceTenths } from "@/lib/format"
+import { slotRows } from "@/lib/team/team-diff"
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
@@ -28,6 +29,8 @@ type TeamComparisonProps = {
   assetsById: Record<string, AssetLite>
   driverProfiles: Record<string, DriverProfile>
   totals: Record<string, number>
+  /** The selected model's projections, explained in each pick's tooltip. */
+  projection: ProjectionResult
   /** The saved team's Remaining Cost Cap, before any of the plan's transfers. */
   remainingCostCapTenths: number
   freeTransfers: number | "unlimited"
@@ -70,12 +73,15 @@ function SwapMarker({ delta }: { delta: number | null }) {
  * card leads with the payoff, highlighted: the projected points gained over
  * keeping the current team (net of any transfer penalty), opposite your
  * team's own projected total in the same type but grey. The footer holds the
- * Apply button with the transfer accounting under it. Both columns share one set of rows (CSS
- * subgrid), so each slot's current pick sits level with its recommended pick,
- * and the gutter between them marks every transfer with an arrow and its
- * points swing. The slot holding the recommended Boost driver leads both
- * columns as the featured card; the other drivers and the constructors follow
- * by projection.
+ * Apply button with the transfer accounting under it.
+ *
+ * Both columns share one set of rows (CSS subgrid), so each slot's current
+ * pick sits level with its recommended pick, and the gutter between them marks
+ * every transfer with an arrow and its points swing. The rows follow your
+ * team, by price (drivers, then constructors), so changing the projection
+ * model never reorders it: only its numbers and the OUT tags move. A kept pick
+ * sits beside itself; the incoming picks fill the leaving picks' rows, best
+ * projection first. The first driver row is the featured card.
  *
  * The Boost badge follows the optimizer's own picks (baseline.boostDriverId on
  * the left, result.best.boostDriverId on the right), so it never disagrees
@@ -87,6 +93,7 @@ export function TeamComparison({
   assetsById,
   driverProfiles,
   totals,
+  projection,
   remainingCostCapTenths,
   freeTransfers,
   whatIf,
@@ -101,13 +108,14 @@ export function TeamComparison({
   const projOf = (id: string): number => totals[id] ?? 0
 
   const rows = useMemo(() => {
-    const slots = slotRows(baseline, best, diffTeam(baseline, best))
-    const byProjection = (a: SlotRow, b: SlotRow) => (totals[b.inId] ?? 0) - (totals[a.inId] ?? 0)
-    const drivers = [...slots.drivers].sort((a, b) =>
-      a.inId === boostId ? -1 : b.inId === boostId ? 1 : byProjection(a, b)
-    )
-    return [...drivers, ...[...slots.constructors].sort(byProjection)]
-  }, [baseline, best, boostId, totals])
+    const priceOf = (id: string) => assetsById[id]?.priceTenths ?? 0
+    const byPrice = (a: string, b: string) => priceOf(b) - priceOf(a) || a.localeCompare(b)
+    const slots = slotRows(baseline, best, {
+      byCurrent: byPrice,
+      byIncoming: (a, b) => (totals[b] ?? 0) - (totals[a] ?? 0) || byPrice(a, b),
+    })
+    return [...slots.drivers, ...slots.constructors]
+  }, [assetsById, baseline, best, totals])
 
   const free = freeTransfers === "unlimited" ? best.transfers : freeTransfers
   const additional = Math.max(0, best.transfers - free)
@@ -122,7 +130,14 @@ export function TeamComparison({
     const id = side === "current" ? (row.outId ?? row.inId) : row.inId
     const status: PickStatus = row.outId === null ? "kept" : side === "current" ? "out" : "in"
     const boost = side === "current" ? id === currentBoostId : id === boostId
-    const props = { asset: assetsById[id], id, projected: projOf(id), status, boost }
+    const props = {
+      asset: assetsById[id],
+      id,
+      projected: projOf(id),
+      projection: projection.byPlayerId[id],
+      status,
+      boost,
+    }
     return index === 0 ? (
       <FeaturedPick key={`${side}-${id}`} {...props} profile={driverProfiles[id]} />
     ) : (

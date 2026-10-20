@@ -4,7 +4,9 @@ The advisor has to guess how many fantasy points every driver and constructor wi
 
 No model can see the future. Each one looks at the points F1 Fantasy has already awarded this season and turns them into an expectation for the next race. They differ in one question: **how much should recent races count compared with the rest of the season?**
 
-You can switch models at any time in the **Projection model** card under your team. The recommended team updates straight away, so you can compare what each model suggests.
+You can switch models at any time in the **Projection model** card under your team. The recommended team updates straight away, so you can compare what each model suggests. Your own team stays exactly as you saved it; only its projected points change.
+
+Hover or tap a pick's numbers to see what they are: its projected points for the race week, split by session, the model they come from, and its price.
 
 ## The models at a glance
 

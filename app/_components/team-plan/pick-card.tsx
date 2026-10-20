@@ -1,3 +1,4 @@
+import type { AssetProjection } from "@/lib/projections/types/projection"
 import type { DriverProfile } from "@/lib/profile/types/profile"
 
 import Image from "next/image"
@@ -6,11 +7,14 @@ import Link from "next/link"
 import { formatPriceTenths, formatSignedPoints } from "@/lib/format"
 import { type AssetLite, assetColorKey } from "@/lib/asset-lite"
 import { splitFullName } from "@/lib/profile/build-profiles"
+import { PRESET_REGISTRY } from "@/lib/projections/engine"
 import { BOOST_MULTIPLIER } from "@/lib/constants"
+import { SPRINT_LABEL } from "@/lib/f1/config"
 import { teamColor } from "@/lib/team-colors"
 import { cn } from "@/lib/utils"
 
 import { RatingPips } from "@/app/_components/driver/rating-pips"
+import { TapTooltip } from "@/app/_components/shared/info-tip"
 
 /** A pick's role in the comparison: unchanged, leaving the team, or joining it. */
 export type PickStatus = "kept" | "out" | "in"
@@ -60,17 +64,24 @@ export function TeamMark({
 }
 
 /** The "x2 Boost" pill — the game's own label for the doubled driver. */
-export function BoostBadge({ className }: { className?: string }) {
+export function BoostBadge({
+  className,
+  collapse = false,
+}: {
+  className?: string
+  /** Drop the word "Boost" in a narrow container (under 11rem), leaving "x2". */
+  collapse?: boolean
+}) {
   return (
     <span
       aria-label={`x${BOOST_MULTIPLIER} Boost driver`}
       title={`x${BOOST_MULTIPLIER} Boost driver`}
       className={cn(
-        "inline-flex h-5 shrink-0 items-center rounded-sm bg-flag-yellow px-1.5 font-display text-[11px] leading-none font-extrabold text-flag-yellow-foreground [font-stretch:80%]",
+        "inline-flex h-5 shrink-0 items-center gap-[0.3em] rounded-sm bg-flag-yellow px-1.5 font-display text-[11px] leading-none font-extrabold text-flag-yellow-foreground [font-stretch:80%]",
         className
       )}
     >
-      x{BOOST_MULTIPLIER} Boost
+      x{BOOST_MULTIPLIER} <span className={cn(collapse && "hidden @[11rem]:inline")}>Boost</span>
     </span>
   )
 }
@@ -85,6 +96,57 @@ function StatusTag({ status }: { status: PickStatus }) {
       )}
     >
       {status === "in" ? "In" : "Out"}
+    </span>
+  )
+}
+
+/**
+ * What a pick's numbers mean: its projected points for this race week, split
+ * by session, the model they come from, and its price. The pick's own
+ * projection says which model applied (a pick with no results yet falls back
+ * to Equal PPM, whatever the selected model).
+ */
+function NumbersTip({
+  asset,
+  projected,
+  projection,
+  boost,
+}: {
+  asset: AssetLite
+  projected: number
+  projection: AssetProjection | undefined
+  boost: boolean
+}) {
+  const model = PRESET_REGISTRY.find((def) => def.id === projection?.source)
+  const sessions = (projection?.perSession ?? [])
+    .map((s) => `${s.session === SPRINT_LABEL ? "Sprint" : s.session} ${s.expected.toFixed(1)}`)
+    .join(" + ")
+  return (
+    <span className="flex flex-col gap-1.5">
+      <span>
+        <span className="font-semibold">{projected.toFixed(1)} projected points</span> this race
+        week
+        {boost &&
+          `, ${(projected * BOOST_MULTIPLIER).toFixed(1)} with the x${BOOST_MULTIPLIER} Boost`}
+        .
+      </span>
+      {!asset.active ? (
+        <span>Inactive: this entry no longer races, so it projects 0.</span>
+      ) : (
+        <>
+          {sessions && <span className="font-mono">{sessions}</span>}
+          {projection?.fallback === "equal-ppm-no-history" ? (
+            <span>No results yet this season, so this comes from its price (Equal PPM).</span>
+          ) : (
+            model && (
+              <span>
+                From the {model.label} model. {model.description}
+              </span>
+            )
+          )}
+        </>
+      )}
+      <span>Price {formatPriceTenths(asset.priceTenths)}.</span>
     </span>
   )
 }
@@ -118,25 +180,25 @@ function Portrait({ asset, color }: { asset: AssetLite; color: string }) {
   )
 }
 
+/** The props every pick takes, in either form. */
+type PickProps = {
+  asset: AssetLite | undefined
+  id: string
+  projected: number
+  /** The pick's projection under the selected model, explained in its numbers' tooltip. */
+  projection: AssetProjection | undefined
+  status: PickStatus
+  boost: boolean
+}
+
 /**
  * One compact pick in a comparison column: portrait, TLA, name, projected
  * points and price, tinted by status (green joining, red leaving). The name
  * carries the status in text style too (struck through when leaving), and the
- * IN/OUT tag says it in words, so color is never the only signal.
+ * IN/OUT tag says it in words, so color is never the only signal. The numbers
+ * are a tooltip trigger that says what they are and where they come from.
  */
-export function PickRow({
-  asset,
-  id,
-  projected,
-  status,
-  boost,
-}: {
-  asset: AssetLite | undefined
-  id: string
-  projected: number
-  status: PickStatus
-  boost: boolean
-}) {
+export function PickRow({ asset, id, projected, projection, status, boost }: PickProps) {
   if (!asset) {
     return (
       <li className="flex h-full items-center rounded-lg bg-surface-2 px-2.5 py-2 text-xs text-muted-foreground">
@@ -169,7 +231,7 @@ export function PickRow({
               Inactive
             </span>
           )}
-          {boost && <BoostBadge className="hidden @[11rem]:inline-flex" />}
+          {boost && <BoostBadge collapse />}
         </p>
         <p
           className={cn(
@@ -181,44 +243,43 @@ export function PickRow({
         >
           {asset.displayName}
         </p>
-        <div className="col-start-2 row-start-2 flex flex-col self-start @[13rem]:col-start-3 @[13rem]:row-span-2 @[13rem]:row-start-1 @[13rem]:items-end @[13rem]:gap-0.5 @[13rem]:self-center">
-          <span className="font-mono text-xs tabular-nums @[13rem]:text-sm">
-            {projected.toFixed(1)}
-          </span>
-          <span className="hidden font-mono text-[11px] text-muted-foreground tabular-nums @[13rem]:block">
-            {formatPriceTenths(asset.priceTenths)}
-          </span>
-        </div>
+        <TapTooltip
+          tip={
+            <NumbersTip asset={asset} projected={projected} projection={projection} boost={boost} />
+          }
+        >
+          <button
+            type="button"
+            aria-label={`${projected.toFixed(1)} projected points, price ${formatPriceTenths(asset.priceTenths)}`}
+            className="col-start-2 row-start-2 -mx-1 flex cursor-help flex-col items-start self-start rounded-sm px-1 text-left outline-none hover:bg-foreground/5 focus-visible:ring-2 focus-visible:ring-accent-f1 @[13rem]:col-start-3 @[13rem]:row-span-2 @[13rem]:row-start-1 @[13rem]:items-end @[13rem]:gap-0.5 @[13rem]:self-center @[13rem]:text-right"
+          >
+            <span className="font-mono text-xs tabular-nums @[13rem]:text-sm">
+              {projected.toFixed(1)}
+            </span>
+            <span className="hidden font-mono text-[11px] text-muted-foreground tabular-nums @[13rem]:block">
+              {formatPriceTenths(asset.priceTenths)}
+            </span>
+          </button>
+        </TapTooltip>
       </div>
     </li>
   )
 }
 
 /**
- * The featured pick at the head of a column: the slot that holds the
- * recommended Boost driver, rendered as a small carbon hero (headshot,
- * light first name over a heavy surname, team mark, the session ratings).
- * On the recommended side it carries the x2 Boost badge and what the Boost
- * is worth.
+ * The featured pick at the head of a column (TeamComparison picks the slot),
+ * rendered as a small carbon hero (headshot, light first name over a heavy
+ * surname, team mark, the session ratings). When it is the Boost driver it
+ * carries the x2 Boost badge and what the Boost is worth.
  */
 export function FeaturedPick({
-  asset,
-  id,
   profile,
-  projected,
-  status,
-  boost,
-}: {
-  asset: AssetLite | undefined
-  id: string
+  ...pick
+}: PickProps & {
   profile: DriverProfile | undefined
-  projected: number
-  status: PickStatus
-  boost: boolean
 }) {
-  if (!asset) {
-    return <PickRow asset={asset} id={id} projected={projected} status={status} boost={boost} />
-  }
+  const { asset, projected, projection, status, boost } = pick
+  if (!asset) return <PickRow {...pick} />
   const color = teamColor(assetColorKey(asset))
   const split = splitFullName(asset.fullName)
   const first = profile?.firstName ?? split.first
@@ -277,7 +338,25 @@ export function FeaturedPick({
               <dt className="text-[0.6rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                 Projected
               </dt>
-              <dd className="font-mono text-sm tabular-nums">{projected.toFixed(1)}</dd>
+              <dd>
+                <TapTooltip
+                  tip={
+                    <NumbersTip
+                      asset={asset}
+                      projected={projected}
+                      projection={projection}
+                      boost={boost}
+                    />
+                  }
+                >
+                  <button
+                    type="button"
+                    className="-mx-1 cursor-help rounded-sm px-1 font-mono text-sm tabular-nums outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-accent-f1"
+                  >
+                    {projected.toFixed(1)}
+                  </button>
+                </TapTooltip>
+              </dd>
             </div>
             <div className="flex flex-col gap-1">
               <dt className="text-[0.6rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">

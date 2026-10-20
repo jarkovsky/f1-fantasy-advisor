@@ -1,4 +1,5 @@
 import type { OptimizerResult, TeamPlan } from "@/lib/optimizer/types/optimizer"
+import type { ProjectionResult } from "@/lib/projections/types/projection"
 import type { AssetLite } from "@/lib/asset-lite"
 
 import { cleanup, render, screen, within } from "@testing-library/react"
@@ -78,11 +79,46 @@ const TOTALS: Record<string, number> = {
 }
 const LINEUP = ["d4", "d5", "d6", "d7", "d8", "c2", "c3"]
 
+// A Weighted recent projection matching a totals table, split 40/60 between
+// qualifying and the race, for the tooltips.
+function projectionOf(totals: Record<string, number>): ProjectionResult {
+  const basis = { completedRaces: 5, completedSprints: 0 }
+  const byPlayerId = Object.fromEntries(
+    GRID.map((a) => {
+      const total = totals[a.playerId] ?? 0
+      const perSession = [
+        { session: "Qualifying" as const, expected: total * 0.4, basisRaces: 5 },
+        { session: "Race" as const, expected: total * 0.6, basisRaces: 5 },
+      ]
+      return [
+        a.playerId,
+        {
+          playerId: a.playerId,
+          kind: a.kind,
+          totalPoints: total,
+          perSession,
+          source: "weighted-recent" as const,
+          basis,
+        },
+      ]
+    })
+  )
+  return {
+    byPlayerId,
+    requestedPreset: "weighted-recent",
+    effectivePreset: "weighted-recent",
+    basis,
+    coldStart: false,
+    notes: [],
+  }
+}
+
 function plan(
   costCap: number,
-  free: number
+  free: number,
+  totals: Record<string, number> = TOTALS
 ): { result: OptimizerResult; baseline: TeamPlan | null } {
-  const grid = toOptimizerAssets(GRID, TOTALS)
+  const grid = toOptimizerAssets(GRID, totals)
   const { assets } = reconcileLineup(LINEUP, grid)
   const result = optimize({
     assets,
@@ -102,6 +138,7 @@ function renderCard(over: Partial<Parameters<typeof TeamComparison>[0]> = {}) {
     assetsById: ASSETS_BY_ID,
     driverProfiles: {},
     totals: TOTALS,
+    projection: projectionOf(TOTALS),
     remainingCostCapTenths: 500,
     freeTransfers: 3 as number | "unlimited",
     whatIf: "none" as const,
@@ -130,7 +167,7 @@ const recommended = () => screen.getByRole("region", { name: "Recommended team" 
 const current = () => screen.getByRole("region", { name: "Your team" })
 
 describe("TeamComparison", () => {
-  it("renders the headline delta and leads with the Boost driver's featured card", () => {
+  it("renders the headline delta and leads with your priciest driver's featured card", () => {
     const { props } = renderCard()
     const best = props.result.best
     const baselineTotal = props.baseline?.projectedTotal ?? 0
@@ -143,11 +180,48 @@ describe("TeamComparison", () => {
     // Opposite the gain, your team shows its own projected total.
     expect(within(current()).getByText(baselineTotal.toFixed(1))).toBeInTheDocument()
 
-    // The recommended column opens on the Boost driver, badged x2.
-    const [featured] = within(recommended()).getAllByRole("listitem")
+    // Your team opens on its priciest driver (d4), in the featured card.
+    const [featured] = within(current()).getAllByRole("listitem")
+    expect(featured?.textContent).toContain("Lastname4")
+
+    // The recommended Boost driver carries the x2 badge.
     const boost = ASSETS_BY_ID[best.boostDriverId] as AssetLite
-    expect(featured?.textContent).toContain(boost.fullName.split(" ").at(-1))
-    expect(within(featured as HTMLElement).getByLabelText("x2 Boost driver")).toBeInTheDocument()
+    const boostRow = within(recommended())
+      .getAllByRole("listitem")
+      .find((li) => li.textContent?.includes(boost.tla))
+    expect(within(boostRow as HTMLElement).getByLabelText("x2 Boost driver")).toBeInTheDocument()
+  })
+
+  it("keeps your team in the same order whatever the projection model", () => {
+    const names = () =>
+      within(current())
+        .getAllByRole("listitem")
+        .map((li) => li.textContent?.match(/D0\d|C0\d|Lastname\d/)?.[0])
+
+    renderCard()
+    const before = names()
+    cleanup()
+
+    // A model that rates the line-up the other way round recommends other moves.
+    const flipped: Record<string, number> = { ...TOTALS, d4: 30, d5: 40, d6: 50, d7: 60, d8: 70 }
+    renderCard({ ...plan(500, 3, flipped), totals: flipped, projection: projectionOf(flipped) })
+    expect(names()).toEqual(before)
+    expect(before).toEqual(["D04", "D05", "D06", "D07", "D08", "C02", "C03"])
+  })
+
+  it("explains a pick's numbers in a tooltip", async () => {
+    const user = userEvent.setup()
+    renderCard()
+    const d5 = within(current())
+      .getAllByRole("listitem")
+      .find((li) => li.textContent?.includes("D05")) as HTMLElement
+    await user.click(within(d5).getByRole("button", { name: /60\.0 projected points/ }))
+
+    const tip = await screen.findByRole("tooltip")
+    expect(tip).toHaveTextContent("60.0 projected points this race week")
+    expect(tip).toHaveTextContent("Qualifying 24.0 + Race 36.0")
+    expect(tip).toHaveTextContent("From the Weighted recent model.")
+    expect(tip).toHaveTextContent("Price $22.0M")
   })
 
   it("lines up each transfer: out on the left, in on the right", () => {
